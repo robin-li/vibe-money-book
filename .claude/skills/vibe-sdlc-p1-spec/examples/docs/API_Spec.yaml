@@ -1,0 +1,1035 @@
+openapi: 3.0.3
+info:
+  title: Easy Dine API
+  version: 1.0.0
+  description: Small Restaurant Digital Ordering System API
+  contact:
+    name: Development Team
+    email: dev@easydine.example.com
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.easydine.example.com/api/v1
+    description: Production Server
+  - url: http://localhost:3000/api/v1
+    description: Development Server
+
+tags:
+  - name: Authentication
+    description: Login and token management
+  - name: User
+    description: User profile management
+  - name: Menu
+    description: Menu and menu items
+  - name: Orders
+    description: Order management
+  - name: Tables
+    description: Table management
+  - name: Admin
+    description: Administrative operations
+  - name: Analytics
+    description: Analytics and statistics
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Admin Login
+      description: Authenticate admin user and return JWT token
+      operationId: adminLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 50
+                  example: admin
+                password:
+                  type: string
+                  minLength: 6
+                  maxLength: 100
+                  example: password123
+                restaurant_id:
+                  type: integer
+                  format: int64
+                  example: 1
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Login successful
+                  data:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      refresh_token:
+                        type: string
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                      expires_in:
+                        type: integer
+                        example: 43200
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            format: int64
+                          username:
+                            type: string
+                          email:
+                            type: string
+                          role:
+                            type: string
+                          restaurant_id:
+                            type: integer
+                            format: int64
+                          restaurant_name:
+                            type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh JWT Token
+      description: Get new access token using refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: Token refreshed successfully
+                  data:
+                    type: object
+                    properties:
+                      access_token:
+                        type: string
+                      refresh_token:
+                        type: string
+                      expires_in:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout
+      description: Logout user
+      operationId: logout
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /restaurants/{restaurant_id}/menu:
+    get:
+      tags:
+        - Menu
+      summary: Get Restaurant Menu
+      description: Retrieve complete menu with categories and items
+      operationId: getMenu
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: include_categories
+          in: query
+          schema:
+            type: boolean
+            default: true
+        - name: include_recommended
+          in: query
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Menu retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      restaurant:
+                        $ref: '#/components/schemas/Restaurant'
+                      recommended_items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MenuItem'
+                      categories:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              format: int64
+                            name:
+                              type: string
+                            sort_order:
+                              type: integer
+                            icon_url:
+                              type: string
+                            items:
+                              type: array
+                              items:
+                                $ref: '#/components/schemas/MenuItem'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /restaurants/{restaurant_id}/menu-items/{menu_item_id}:
+    get:
+      tags:
+        - Menu
+      summary: Get Menu Item Details
+      description: Retrieve details of a single menu item
+      operationId: getMenuItemDetails
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: menu_item_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Menu item details retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/MenuItem'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /restaurants/{restaurant_id}/menu-items:
+    post:
+      tags:
+        - Menu
+      summary: Create Menu Item
+      description: Add new menu item (Admin only)
+      operationId: createMenuItem
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - category_id
+                - name
+                - price
+              properties:
+                category_id:
+                  type: integer
+                  format: int64
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                description:
+                  type: string
+                  maxLength: 500
+                price:
+                  type: number
+                  format: decimal
+                  example: 25.00
+                image_url:
+                  type: string
+                is_recommended:
+                  type: boolean
+                status:
+                  type: string
+                  enum:
+                    - active
+                    - inactive
+                    - sold_out
+      responses:
+        '201':
+          description: Menu item created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 201
+                  data:
+                    $ref: '#/components/schemas/MenuItem'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /restaurants/{restaurant_id}/menu-items/{menu_item_id}:
+    put:
+      tags:
+        - Menu
+      summary: Update Menu Item
+      description: Edit menu item details (Admin only)
+      operationId: updateMenuItem
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: menu_item_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                price:
+                  type: number
+                  format: decimal
+                image_url:
+                  type: string
+                is_recommended:
+                  type: boolean
+                status:
+                  type: string
+                  enum:
+                    - active
+                    - inactive
+                    - sold_out
+      responses:
+        '200':
+          description: Menu item updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/MenuItem'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    delete:
+      tags:
+        - Menu
+      summary: Delete Menu Item
+      description: Delete menu item (Admin only)
+      operationId: deleteMenuItem
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: menu_item_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Menu item deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /orders:
+    post:
+      tags:
+        - Orders
+      summary: Create Order
+      description: Submit a new order
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - table_id
+                - items
+              properties:
+                table_id:
+                  type: integer
+                  format: int64
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  items:
+                    type: object
+                    required:
+                      - menu_item_id
+                      - quantity
+                    properties:
+                      menu_item_id:
+                        type: integer
+                        format: int64
+                      quantity:
+                        type: integer
+                        minimum: 1
+                        maximum: 100
+                      remark:
+                        type: string
+                        maxLength: 200
+                customer_count:
+                  type: integer
+                  minimum: 1
+                remark:
+                  type: string
+                  maxLength: 500
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 201
+                  data:
+                    type: object
+                    properties:
+                      order:
+                        $ref: '#/components/schemas/Order'
+                      print_content:
+                        type: object
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /orders/{order_id}:
+    get:
+      tags:
+        - Orders
+      summary: Get Order Details
+      description: Retrieve order information
+      operationId: getOrderDetails
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Order details retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /restaurants/{restaurant_id}/orders:
+    get:
+      tags:
+        - Orders
+      summary: Get Restaurant Orders
+      description: Get list of orders for a restaurant (Admin/Staff only)
+      operationId: getRestaurantOrders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending
+              - confirmed
+              - preparing
+              - ready
+              - completed
+              - cancelled
+        - name: table_id
+          in: query
+          schema:
+            type: integer
+            format: int64
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            default: created_at
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+      responses:
+        '200':
+          description: Orders retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/OrderListItem'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  /orders/{order_id}/status:
+    put:
+      tags:
+        - Orders
+      summary: Update Order Status
+      description: Update order status (Admin/Staff only)
+      operationId: updateOrderStatus
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - confirmed
+                    - preparing
+                    - ready
+                    - completed
+                    - cancelled
+                remark:
+                  type: string
+      responses:
+        '200':
+          description: Order status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        format: int64
+                      order_no:
+                        type: string
+                      status:
+                        type: string
+                      updated_at:
+                        type: string
+                        format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /admin/analytics:
+    get:
+      tags:
+        - Analytics
+      summary: Get Analytics Data
+      description: Get analytics and statistics (Admin only)
+      operationId: getAnalytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum:
+              - daily
+              - monthly
+              - yearly
+      responses:
+        '200':
+          description: Analytics data retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      summary:
+                        type: object
+                      daily_stats:
+                        type: array
+                      top_items:
+                        type: array
+                      table_stats:
+                        type: array
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        owner_id:
+          type: integer
+          format: int64
+
+    MenuItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        category_id:
+          type: integer
+          format: int64
+        category_name:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: decimal
+        image_url:
+          type: string
+        is_recommended:
+          type: boolean
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+            - sold_out
+            - deleted
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        order_no:
+          type: string
+        restaurant_id:
+          type: integer
+          format: int64
+        table_id:
+          type: integer
+          format: int64
+        table_number:
+          type: string
+        status:
+          type: string
+          enum:
+            - pending
+            - confirmed
+            - preparing
+            - ready
+            - completed
+            - cancelled
+        total_amount:
+          type: number
+          format: decimal
+        discount_amount:
+          type: number
+          format: decimal
+        final_amount:
+          type: number
+          format: decimal
+        customer_count:
+          type: integer
+        remark:
+          type: string
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: int64
+              menu_item_id:
+                type: integer
+                format: int64
+              menu_item_name:
+                type: string
+              quantity:
+                type: integer
+              price:
+                type: number
+                format: decimal
+              remark:
+                type: string
+              subtotal:
+                type: number
+                format: decimal
+              item_status:
+                type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    OrderListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        order_no:
+          type: string
+        table_id:
+          type: integer
+          format: int64
+        table_number:
+          type: string
+        status:
+          type: string
+        total_amount:
+          type: number
+          format: decimal
+        final_amount:
+          type: number
+          format: decimal
+        customer_count:
+          type: integer
+        item_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        pages:
+          type: integer
+        has_next:
+          type: boolean
+        has_prev:
+          type: boolean
+
+    SuccessResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 400
+              message:
+                type: string
+              errors:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    code:
+                      type: string
+                    reason:
+                      type: string
+              timestamp:
+                type: string
+                format: date-time
+
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 401
+              message:
+                type: string
+                example: Unauthorized
+
+    ForbiddenError:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 403
+              message:
+                type: string
+                example: Forbidden
+
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 404
+              message:
+                type: string
+                example: Resource not found
+
+    RateLimitExceeded:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 429
+              message:
+                type: string
+                example: Rate limit exceeded
