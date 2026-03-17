@@ -1,0 +1,84 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  name           String
+  email          String   @unique
+  passwordHash   String   @map("password_hash")
+  persona        String   @default("gentle") // sarcastic, gentle, guilt_trip
+  aiEngine       String   @default("gemini") @map("ai_engine") // gemini, openai
+  monthlyBudget  Decimal  @default(30000.00) @map("monthly_budget")
+  currency       String   @default("TWD")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  transactions    Transaction[]
+  categoryBudgets CategoryBudget[]
+  aiFeedbacks     AIFeedback[]
+
+  @@map("users")
+}
+
+model CategoryBudget {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  category    String
+  budgetLimit Decimal  @default(0) @map("budget_limit")
+  isCustom    Boolean  @default(false) @map("is_custom")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+  @@index([userId])
+  @@map("category_budgets")
+}
+
+model Transaction {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  amount          Decimal
+  category        String
+  merchant        String?
+  rawText         String   @map("raw_text")
+  note            String?
+  transactionDate DateTime @map("transaction_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aiFeedback AIFeedback?
+
+  @@index([userId])
+  @@index([userId, transactionDate(sort: Desc)])
+  @@index([userId, category])
+  @@map("transactions")
+}
+
+model AIFeedback {
+  id            String   @id @default(uuid())
+  transactionId String   @unique @map("transaction_id")
+  userId        String   @map("user_id")
+  feedbackText  String   @map("feedback_text")
+  emotionTag    String?  @map("emotion_tag")
+  personaUsed   String   @map("persona_used") // sarcastic, gentle, guilt_trip
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+  @@index([userId])
+  @@map("ai_feedbacks")
+}
