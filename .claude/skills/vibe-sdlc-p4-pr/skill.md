@@ -44,6 +44,7 @@ user_invocable: true
 | 5a | *Review 通過* | **開發者**點擊 Merge，合併至 `main` | Merge commit |
 | 6 | **GitHub** | 觸發 CD pipeline（如已配置） | 部署 |
 | 7 | **AI 助手** | 將 `02-Dev_Plan.md` 中對應任務標記為 `[x] Completed` | Dev Plan 更新 |
+| 8 | **AI 助手** | 提醒開發者：若該任務有對應的手動驗證 Issues，現在可交由審查角色開始驗證 | 驗證提醒 |
 
 ## PR 格式規範
 
@@ -137,6 +138,10 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
    - 讀取 `/docs/02-Dev_Plan.md`
    - 找到對應任務，將 `- [ ]` 改為 `- [x]`
    - 提交更新
-7. 提示開發者：
-   - 若還有待處理的 Issue → 回到 Phase 3（`/vibe-sdlc-p3-dev`）
-   - 若當前里程碑已完成 → 進入 Phase 5（`/vibe-sdlc-p5-release`）
+7. 檢查該任務是否有對應的手動驗證 Issues（標籤 `verification`，標題以 `[驗證] T-{ID}` 開頭）：
+   - 若有：提醒開發者通知對應的審查角色（H-Reviewer / H-UxReviewer）開始驗證
+   - 列出相關驗證 Issues 的編號與標題
+8. 提示開發者：
+   - 若還有待處理的開發 Issue → 回到 Phase 3（`/vibe-sdlc-p3-dev`）
+   - 若當前里程碑的開發 Issues 已全部完成，但仍有未關閉的驗證 Issues → 提醒等待驗證完成
+   - 若當前里程碑所有 Issues（開發 + 驗證）皆已關閉 → 進入 Phase 5（`/vibe-sdlc-p5-release`）

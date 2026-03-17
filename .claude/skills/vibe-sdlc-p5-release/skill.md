@@ -26,7 +26,8 @@ user_invocable: true
 
 ## 前置條件
 
-- 當前里程碑的所有 Issue 皆已合併
+- 當前里程碑的所有**開發任務 Issues** 皆已合併（PR `Closes #N` 自動關閉）
+- 當前里程碑的所有**手動驗證 Issues**（標籤 `verification`）皆已由審查角色關閉（附驗證結果 comment）
 - `02-Dev_Plan.md` 中對應里程碑的任務皆標記為完成
 
 ## 操作步驟
@@ -101,8 +102,13 @@ user_invocable: true
 
 1. 先確認前置條件：
    - 讀取 `02-Dev_Plan.md`，檢查當前里程碑的任務是否全部標記為完成
-   - 使用 `gh issue list` 確認是否有未關閉的 Issue
-2. 若前置條件未滿足，列出尚未完成的任務，提示使用者先完成
+   - 使用 `gh issue list` 確認是否有未關閉的開發任務 Issue
+   - 使用 `gh issue list --label verification` 確認是否有未關閉的手動驗證 Issue
+   - 分別列出三類 Issue 的關閉狀態：開發任務、手動驗證、驗收門
+2. 若前置條件未滿足：
+   - 列出尚未完成的開發任務，提示使用者先完成
+   - 列出尚未關閉的驗證 Issues，提醒對應審查角色完成驗證
+   - 若所有開發+驗證 Issues 已關閉，提示 H-Director 關閉驗收門 Issue
 3. 產出里程碑完成確認報告
 4. 若開發者提供回饋：
    - 協助整理為結構化格式
