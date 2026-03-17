@@ -19,13 +19,13 @@ user_invocable: true
 - 從 `main` 建立 feature 分支
 - 參考 SRD 技術規範與 API Spec 實作程式碼
 - 撰寫並執行單元測試
-- 向開發者報告 Vibe Check 結果
-- **Vibe Check 通過後，自動推送分支並建立 PR**
+- **Vibe Check 通過後，自動推送分支、建立 PR，並向開發者彙報結果與 PR 連結**
 
 **你不應該**：
 - 自行挑選 Issue，由開發者指派
 - 跳過測試直接提交
 - 在 Vibe Check 未通過時建立 PR
+- 在推送與建立 PR 前等待人類核准（Vibe Check 通過即視為核准）
 
 ### Sub Agent 情境
 若 Dev Plan 的角色定義中指定了 Sub Agent 角色（如 `A-Backend`、`A-Frontend`），請遵守以下規範：
@@ -58,14 +58,11 @@ user_invocable: true
 | 4 | **AI 助手** | 從 `main` 建立 feature 分支（命名：`feat/<agent>/issue-N-簡述`） | feature 分支 |
 | 5 | **AI 助手** | 參考 SRD 技術規範與 API Spec，實作功能程式碼 | 功能程式碼 |
 | 6 | **AI 助手** | 撰寫對應的單元測試 | 測試程式碼 |
-| 7 | **AI 助手** | 執行本地測試，確認全部通過 | 測試結果 |
-| 8 | **AI 助手** | 向開發者報告本地驗證結果（Vibe Check），含 PR 預覽 | 驗證報告 |
-| 9 | **開發者** | 審閱 Vibe Check 結果，核准或駁回 | 核准 / 駁回 |
-| — | *若駁回* | **開發者**指出問題，回到步驟 5 修正 | — |
-| 10 | **AI 助手** | 核准後自動：推送分支 → 建立 PR（含 `Closes #N`） → 回報 PR 連結 | Pull Request |
-| 11 | **AI 助手** | 提醒開發者進行 Code Review，或等待 CI 結果 | — |
+| 7 | **AI 助手** | 執行本地測試（Vibe Check），確認全部通過 | 測試結果 |
+| 8 | **AI 助手** | Vibe Check 通過 → 自動推送分支 → 建立 PR（含 `Closes #N`） | Pull Request |
+| 9 | **AI 助手** | 向開發者彙報 Vibe Check 結果 + PR 連結，提醒進行 Code Review | 完成報告 |
 
-> **關鍵變更**：Vibe Check 通過後，AI 自動完成「推送 + 建 PR」，無需額外呼叫 `/vibe-sdlc-p4-pr`。Phase 4 僅在需要處理 CI 失敗或 PR 後續作業時使用。
+> **核心原則**：Vibe Check 通過 = 自動推送 + 建 PR，**無需等待人類核准**。人類審核集中在 GitHub PR 的 Code Review 環節。Phase 4 僅在需要處理 CI 失敗或合併後作業時使用。
 
 ## 工作目錄同步規範
 
@@ -142,15 +139,13 @@ git rebase origin/main
 
 ## PR 自動建立規範
 
-Vibe Check 通過且開發者核准後，**AI 助手必須自動完成以下動作**（無需開發者額外指示）：
+Vibe Check 通過後，**AI 助手必須立即自動完成以下動作**（無需等待開發者核准）：
 
 1. **推送分支**：`git push -u origin <branch-name>`
 2. **建立 PR**：使用 `gh pr create`，格式如下：
    - **標題**：`feat(<scope>): <簡述> (<任務編號>)`，例如 `feat(backend): Schema 與 DB 初始化 + 後端骨架 (T-101, T-102)`
    - **Body**：包含變更摘要、`Closes #N` 關聯 Issue、變更清單、測試結果
-   - **Reviewer**：
-     - **Bootstrap 階段**（CI 尚未建立時）：直接指定 H-Director 為 reviewer（`--reviewer <H-Director-username>`）
-     - **標準流程**（CI 已就緒時）：等 CI 通過後由 A-Main 指定 reviewer
+   - **Reviewer**：一律指定 H-Director 為 reviewer（`--reviewer <H-Director-username>`）
 3. **回報 PR 連結**：在 Vibe Check 報告末尾附上 PR URL
 
 ### PR Body 格式
@@ -172,17 +167,19 @@ Closes #N
 
 ### Multi Sub Agent PR 建立
 
-當多個 Sub Agent 並行開發時，每個 Agent 在自己的 Vibe Check 通過後**獨立建立 PR**：
+當多個 Sub Agent 並行開發時，A-Main 統一處理所有 Sub Agent 的 PR 建立：
+- 各 Sub Agent 完成開發後回報 Vibe Check 結果（含分支名稱與 worktree 路徑）
+- **A-Main 批量推送所有通過 Vibe Check 的分支，並依序建立 PR**
 - 各 Agent 的 PR 僅包含自己負責範圍的檔案
 - PR 分支命名遵循 `feat/<agent>/issue-N-簡述`
-- A-Main 在 Vibe Check 報告中彙整所有 Sub Agent 的結果，核准後**批量推送與建立 PR**
+- A-Main 在最終彙報中列出所有 PR 連結，提醒開發者進行 Code Review
 
 ## 完成條件
 
 - [ ] 功能程式碼已完成且符合 SRD 規範
-- [ ] 單元測試全部通過
-- [ ] 開發者已核准 Vibe Check 結果
-- [ ] PR 已建立並回報連結
+- [ ] 單元測試全部通過（Vibe Check 通過）
+- [ ] PR 已自動建立並回報連結
+- [ ] 開發者已收到 Code Review 通知
 
 ## 行為指引
 
@@ -203,8 +200,7 @@ Closes #N
    - `/docs/API_Spec.yaml`（OpenAPI 合約）
    - `/docs/01-4-UI_UX_Design.md` (UI/UX規格)
 7. 完成後撰寫測試並執行
-8. 產出 Vibe Check 報告，等待開發者審閱
-9. **若開發者核准**：自動推送分支 → 建立 PR → 回報 PR 連結
-   - 提醒開發者進行 Code Review 或等待 CI 結果
+8. Vibe Check 通過後，**立即自動推送分支 → 建立 PR → 回報 PR 連結**（無需等待人類核准）
+   - 向開發者彙報 Vibe Check 結果 + PR 連結，提醒進行 Code Review
    - 若 CI 失敗需修正，可呼叫 `/vibe-sdlc-p4-pr` 處理
-10. 若開發者駁回，根據反饋修正後重新報告
+9. 若 Vibe Check 未通過，自行修正後重新執行測試，直到通過為止
