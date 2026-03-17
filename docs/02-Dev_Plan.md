@@ -134,10 +134,13 @@ gantt
 **目標**：建立前後端基礎框架、CI Pipeline，完成認證機制，確保前後端連通。
 
 **AI 執行策略**：
-- **A-Backend**：初始化 Express + TypeScript + Prisma，建立 DB Schema（T-101, T-102）
-- **A-Frontend**：初始化 Vite + React + TypeScript + Tailwind（T-103）
+- **A-Backend**：初始化 Express + TypeScript + Prisma，建立 DB Schema（T-101 + T-102 合併為一個 PR）
+- **A-Frontend**：初始化 Vite + React + TypeScript + Tailwind（T-103 獨立 PR）
 - **A-DevOps**：建立 GitHub Actions CI Workflow（T-104）
-- T-101 ~ T-103 **完全並行**；T-104 待 T-102、T-103 就緒後開始；T-105、T-106 在 T-104（CI）就緒後開始，確保功能 PR 皆經過 CI 檢查
+- T-101 + T-102（A-Backend）與 T-103（A-Frontend）**跨 Agent 並行**；T-101 + T-102 為同一 Agent 內部依序執行，合併為一個 PR 提交
+- T-104 待 T-102、T-103 就緒後開始；T-105、T-106 在 T-104（CI）就緒後開始，確保功能 PR 皆經過 CI 檢查
+
+> **Bootstrap 說明**：T-101 ~ T-104 屬於專案初始化階段，此時 CI Pipeline 尚未建立，PR 直接由 H-Director 審查合併（不經過 CI 閘門）。T-104 合併後，後續所有 PR（T-105 起）必須通過 CI 檢查。
 
 **交付物**：
 - 完整 DB Schema 及 Migration
@@ -206,15 +209,15 @@ gantt
 
 ### 4.1 任務總覽
 
-| ID | 任務名稱 | 優先級 | 負責角色 | 前置任務 | 預估耗時 |
-|----|---------|-------|---------|---------|----------|
-| T-101 | Schema 與 DB 初始化 | P0 | A-Backend | — | ~2 Sessions |
-| T-102 | 後端骨架與中間件 | P0 | A-Backend | — | ~3 Sessions |
-| T-103 | 前端骨架與路由 | P0 | A-Frontend | — | ~3 Sessions |
-| T-104 | CI 基礎建設 (GitHub Actions) | P0 | A-DevOps | T-102, T-103 | ~2 Sessions |
-| T-105 | 認證與使用者模組 API 開發 | P0 | A-Backend | T-101, T-102, T-104 | ~4 Sessions |
-| T-106 | 登入/註冊頁面與 Auth | P0 | A-Frontend | T-103, T-104 | ~3 Sessions |
-| ⛳ M1 | M1 驗收門 | P0 | H-Director | T-105, T-106 | ~2 HRH |
+| ID | 任務名稱 | 優先級 | 負責角色 | 前置任務 | PR 策略 | 預估耗時 |
+|----|---------|-------|---------|---------|--------|----------|
+| T-101 | Schema 與 DB 初始化 | P0 | A-Backend | — | 與 T-102 合併為一個 PR | ~2 Sessions |
+| T-102 | 後端骨架與中間件 | P0 | A-Backend | — | 與 T-101 合併為一個 PR | ~3 Sessions |
+| T-103 | 前端骨架與路由 | P0 | A-Frontend | — | 獨立 PR | ~3 Sessions |
+| T-104 | CI 基礎建設 (GitHub Actions) | P0 | A-DevOps | T-102, T-103 | 獨立 PR | ~2 Sessions |
+| T-105 | 認證與使用者模組 API 開發 | P0 | A-Backend | T-101, T-102, T-104 | 獨立 PR | ~4 Sessions |
+| T-106 | 登入/註冊頁面與 Auth | P0 | A-Frontend | T-103, T-104 | 獨立 PR | ~3 Sessions |
+| ⛳ M1 | M1 驗收門 | P0 | H-Director | T-105, T-106 | — | ~2 HRH |
 | T-201 | LLM 雙引擎（含新類別偵測 + 多引擎） | P0 | A-Backend | T-105 | ~12 Sessions |
 | T-202 | 交易 CRUD API | P0 | A-Backend | T-105 | ~4 Sessions |
 | T-203 | 語音輸入組件 | P0 | A-Frontend | T-106 | ~5 Sessions |
@@ -604,15 +607,16 @@ gantt
 
 ```mermaid
 flowchart TB
-    START(("🚀 開始")) --> T101 & T102 & T103
+    START(("🚀 開始")) --> BE_INIT & T103
 
-    T101["T-101 Schema 初始化<br/>(A-Backend)"]
-    T102["T-102 後端骨架<br/>(A-Backend)"]
+    subgraph BE_INIT["A-Backend 初始化 (一個 PR)"]
+        T101["T-101 Schema 初始化"] --> T102["T-102 後端骨架"]
+    end
     T103["T-103 前端骨架<br/>(A-Frontend)"]
 
     T102 & T103 --> T104["T-104 CI 基礎建設<br/>(A-DevOps)"]
 
-    T101 & T102 & T104 --> T105["T-105 認證+使用者模組<br/>(A-Backend)"]
+    T102 & T104 --> T105["T-105 認證+使用者模組<br/>(A-Backend)"]
     T103 & T104 --> T106["T-106 登入頁 UI<br/>(A-Frontend)"]
 
     T105 & T106 --> M1G["⛳ M1 驗收門<br/>(H-Director)"]
@@ -752,16 +756,40 @@ git worktree add ../worktree-backend feat/backend/issue-5-auth-api
 git worktree add ../worktree-frontend feat/frontend/issue-8-chat-ui
 ```
 
-#### PR 審查流程
+#### PR 審查流程（標準流程，T-105 起適用）
 
 ```mermaid
 flowchart LR
-    SUB["Sub Agent<br/>提交 PR"] --> CI["GitHub Actions<br/>CI 檢查"]
-    CI -->|通過| MAIN["A-Main<br/>初審"]
+    SUB["Sub Agent<br/>gh pr create"] --> CI["GitHub Actions<br/>CI 檢查"]
+    CI -->|通過| MAIN["A-Main 初審<br/>讀取 PR diff"]
     CI -->|失敗| SUB
-    MAIN -->|通過| DIR["H-Director<br/>終審 & Merge"]
+    MAIN -->|通過| REQ["A-Main 執行<br/>gh pr edit<br/>--add-reviewer H-Director"]
+    REQ --> DIR["H-Director<br/>收到 GitHub 通知<br/>終審 & Merge"]
     MAIN -->|駁回| SUB
 ```
+
+#### PR 審查流程（Bootstrap 階段，T-101 ~ T-104 適用）
+
+CI Pipeline 尚未建立，PR 直接由 H-Director 審查：
+
+```mermaid
+flowchart LR
+    SUB["Sub Agent / A-Main<br/>gh pr create<br/>--reviewer H-Director"] --> DIR["H-Director<br/>收到 GitHub 通知<br/>審查 & Merge"]
+    DIR -->|要求修改| SUB
+```
+
+**Bootstrap PR 合併規則**：
+- T-101 + T-102（A-Backend）：合併為**一個 PR**，因為同一 Agent 且修改同一目錄（`/backend/**`）
+- T-103（A-Frontend）：獨立 PR，與上述 PR **並行提交、無衝突**（不同目錄）
+- T-104（A-DevOps）：獨立 PR，待 T-102、T-103 合併後提交
+
+#### H-Director 通知機制
+
+| 場景 | 通知方式 |
+|------|---------|
+| **標準流程** | A-Main 初審通過後執行 `gh pr edit --add-reviewer <H-Director-username>`，GitHub 自動發送 Review Request 通知（Email / Web / Mobile） |
+| **Bootstrap 階段** | Sub Agent 建立 PR 時直接指定 `gh pr create --reviewer <H-Director-username>` |
+| **Milestone 驗收** | A-Main 在 GitHub Issue 中 `@H-Director` 並附上驗收檢查清單 |
 
 #### PR 範圍限制
 
