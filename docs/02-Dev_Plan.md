@@ -38,7 +38,27 @@
 | **A-QA** | 測試子代理 | 🤖 AI | 專注 `/tests/**`。負責 E2E 測試腳本。 |
 | **A-DevOps** | 部署子代理 | 🤖 AI | 專注 `.github/**`、`docker/**`。負責 CI/CD、容器化。 |
 
-### 1.2 任務分發流程
+### 1.2 人類角色職責詳述
+
+| 階段 | H-Director 職責 | H-Reviewer 職責 | H-UxReviewer 職責 |
+|------|-----------------|-----------------|-------------------|
+| **規格定義** | 撰寫/定案 PRD、SRD、API Spec | 交叉審查規格一致性 | — |
+| **任務分派** | 核准 A-Main 產出的 Issue 清單與優先級 | — | — |
+| **開發進行中** | 監控進度、處理 AI 無法解決的環境/依賴問題 | Review 特定領域 PR (安全性) | — |
+| **Milestone 驗收** | **唯一有權決定是否進入下一個 Milestone** | 協助驗收安全/合規性、LLM 整合測試 | 驗收 UI 視覺效果、互動體驗、裝置相容性 |
+| **上線決策** | 最終 Go/No-Go 決策 | 確認上線安全檢查清單 | 確認 UX 品質達標 |
+
+### 1.3 AI 角色職責詳述
+
+| 角色代號 | 操作範圍 | 輸入依據 | 產出物 |
+|---------|---------|---------|--------|
+| **A-Main** | 全專案讀寫 | `/docs` 規格文件全集 | GitHub Issues、PR 初審結果、整合報告、Vibe Check |
+| **A-Backend** | `/backend/**` | `01-2-SRD.md` + `API_Spec.yaml` | API 端點、DB Migrations、Seed Data、LLM 整合、單元測試 |
+| **A-Frontend** | `/frontend/**` | `01-1-PRD.md` + `01-4-UI_UX_Design.md` + `API_Spec.yaml` | UI 頁面、組件、狀態管理、語音輸入、圖表 |
+| **A-QA** | `/tests/**` | 全部規格 + 已完成程式碼 | E2E 測試腳本、測試報告 |
+| **A-DevOps** | `.github/**`, `docker/**` | `04-CI_CD_Spec.md` + 專案結構 | CI/CD Workflows、Dockerfile、docker-compose |
+
+### 1.4 任務分發流程
 
 ```mermaid
 flowchart LR
@@ -751,6 +771,74 @@ flowchart LR
 | A-DevOps | `.github/**`, `docker/**`, `Dockerfile`, `docker-compose.yml` |
 | A-Main | 全專案（整合與修復用） |
 
+### 8.3 規格變更流程
+
+```text
+任何角色發現規格問題 → A-Main 提報 → H-Director 審查 → 核准後更新 /docs → 通知所有相關 Sub Agents
+```
+
+**禁止事項**：任何 AI 角色不得在未經 H-Director 核准的情況下修改 `/docs` 下的規格文件。
+
+### 8.4 Sub Agent Session 隔離
+
+#### 核心原則
+
+> **每個 Sub Agent = 一個獨立的 Claude Code terminal session（獨立 context window）。**
+>
+> Sub Agents 之間不直接共享 context，跨代理的溝通媒介為 **GitHub Issues 與 PR Comments**，而非 session 內的對話記憶。
+
+**理由**：
+- 避免不同角色的程式碼知識互相污染（A-Frontend 不需要知道 A-Backend 的內部實作）
+- 各 session 的 context token 消耗彼此獨立，不互相搶佔
+- 與 Worktree 一一對應，概念清晰、邊界明確
+
+#### Session 與 Worktree 對應表
+
+| Agent 角色 | Claude Code Session | Git Worktree 路徑 |
+|-----------|--------------------|--------------------|
+| **A-Main** | 主 session（專案根目錄） | `./`（主 worktree） |
+| **A-Backend** | 獨立 session | `../worktree-backend` |
+| **A-Frontend** | 獨立 session | `../worktree-frontend` |
+| **A-QA** | 獨立 session | `../worktree-qa` |
+| **A-DevOps** | 獨立 session | `../worktree-devops` |
+
+#### Sub Agent 啟動規範（Context 初始化）
+
+每個 Sub Agent session 啟動時，**必須**依序執行以下初始化，確保 context 正確載入：
+
+```
+1. 進入對應的 Worktree 目錄
+2. 讀取角色對應的規格文件（見下表）
+3. 讀取 H-Director 指派的 GitHub Issue
+4. 確認理解任務範圍後，開始實作
+```
+
+| Agent 角色 | 必讀規格文件 | 不需讀取 |
+|-----------|------------|---------|
+| **A-Backend** | `01-2-SRD.md`、`API_Spec.yaml` | `/frontend/**` 程式碼 |
+| **A-Frontend** | `01-1-PRD.md`、`01-4-UI_UX_Design.md`、`API_Spec.yaml` | `/backend/**` 程式碼 |
+| **A-QA** | 全部規格文件 + 已完成程式碼 | — |
+| **A-DevOps** | `04-CI_CD_Spec.md`、`01-2-SRD.md`（部署需求章節） | `/frontend/**`、`/backend/**` 程式碼 |
+| **A-Main** | 全部規格文件 + `02-Dev_Plan.md` | — |
+
+> **原則**：Sub Agent 只需載入「完成自身任務所需的最小 context」。讀取無關的大量程式碼只會消耗 context 且引入雜訊。
+
+#### A-Main 的協調機制
+
+A-Main 不直接存取或「注入」Sub Agent 的 session context，而是透過以下方式協調：
+
+```
+派發任務：A-Main 建立/更新 GitHub Issue → Sub Agent 讀取 Issue 開始工作
+收集成果：Sub Agent 提交 PR → A-Main 讀取 PR diff 進行初審
+問題回報：Sub Agent 在 PR Comments 提問 → A-Main 回覆 → Sub Agent 讀取回覆繼續工作
+```
+
+#### Session 終止與清理
+
+- 任務完成、PR 合併後，Sub Agent session 可關閉（context 無需保留）。
+- 若同一 Agent 需執行下一個 Issue，**建議開啟新的 session**（而非在舊 context 上繼續），以避免前次任務的程式碼細節干擾新任務的判斷。
+- A-Main session 可跨里程碑持續使用，因其需要全局視角。
+
 ---
 
 ## 附錄：任務執行狀態追蹤
@@ -794,3 +882,4 @@ flowchart LR
 
 **修訂與維護者**：A-Main 代 H-Director 修訂
 **開發範式**：Vibe-SDLC / Agentic Coding
+**下次計畫重估**：Milestone 2 結束時

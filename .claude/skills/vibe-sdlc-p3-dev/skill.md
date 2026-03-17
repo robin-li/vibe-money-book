@@ -26,14 +26,15 @@ user_invocable: true
 - 跳過測試直接提交
 - 在未獲開發者核准的情況下進入 Phase 4
 
-> **Sub Agent 情境**：若 Dev Plan 的角色定義中指定了 Sub Agent 角色（如 `A-Backend`、`A-Frontend`），請遵守以下規範：
-> 1. **獨立 session**：每個 Sub Agent 應在獨立的 Claude Code terminal session 中執行，擁有自己的 context window，不與其他 Sub Agent 共享。
-> 2. **Worktree 對應**：啟動 session 前，先切換至對應的 Git Worktree 目錄（`../worktree-<agent>`）。
-> 3. **最小 context 原則**：僅讀取完成任務所需的規格文件（A-Backend 讀 SRD + API Spec；A-Frontend 讀 PRD + API Spec），不主動讀取其他 Agent 負責的程式碼目錄。
-> 4. **跨代理溝通**：透過 GitHub Issue Comments 與 PR Comments 與 A-Main 溝通，而非 session 內直接交流。
-> 5. **操作範圍**：僅操作該角色負責的目錄與檔案，不修改其他 Agent 的負責範圍。
->
-> 詳見 `Dev Plan §8.5 Sub Agent Session 隔離`。
+### Sub Agent 情境
+若 Dev Plan 的角色定義中指定了 Sub Agent 角色（如 `A-Backend`、`A-Frontend`），請遵守以下規範：
+1. **獨立 session**：每個 Sub Agent 應在獨立的 Claude Code terminal session 中執行，擁有自己的 context window，不與其他 Sub Agent 共享。
+2. **Worktree 對應**：啟動 session 前，先切換至對應的 Git Worktree 目錄（`../worktree-<agent>`）。
+3. **最小 context 原則**：僅讀取完成任務所需的規格文件（A-Backend 讀 SRD + API Spec；A-Frontend 讀 PRD + API Spec），不主動讀取其他 Agent 負責的程式碼目錄。
+4. **跨代理溝通**：透過 GitHub Issue Comments 與 PR Comments 與 A-Main 溝通，而非 session 內直接交流。
+5. **操作範圍**：僅操作該角色負責的目錄與檔案，不修改其他 Agent 的負責範圍。
+
+> 詳見 `Dev Plan §8.4 Sub Agent Session 隔離`。
 
 ## 前置條件
 
@@ -51,7 +52,7 @@ user_invocable: true
 |------|--------|------|------|
 | 1 | **開發者** | 從看板 `Todo` 欄位挑選最高優先級 Issue，指派給 AI | — |
 | 2 | **AI 助手** | 讀取 Issue 內容，確認理解任務範圍與驗收標準；將 Issue 在看板上移至 `In Progress` | 任務確認 |
-| 3 | **AI 助手** | 從 `main` 建立 feature 分支（命名：`feature/issue-N-簡述`） | feature 分支 |
+| 3 | **AI 助手** | 從 `main` 建立 feature 分支（命名：`feat/<agent>/issue-N-簡述`） | feature 分支 |
 | 4 | **AI 助手** | 參考 SRD 技術規範與 API Spec，實作功能程式碼 | 功能程式碼 |
 | 5 | **AI 助手** | 撰寫對應的單元測試 | 測試程式碼 |
 | 6 | **AI 助手** | 執行本地測試，確認全部通過 | 測試結果 |
@@ -84,7 +85,7 @@ user_invocable: true
   - [x] [標準 2]
 
 ## 分支資訊
-- 分支名稱：`feature/issue-N-簡述`
+- 分支名稱：`feat/<agent>/issue-N-簡述`
 - commit 數量：N
 
 ## 狀態
