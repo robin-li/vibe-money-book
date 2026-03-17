@@ -69,7 +69,11 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
 - **有效期**：7 天
 - **傳遞方式**：`Authorization: Bearer <token>`
 
-### 2.2 Token Payload
+### 2.2 登出策略
+
+登出操作由前端處理（清除 localStorage 中的 JWT Token 與 LLM API Key），無需後端端點。
+
+### 2.3 Token Payload
 
 ```json
 {
@@ -94,7 +98,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
 | 400 | Bad Request | 參數驗證失敗 |
 | 401 | Unauthorized | 未認證或 Token 過期 |
 | 404 | Not Found | 資源不存在 |
-| 429 | Too Many Requests | 超出速率限制 |
+| 429 | Too Many Requests | 超出速率限制（含 `X-RateLimit-Limit`、`X-RateLimit-Remaining`、`X-RateLimit-Reset`、`Retry-After` Response Headers） |
 | 500 | Internal Server Error | 伺服器內部錯誤 |
 
 ### 3.2 時間格式
@@ -131,6 +135,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
 
 | 方法 | 端點 | 描述 | 認證 |
 |------|------|------|------|
+| POST | /ai/validate-key | 驗證使用者提供的 LLM API Key 是否有效（PRD-F-013） | ✓ |
 | POST | /ai/parse | 解析自然語言輸入（資料萃取 + 人設回饋） | ✓ |
 
 ### 4.4 交易模組
@@ -191,6 +196,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
       "name": "小明",
       "email": "ming@example.com",
       "persona": "gentle",
+      "ai_engine": "gemini",
       "monthly_budget": 30000.00,
       "currency": "TWD"
     },
@@ -225,6 +231,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
       "name": "小明",
       "email": "ming@example.com",
       "persona": "sarcastic",
+      "ai_engine": "gemini",
       "monthly_budget": 30000.00,
       "currency": "TWD"
     },
@@ -282,6 +289,36 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
 ---
 
 ### 5.3 AI 記帳模組
+
+#### POST /ai/validate-key — 驗證 LLM API Key（PRD-F-013）
+
+**描述**：驗證使用者提供的 LLM API Key 是否有效。後端根據使用者的 `ai_engine` 偏好，使用對應引擎發送最小化測試請求，確認 Key 可用。
+
+**Request Header**：
+```
+X-LLM-API-Key: <使用者自行提供的 LLM API Key>
+```
+
+**請求**：無 Body（僅需 Header）
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "valid": true,
+    "engine": "gemini"
+  },
+  "timestamp": "2026-03-17T12:00:00Z"
+}
+```
+
+**錯誤**：
+- 401：`X-LLM-API-Key` Header 缺失或為空
+- 403：API Key 無效或 quota 耗盡，回傳具體錯誤原因（如「金鑰格式錯誤」、「配額已用盡」）
+- 429：超過速率限制
+
+---
 
 #### POST /ai/parse — 解析自然語言輸入
 
@@ -547,14 +584,14 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
   "code": 200,
   "data": {
     "categories": [
-      { "category": "food", "budget_limit": 10000.00 },
-      { "category": "transport", "budget_limit": 3000.00 },
-      { "category": "entertainment", "budget_limit": 5000.00 },
-      { "category": "shopping", "budget_limit": 5000.00 },
-      { "category": "daily", "budget_limit": 3000.00 },
-      { "category": "medical", "budget_limit": 2000.00 },
-      { "category": "education", "budget_limit": 2000.00 },
-      { "category": "other", "budget_limit": 0 }
+      { "category": "food", "budget_limit": 10000.00, "is_custom": false },
+      { "category": "transport", "budget_limit": 3000.00, "is_custom": false },
+      { "category": "entertainment", "budget_limit": 5000.00, "is_custom": false },
+      { "category": "shopping", "budget_limit": 5000.00, "is_custom": false },
+      { "category": "daily", "budget_limit": 3000.00, "is_custom": false },
+      { "category": "medical", "budget_limit": 2000.00, "is_custom": false },
+      { "category": "education", "budget_limit": 2000.00, "is_custom": false },
+      { "category": "other", "budget_limit": 0, "is_custom": false }
     ]
   }
 }

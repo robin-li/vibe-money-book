@@ -157,7 +157,8 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci --prefix frontend
       - name: Run DB migrations
-        run: npx prisma migrate deploy --prefix backend
+        run: npx prisma migrate deploy
+        working-directory: backend
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/vibe_money_test
       - name: Install Playwright browsers

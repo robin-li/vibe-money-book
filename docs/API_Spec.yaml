@@ -197,6 +197,55 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /ai/validate-key:
+    post:
+      tags: [AI]
+      summary: 驗證 LLM API Key
+      description: 驗證使用者提供的 LLM API Key 是否有效。後端根據使用者的 ai_engine 偏好，使用對應引擎發送最小化測試請求確認 Key 可用（PRD-F-013）。
+      operationId: validateApiKey
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: X-LLM-API-Key
+          in: header
+          required: true
+          description: 使用者自行提供的 LLM API Key
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 驗證成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      valid:
+                        type: boolean
+                        example: true
+                      engine:
+                        type: string
+                        enum: [gemini, openai]
+                  timestamp:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: API Key 無效或 quota 耗盡
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+
   /ai/parse:
     post:
       tags: [AI]

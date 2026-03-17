@@ -19,6 +19,17 @@
 
 ---
 
+## 關聯文件
+
+| 文件 | 關係 |
+|------|------|
+| [`01-1-PRD.md`](./01-1-PRD.md) | 產品功能需求（本文件的 UI 規格依據） |
+| [`01-2-SRD.md`](./01-2-SRD.md) | 技術架構與資料模型（前端技術棧、API 設計） |
+| [`01-3-API_Spec.md`](./01-3-API_Spec.md) | API 端點規格（前端串接依據） |
+| [`API_Spec.yaml`](./API_Spec.yaml) | OpenAPI 合約 |
+
+---
+
 ## 1. 設計原則
 
 | 原則 | 說明 |
@@ -138,11 +149,13 @@
 │  最近帳目列表 (Recent Transactions)    │
 │  (可滾動區域)                          │
 ├──────────────────────────────────────┤
-│  輸入區 (Input Bar) - 固定底部         │
+│  輸入區 (Input Bar) - 固定於 Tab Bar 上方│
 ├──────────────────────────────────────┤
-│  Footer                              │
+│  底部 Tab Bar - 固定底部              │
 └──────────────────────────────────────┘
 ```
+
+> **佈局說明**：首頁同時顯示底部 Tab Bar 與輸入區。Tab Bar 固定於螢幕最底部（含 safe-area），輸入區固定於 Tab Bar 正上方（`bottom` = Tab Bar 高度）。可滾動區域的底部 padding 需預留兩者的總高度。
 
 #### 3.1.1 Header
 
@@ -165,9 +178,9 @@
 
 ```
 ┌──────────────────────────────────────┐
-│ 預算剩餘                 本月支出     │
-│ 99%                      $250       │
-│ ████████████████████░░  ← 進度條     │
+│ 預算剩餘                 本月支出       │
+│ 99%                      $250        │
+│ ████████████████████░░  ← 進度條      │
 │ $0                    目標：$20,000   │
 └──────────────────────────────────────┘
 ```
@@ -195,9 +208,9 @@
 
 ```
 ┌──────────────────────────────────────┐
-│ [💬]  溫柔管家 的即時回饋             │
-│       「享受美味是很重要的。預算目前仍 │
-│        很充裕，請繼續保持...」         │
+│ [💬]  溫柔管家 的即時回饋                │
+│       「享受美味是很重要的。預算目前仍     │
+│        很充裕，請繼續保持...」           │
 └──────────────────────────────────────┘
 ```
 
@@ -252,7 +265,7 @@
 
 | 元素 | 規格 |
 |------|------|
-| 容器 | position: fixed、bottom: 0、背景 `--color-surface`、padding `--space-md --space-2xl`、shadow `0 -2px 8px rgba(0,0,0,0.06)`、safe-area-inset-bottom |
+| 容器 | position: fixed、bottom: **Tab Bar 高度（56px + safe-area-inset-bottom）**、背景 `--color-surface`、padding `--space-md --space-2xl`、shadow `0 -2px 8px rgba(0,0,0,0.06)` |
 | 文字輸入框 | flex: 1、高度 44px、radius `--radius-xl`、背景 `--color-bg`、border 1px `--color-border`、padding `0 --space-lg`、`--font-body` |
 | Placeholder | `--color-text-tertiary`、文字「例如：中午吃拉麵 280 元」 |
 | 麥克風按鈕 | 36×36px、`--color-text-secondary`、無背景、點擊觸發語音輸入 |
@@ -729,7 +742,7 @@ AI 回覆：
 │  ┌──────────────┐ ┌──────────────┐  │
 │  │  ✨           │ │  🤖          │  │
 │  │  Gemini    ✓  │ │  OpenAI      │  │
-│  │  (預設)       │ │  (GPT-4o)    │  │
+│  │  (預設)       │ │  (GPT-4o-mini)│  │
 │  └──────────────┘ └──────────────┘  │
 │                                      │
 │  API Key                             │
@@ -752,7 +765,7 @@ AI 回覆：
 | 引擎卡片（選中） | border 2px `--color-primary`、背景 `--color-primary-light` |
 | 引擎 icon | 24×24px、Gemini 使用 ✨、OpenAI 使用 🤖 |
 | 引擎名稱 | `--font-body`、font-weight 600 |
-| 引擎副標 | `--font-small`、`--color-text-secondary`、Gemini 顯示「(預設)」、OpenAI 顯示「(GPT-4o)」 |
+| 引擎副標 | `--font-small`、`--color-text-secondary`、Gemini 顯示「(預設)」、OpenAI 顯示「(GPT-4o-mini)」 |
 | API Key 輸入框 | 全寬、高度 44px、type=password、radius `--radius-md`、padding `--space-lg` |
 | 顯示/隱藏按鈕 | 24×24px 眼睛 icon、切換 type=password ↔ type=text |
 | 金鑰狀態 | `--font-caption`；✅ 有效：`--color-success`；❌ 無效：`--color-danger`；⏳ 驗證中：`--color-warning` |
