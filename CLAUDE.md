@@ -10,6 +10,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 具備個性化 AI 人設（毒舌、溫柔、情勒），在記帳的同時提供即時財務評論。
 
 - **規格文件目錄**: `/docs/`
+- **GitHub Repo**: `robin-li/vibe-money-book2`
+- **GitHub Project**: [Vibe Money Book](https://github.com/users/robin-li/projects/3)（Project #3，已連結至 Repo）
+- **H-Director**: `robin-li`
+
+---
+
+## 目前進度
+
+- [x] **Phase 1**：規格文件撰寫與審查 — 已完成（所有規格文件已定稿）
+- [x] **Phase 2**：任務掛載 — 已完成（19 個 Issues #1~#19 已建立，Project 看板已連結）
+- [ ] **Phase 3**：開發循環 — 待開始
 
 ---
 

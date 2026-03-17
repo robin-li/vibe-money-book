@@ -60,9 +60,84 @@ user_invocable: true
 
 ## 行為指引
 
-當使用者呼叫此 skill 時：
+當使用者呼叫此 skill 時，**必須產出進度儀表板**，步驟如下：
 
-1. 讀取 `/docs` 目錄下的規格文件，確認專案目前狀態
-2. 判斷專案處於哪個 Phase，向使用者說明
-3. 建議使用者呼叫對應的 Phase skill 繼續操作
-4. 若使用者不確定，協助他們釐清目前該做什麼
+### 步驟 1：收集數據（並行執行）
+
+同時執行以下指令收集最新狀態：
+
+```bash
+# 1. 各 Milestone 的 Issue 統計（open vs closed）
+gh issue list -R {owner}/{repo} --state all --json number,title,state,milestone,labels --limit 100
+
+# 2. 待審 PR
+gh pr list -R {owner}/{repo} --state open --json number,title,labels,checks
+
+# 3. 最近合併的 PR
+gh pr list -R {owner}/{repo} --state merged --limit 5 --json number,title,mergedAt
+
+# 4. CI 最新狀態（若有 open PR）
+gh pr checks {PR-number} -R {owner}/{repo}
+```
+
+### 步驟 2：讀取 Dev Plan 任務狀態
+
+讀取 `/docs/02-Dev_Plan.md` 附錄的任務執行狀態追蹤區塊，統計 `- [ ]` 與 `- [x]` 數量。
+
+### 步驟 3：產出進度儀表板
+
+使用以下格式輸出：
+
+```
+📊 Vibe-SDLC 進度儀表板
+========================
+專案：{repo-name}
+日期：{today}
+目前階段：Phase {N}（{phase-name}）
+
+┌─ 里程碑進度 ────────────────────────────────┐
+│ M1 {名稱}  {進度條} {closed}/{total} ({%})  │
+│ M2 {名稱}  {進度條} {closed}/{total} ({%})  │
+│ M3 {名稱}  {進度條} {closed}/{total} ({%})  │
+│ M4 {名稱}  {進度條} {closed}/{total} ({%})  │
+│                                              │
+│ 總進度      {進度條} {closed}/{total} ({%})  │
+└──────────────────────────────────────────────┘
+
+┌─ 待處理事項 ─────────────────────────────────┐
+│ 🔀 待審 PR：{N} 個                           │
+│    - #{num} {title} (CI: ✅/❌)              │
+│ 📋 進行中 Issue：{N} 個                      │
+│    - #{num} {title}                          │
+│ 🔍 待驗證：{N} 個                            │
+│    - #{num} {title}                          │
+└──────────────────────────────────────────────┘
+
+┌─ 最近動態 ───────────────────────────────────┐
+│ ✅ #{num} {title} — merged {date}            │
+│ ✅ #{num} {title} — merged {date}            │
+└──────────────────────────────────────────────┘
+
+📌 建議下一步：{具體建議}
+```
+
+**進度條規則**：
+- 使用 `█`（已完成）和 `░`（未完成），共 10 格
+- 例：60% → `██████░░░░`
+
+### 步驟 4：判斷當前 Phase 並建議
+
+根據收集到的數據判斷：
+
+| 條件 | 判定 Phase | 建議 |
+|------|-----------|------|
+| `/docs` 下缺少規格文件 | Phase 1 | 呼叫 `/vibe-sdlc-p1-spec` |
+| 規格文件齊全但無 Issues | Phase 2 | 呼叫 `/vibe-sdlc-p2-issues` |
+| 有 open Issues 且無 open PR | Phase 3 | 呼叫 `/vibe-sdlc-p3-dev` 領取 Issue |
+| 有 open PR 待審 | Phase 4 | 審閱 PR，決定 Merge 或要求修改 |
+| 某 Milestone 所有 Issue closed | Phase 5 | 呼叫 `/vibe-sdlc-p5-release` 驗收 |
+| 有待驗證 Issue（`verification` 標籤） | Phase 5 | 提醒進行手動驗證 |
+
+### 步驟 5：若使用者不確定
+
+協助釐清目前該做什麼，提供具體的 Issue 編號與操作建議。
