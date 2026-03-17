@@ -878,7 +878,7 @@ A-Main 不直接存取或「注入」Sub Agent 的 session context，而是透�
 - [x] T-101 (A-Backend) Schema 與 DB 初始化 — PR #33 merged 2026-03-17
 - [x] T-102 (A-Backend) 後端骨架與中間件 — PR #33 merged 2026-03-17
 - [x] T-103 (A-Frontend) 前端骨架與路由 — PR #34 merged 2026-03-17
-- [ ] T-104 (A-DevOps) CI 基礎建設 (GitHub Actions)
+- [x] T-104 (A-DevOps) CI 基礎建設 (GitHub Actions) — PR #35 merged 2026-03-18
 - [ ] T-105 (A-Backend) 認證與使用者模組 API 開發
 - [ ] T-106 (A-Frontend) 登入/註冊頁面
 - [ ] ⛳ M1 驗收門
