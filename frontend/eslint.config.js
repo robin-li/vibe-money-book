@@ -20,4 +20,10 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: ['src/types/**/*.d.ts'],
+    rules: {
+      'no-var': 'off',
+    },
+  },
 ])
