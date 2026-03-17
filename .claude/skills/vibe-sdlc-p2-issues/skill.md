@@ -29,18 +29,41 @@ user_invocable: true
   - `/docs/01-3-API_Spec.md`
   - `/docs` 目錄下其它所有規格文件，例如 `API_Spec.yaml`、`01-4-UI_UX_Spec.md` 等
   - `/docs/02-Dev_Plan.md`
-- GitHub Projects 看板已建立
 
 ## 操作步驟
 
 | 步驟 | 執行者 | 操作 | 產出 |
 |------|--------|------|------|
 | 1 | **AI 助手** | 確認 P1 審查報告 (`03-Docs_Review_Report.md`) 已通過，無未解決的遺漏項目 | 確認結果 |
-| 2 | **開發者** | 指示 AI 按里程碑建立 Issues | — |
-| 3 | **AI 助手** | 依 Dev Plan 逐一建立 GitHub Issues（開發任務），每個 Issue 包含：標題、描述、優先級標籤、里程碑標籤、依賴關係說明 | GitHub Issues（開發） |
-| 4 | **AI 助手** | 掃描所有任務的 `👁️ 手動` 驗證項，為每個手動驗證項建立獨立的驗證 Issue，指派給對應的審查角色 | GitHub Issues（驗證） |
-| 5 | **GitHub** | 自動將 Issues 同步至 Projects 看板 | 看板就緒 |
-| 6 | **開發者** | 確認看板上的 Issue 清單與排序是否正確 | 最終確認 |
+| 2 | **AI 助手** | 確認 `gh` CLI 已認證、repo 存在，詢問 GitHub repo 名稱（`{owner}/{repo}`）與 H-Director 的 GitHub username | 基本資訊 |
+| 3 | **開發者** | 指示 AI 按里程碑建立 Issues（或全部） | — |
+| 4 | **AI 助手** | 建立所需的 Labels（優先級、里程碑、類型、角色）與 Milestones | Labels + Milestones |
+| 5 | **AI 助手** | 依 Dev Plan 逐一建立 GitHub Issues（開發任務），每個 Issue 包含：標題、描述、優先級標籤、里程碑標籤、角色標籤、依賴關係說明 | GitHub Issues（開發） |
+| 6 | **AI 助手** | 掃描所有任務的 `👁️ 手動` 驗證項，為每個手動驗證項建立獨立的驗證 Issue，指派給對應的審查角色 | GitHub Issues（驗證） |
+| 7 | **AI 助手** | Issues 全部建立完成後，**主動詢問**開發者是否要建立或連結 GitHub Project 看板 | — |
+| 8 | **AI 助手** | 若開發者同意，建立 Project（或連結現有）→ 加入 Issues → **連結至 Repo** | Project 看板就緒 |
+| 9 | **開發者** | 前往 Repo 的 Projects tab 確認看板上的 Issue 清單與排序是否正確 | 最終確認 |
+
+## Labels 與 Milestones 規範
+
+建立 Issues 前，**必須**先建立以下 Labels 與 Milestones：
+
+### Labels（使用 `gh label create`）
+
+| 類別 | 標籤 | 色碼 | 說明 |
+|------|------|------|------|
+| 優先級 | `P0` | `#B60205` | 最高優先級 |
+| 優先級 | `P1` | `#D93F0B` | 高優先級 |
+| 優先級 | `P2` | `#E4E669` | 中優先級 |
+| 優先級 | `P3` | `#0E8A16` | 低優先級 |
+| 里程碑 | `M1` ~ `M4` | 自訂 | 對應 Dev Plan 里程碑 |
+| 類型 | `feature` / `infra` / `security` / `test` / `verification` / `gate` | 自訂 | 任務類型 |
+| 角色 | `A-Backend` / `A-Frontend` / `A-DevOps` / `A-QA` / `A-Main` / `H-Director` | 自訂 | Dev Plan 中定義的角色 |
+| 審查類型 | `ux-review` / `review` / `acceptance` | 自訂 | 手動驗證 Issue 專用 |
+
+### Milestones（使用 `gh api repos/{owner}/{repo}/milestones`）
+
+依據 Dev Plan 的里程碑定義建立，包含 `title`、`due_on`、`description`。
 
 ## Issue 格式規範
 
@@ -53,6 +76,9 @@ user_invocable: true
 
 ## 任務編號
 [任務編號：原先在 Dev Plan 中的任務編號，如 T-XXX]
+
+## 主要步驟
+[從 Dev Plan 複製該任務的主要步驟，確保資訊完整]
 
 ## 產出文件
 - [ ] [文件 1]（如適用）
@@ -74,7 +100,30 @@ user_invocable: true
 - 優先級：P0 / P1 / P2 / P3
 - 里程碑：M1 / M2 / M3 / M4
 - 類型：feature / infra / security / test
+- 負責角色：A-Backend / A-Frontend / A-DevOps / A-QA / A-Main
+
+## PR 策略
+[獨立 PR / 與 T-XXX 合併為一個 PR / 無 PR（Review 任務）]
 ```
+
+### Issue 建立指令範例
+
+```bash
+gh issue create -R {owner}/{repo} \
+  --title "T-101：Schema 與 DB 初始化" \
+  --milestone "M1：基礎架構與認證" \
+  --label "P0,M1,infra,A-Backend" \
+  --body "$(cat <<'EOF'
+[Issue body here...]
+EOF
+)"
+```
+
+**注意事項**：
+- 使用 `--milestone` 指定 GitHub Milestone（需先建立）
+- 使用 `--label` 一次指定多個標籤（逗號分隔）
+- 依賴關係中使用 `#N` 引用 Issue 編號，需在建立時根據實際編號填寫
+- 使用 HEREDOC（`<<'EOF'`）傳遞 body 以確保格式正確
 
 
 ## 手動驗證 Issue 格式規範
@@ -118,6 +167,7 @@ T-{ID}：{任務名稱}
 - 優先級：P0 / P1
 - 里程碑：M1 / M2 / M3 / M4
 - 類型：verification
+- 角色：H-Director, A-Main, A-Backend, A-Frontend, ...
 - 審查類型：ux-review / review / acceptance
 ```
 
@@ -197,11 +247,36 @@ T-{ID}：{任務名稱}
 
 ## 完成條件
 
+- [ ] 所需 Labels（優先級、里程碑、類型、角色、審查類型）皆已建立
+- [ ] 所需 Milestones 皆已建立
 - [ ] Dev Plan 中的所有開發任務皆已轉為 GitHub Issues
 - [ ] 所有 `👁️ 手動` 驗證項皆已建立獨立的驗證 Issues，並指派給正確的審查角色
 - [ ] 每個 Milestone 的驗收門（⛳）皆已建立為 Issue
-- [ ] 每個 Issue 皆有完整的驗收標準與標籤
-- [ ] Projects 看板已正確顯示所有 Issues（開發 + 驗證 + 驗收門）
+- [ ] 每個 Issue 皆有完整的驗收標準與標籤（含角色標籤）
+- [ ] GitHub Project 已建立（或連結現有）且已連結至 Repo
+- [ ] 所有 Issues 已加入 Project 看板
+- [ ] Repo 的 Projects tab 可正確顯示該 Project
+
+## GitHub Project 看板規範
+
+### 建立與連結
+
+Issues 全部建立完成後，**必須主動詢問開發者（導演）是否建立 GitHub Project 看板**。
+
+- **Project 命名**：默認與 Repo 名稱相同（例如 repo 為 `vibe-money-book2`，Project 名稱即為 `vibe-money-book2`）
+- **檢查現有 Project**：建立前先用 `gh project list --owner {owner}` 檢查是否已有同名 Project，避免重複建立
+- **建立 Project**：使用 `gh project create --owner {owner} --title {repo-name}`
+- **加入 Issues**：使用 `gh project item-add {project-number} --owner {owner} --url {issue-url}` 逐一加入
+- **連結至 Repo**：**關鍵步驟！** 使用 `gh project link {project-number} --owner {owner} --repo {owner}/{repo}` 將 Project 連結至 Repo，否則 Repo 的 Projects tab 不會顯示該 Project
+- **清理舊項目**：若 Project 中存在來自其他 Repo 的舊項目，應提醒開發者是否清理
+
+### 常見問題
+
+| 問題 | 原因 | 解法 |
+|------|------|------|
+| Repo Projects tab 顯示空白 | Project 未連結至 Repo | 執行 `gh project link` |
+| 看板有不相關的項目 | Project 被多個 Repo 共用 | 用 `gh project item-delete` 移除舊項目 |
+| Issues 未出現在看板上 | 未執行 `item-add` | 逐一加入 Issues |
 
 ## 行為指引
 
@@ -209,8 +284,12 @@ T-{ID}：{任務名稱}
 
 1. 先確認前置條件：檢查 `/docs` 下的規格文件是否存在
 2. 若缺少前置文件，提示使用者先完成 Phase 1（`/vibe-sdlc-p1-spec`）
-3. 讀取 `02-Dev_Plan.md` 與 `/docs` 目錄下所有規格文件，確認已執行過完整性審核
-4. 檢查審核報告 `03-Docs_Review_Report.md`，等待開發者確認
-5. 開發者核准後，詢問要建立哪個里程碑的 Issues（或全部）
-6. 使用 `gh` CLI 逐一建立 Issues，每建立一個即回報
-7. 全部建立完成後，提示開發者確認看板，並告知可進入 Phase 3（`/vibe-sdlc-p3-dev`）
+3. 確認 `gh` CLI 已認證，詢問 GitHub repo 名稱（`{owner}/{repo}`）與 H-Director 的 GitHub username
+4. 讀取 `02-Dev_Plan.md` 與 `/docs` 目錄下所有規格文件，確認已執行過完整性審核
+5. 檢查審核報告 `03-Docs_Review_Report.md`，等待開發者確認
+6. 開發者核准後，詢問要建立哪個里程碑的 Issues（或全部）
+7. 建立所需的 Labels（優先級、里程碑、類型、角色）與 Milestones
+8. 使用 `gh` CLI 逐一建立 Issues（可並行建立以提高效率），每批次回報進度
+9. 全部建立完成後，列出總覽表，並**主動詢問開發者是否要建立 GitHub Project 看板**
+10. 若同意，建立（或連結現有）Project → 加入 Issues → **連結至 Repo**（`gh project link`）
+11. 提示開發者前往 Repo 的 Projects tab 確認看板，並告知可進入 Phase 3（`/vibe-sdlc-p3-dev`）

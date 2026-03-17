@@ -1,71 +1,110 @@
 openapi: 3.0.3
 info:
-  title: Easy Dine API
+  title: Vibe Money Book API
   version: 1.0.0
-  description: Small Restaurant Digital Ordering System API
+  description: 語音記帳應用 API — 透過自然語言實現一句話記帳
   contact:
     name: Development Team
-    email: dev@easydine.example.com
-  license:
-    name: MIT
 
 servers:
-  - url: https://api.easydine.example.com/api/v1
-    description: Production Server
   - url: http://localhost:3000/api/v1
     description: Development Server
 
 tags:
   - name: Authentication
-    description: Login and token management
+    description: 使用者認證（註冊/登入）
   - name: User
-    description: User profile management
-  - name: Menu
-    description: Menu and menu items
-  - name: Orders
-    description: Order management
-  - name: Tables
-    description: Table management
-  - name: Admin
-    description: Administrative operations
-  - name: Analytics
-    description: Analytics and statistics
+    description: 使用者個人資料管理
+  - name: AI
+    description: LLM 自然語言解析與人設回饋
+  - name: Transactions
+    description: 交易記錄 CRUD
+  - name: Budget
+    description: 預算管理與摘要
+  - name: Stats
+    description: 消費統計與分佈
 
 paths:
-  /auth/login:
+  /auth/register:
     post:
-      tags:
-        - Authentication
-      summary: Admin Login
-      description: Authenticate admin user and return JWT token
-      operationId: adminLogin
+      tags: [Authentication]
+      summary: 使用者註冊
+      operationId: register
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - username
-                - password
+              required: [name, email, password]
               properties:
-                username:
+                name:
                   type: string
-                  minLength: 3
+                  minLength: 2
                   maxLength: 50
-                  example: admin
+                  example: 小明
+                email:
+                  type: string
+                  format: email
+                  example: ming@example.com
                 password:
                   type: string
-                  minLength: 6
+                  minLength: 8
                   maxLength: 100
-                  example: password123
-                restaurant_id:
-                  type: integer
-                  format: int64
-                  example: 1
+      responses:
+        '201':
+          description: 註冊成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 201
+                  message:
+                    type: string
+                    example: 註冊成功
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        $ref: '#/components/schemas/User'
+                      token:
+                        type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email 已被註冊
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: 使用者登入
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
       responses:
         '200':
-          description: Login successful
+          description: 登入成功
           content:
             application/json:
               schema:
@@ -76,264 +115,168 @@ paths:
                     example: 200
                   message:
                     type: string
-                    example: Login successful
+                    example: 登入成功
                   data:
                     type: object
                     properties:
-                      access_token:
-                        type: string
-                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                      refresh_token:
-                        type: string
-                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                      expires_in:
-                        type: integer
-                        example: 43200
                       user:
-                        type: object
-                        properties:
-                          id:
-                            type: integer
-                            format: int64
-                          username:
-                            type: string
-                          email:
-                            type: string
-                          role:
-                            type: string
-                          restaurant_id:
-                            type: integer
-                            format: int64
-                          restaurant_name:
-                            type: string
+                        $ref: '#/components/schemas/User'
+                      token:
+                        type: string
                   timestamp:
                     type: string
                     format: date-time
         '401':
-          $ref: '#/components/responses/UnauthorizedError'
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/profile:
+    get:
+      tags: [User]
+      summary: 取得個人資料
+      operationId: getProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags: [User]
+      summary: 更新個人資料
+      operationId: updateProfile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 50
+                persona:
+                  type: string
+                  enum: [sarcastic, gentle, guilt_trip]
+                ai_engine:
+                  type: string
+                  enum: [gemini, openai]
+                  description: 使用者偏好的 AI 引擎（PRD-F-013）
+                monthly_budget:
+                  type: number
+                  format: decimal
+                  minimum: 0
+                  maximum: 10000000
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ai/validate-key:
+    post:
+      tags: [AI]
+      summary: 驗證 LLM API Key
+      description: 驗證使用者提供的 LLM API Key 是否有效。後端根據使用者的 ai_engine 偏好，使用對應引擎發送最小化測試請求確認 Key 可用（PRD-F-013）。
+      operationId: validateApiKey
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: X-LLM-API-Key
+          in: header
+          required: true
+          description: 使用者自行提供的 LLM API Key
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 驗證成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      valid:
+                        type: boolean
+                        example: true
+                      engine:
+                        type: string
+                        enum: [gemini, openai]
+                  timestamp:
+                    type: string
+                    format: date-time
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: API Key 無效或 quota 耗盡
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
         '429':
           $ref: '#/components/responses/RateLimitExceeded'
 
-  /auth/refresh:
+  /ai/parse:
     post:
-      tags:
-        - Authentication
-      summary: Refresh JWT Token
-      description: Get new access token using refresh token
-      operationId: refreshToken
+      tags: [AI]
+      summary: 解析自然語言輸入
+      description: 接收使用者的自然語言文字，呼叫 LLM 資料萃取引擎與人設回饋引擎，回傳結構化結果。不會自動建立交易記錄。後端根據使用者的 ai_engine 偏好選擇對應的 LLM 引擎（PRD-F-013）。
+      operationId: aiParse
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: X-LLM-API-Key
+          in: header
+          required: true
+          description: 使用者自行提供的 LLM API Key，後端用後即棄不持久化（PRD-F-013）
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - refresh_token
+              required: [raw_text]
               properties:
-                refresh_token:
-                  type: string
-                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-      responses:
-        '200':
-          description: Token refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                    example: 200
-                  message:
-                    type: string
-                    example: Token refreshed successfully
-                  data:
-                    type: object
-                    properties:
-                      access_token:
-                        type: string
-                      refresh_token:
-                        type: string
-                      expires_in:
-                        type: integer
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
-  /auth/logout:
-    post:
-      tags:
-        - Authentication
-      summary: Logout
-      description: Logout user
-      operationId: logout
-      security:
-        - BearerAuth: []
-      responses:
-        '200':
-          description: Logout successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-
-  /restaurants/{restaurant_id}/menu:
-    get:
-      tags:
-        - Menu
-      summary: Get Restaurant Menu
-      description: Retrieve complete menu with categories and items
-      operationId: getMenu
-      parameters:
-        - name: restaurant_id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: include_categories
-          in: query
-          schema:
-            type: boolean
-            default: true
-        - name: include_recommended
-          in: query
-          schema:
-            type: boolean
-            default: true
-      responses:
-        '200':
-          description: Menu retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                    example: 200
-                  message:
-                    type: string
-                  data:
-                    type: object
-                    properties:
-                      restaurant:
-                        $ref: '#/components/schemas/Restaurant'
-                      recommended_items:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/MenuItem'
-                      categories:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: integer
-                              format: int64
-                            name:
-                              type: string
-                            sort_order:
-                              type: integer
-                            icon_url:
-                              type: string
-                            items:
-                              type: array
-                              items:
-                                $ref: '#/components/schemas/MenuItem'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-  /restaurants/{restaurant_id}/menu-items/{menu_item_id}:
-    get:
-      tags:
-        - Menu
-      summary: Get Menu Item Details
-      description: Retrieve details of a single menu item
-      operationId: getMenuItemDetails
-      parameters:
-        - name: restaurant_id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: menu_item_id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Menu item details retrieved
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                  data:
-                    $ref: '#/components/schemas/MenuItem'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-  /restaurants/{restaurant_id}/menu-items:
-    post:
-      tags:
-        - Menu
-      summary: Create Menu Item
-      description: Add new menu item (Admin only)
-      operationId: createMenuItem
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: restaurant_id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - category_id
-                - name
-                - price
-              properties:
-                category_id:
-                  type: integer
-                  format: int64
-                name:
+                raw_text:
                   type: string
                   minLength: 1
-                  maxLength: 100
-                description:
-                  type: string
                   maxLength: 500
-                price:
-                  type: number
-                  format: decimal
-                  example: 25.00
-                image_url:
-                  type: string
-                is_recommended:
-                  type: boolean
-                status:
-                  type: string
-                  enum:
-                    - active
-                    - inactive
-                    - sold_out
+                  example: 午餐吃拉麵 180 元
       responses:
-        '201':
-          description: Menu item created successfully
+        '200':
+          description: 解析成功
           content:
             application/json:
               schema:
@@ -341,159 +284,87 @@ paths:
                 properties:
                   code:
                     type: integer
-                    example: 201
+                    example: 200
                   data:
-                    $ref: '#/components/schemas/MenuItem'
+                    type: object
+                    properties:
+                      parsed:
+                        $ref: '#/components/schemas/ParsedTransaction'
+                      feedback:
+                        $ref: '#/components/schemas/AIFeedbackContent'
+                      budget_context:
+                        $ref: '#/components/schemas/BudgetContext'
+                  timestamp:
+                    type: string
+                    format: date-time
         '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
+          $ref: '#/components/responses/BadRequest'
         '403':
-          $ref: '#/components/responses/ForbiddenError'
+          description: LLM API Key 無效或 quota 耗盡（PRD-F-013）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '502':
+          description: LLM 服務暫時不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /restaurants/{restaurant_id}/menu-items/{menu_item_id}:
-    put:
-      tags:
-        - Menu
-      summary: Update Menu Item
-      description: Edit menu item details (Admin only)
-      operationId: updateMenuItem
+  /transactions:
+    post:
+      tags: [Transactions]
+      summary: 建立交易記錄
+      operationId: createTransaction
       security:
         - BearerAuth: []
-      parameters:
-        - name: restaurant_id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: menu_item_id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required: [amount, category, raw_text, transaction_date]
               properties:
-                name:
-                  type: string
-                description:
-                  type: string
-                price:
+                amount:
                   type: number
                   format: decimal
-                image_url:
+                  minimum: 0.01
+                  example: 180
+                category:
                   type: string
-                is_recommended:
-                  type: boolean
-                status:
+                  example: food
+                merchant:
                   type: string
-                  enum:
-                    - active
-                    - inactive
-                    - sold_out
-      responses:
-        '200':
-          description: Menu item updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                  data:
-                    $ref: '#/components/schemas/MenuItem'
-        '400':
-          $ref: '#/components/responses/BadRequestError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-    delete:
-      tags:
-        - Menu
-      summary: Delete Menu Item
-      description: Delete menu item (Admin only)
-      operationId: deleteMenuItem
-      security:
-        - BearerAuth: []
-      parameters:
-        - name: restaurant_id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: menu_item_id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Menu item deleted successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessResponse'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-  /orders:
-    post:
-      tags:
-        - Orders
-      summary: Create Order
-      description: Submit a new order
-      operationId: createOrder
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - table_id
-                - items
-              properties:
-                table_id:
-                  type: integer
-                  format: int64
-                items:
-                  type: array
-                  minItems: 1
-                  maxItems: 50
-                  items:
-                    type: object
-                    required:
-                      - menu_item_id
-                      - quantity
-                    properties:
-                      menu_item_id:
-                        type: integer
-                        format: int64
-                      quantity:
-                        type: integer
-                        minimum: 1
-                        maximum: 100
-                      remark:
-                        type: string
-                        maxLength: 200
-                customer_count:
-                  type: integer
-                  minimum: 1
-                remark:
+                  maxLength: 100
+                  example: 拉麵店
+                raw_text:
                   type: string
                   maxLength: 500
+                  example: 午餐吃拉麵 180 元
+                transaction_date:
+                  type: string
+                  format: date
+                  example: '2026-03-16'
+                note:
+                  type: string
+                  maxLength: 500
+                feedback:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                    emotion_tag:
+                      type: string
+                    persona_used:
+                      type: string
+                      enum: [sarcastic, gentle, guilt_trip]
       responses:
         '201':
-          description: Order created successfully
+          description: 交易建立成功
           content:
             application/json:
               schema:
@@ -505,60 +376,22 @@ paths:
                   data:
                     type: object
                     properties:
-                      order:
-                        $ref: '#/components/schemas/Order'
-                      print_content:
-                        type: object
+                      transaction:
+                        $ref: '#/components/schemas/Transaction'
+                      feedback:
+                        $ref: '#/components/schemas/AIFeedback'
         '400':
-          $ref: '#/components/responses/BadRequestError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
-  /orders/{order_id}:
     get:
-      tags:
-        - Orders
-      summary: Get Order Details
-      description: Retrieve order information
-      operationId: getOrderDetails
-      parameters:
-        - name: order_id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Order details retrieved
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                  data:
-                    $ref: '#/components/schemas/Order'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-
-  /restaurants/{restaurant_id}/orders:
-    get:
-      tags:
-        - Orders
-      summary: Get Restaurant Orders
-      description: Get list of orders for a restaurant (Admin/Staff only)
-      operationId: getRestaurantOrders
+      tags: [Transactions]
+      summary: 查詢交易列表
+      operationId: listTransactions
       security:
         - BearerAuth: []
       parameters:
-        - name: restaurant_id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
         - name: page
           in: query
           schema:
@@ -569,25 +402,13 @@ paths:
           in: query
           schema:
             type: integer
-            default: 10
+            default: 20
             minimum: 1
             maximum: 100
-        - name: status
+        - name: category
           in: query
           schema:
             type: string
-            enum:
-              - pending
-              - confirmed
-              - preparing
-              - ready
-              - completed
-              - cancelled
-        - name: table_id
-          in: query
-          schema:
-            type: integer
-            format: int64
         - name: start_date
           in: query
           schema:
@@ -598,22 +419,15 @@ paths:
           schema:
             type: string
             format: date
-        - name: order_by
-          in: query
-          schema:
-            type: string
-            default: created_at
         - name: sort
           in: query
           schema:
             type: string
-            enum:
-              - asc
-              - desc
+            enum: [asc, desc]
             default: desc
       responses:
         '200':
-          description: Orders retrieved successfully
+          description: 查詢成功
           content:
             application/json:
               schema:
@@ -627,52 +441,203 @@ paths:
                       items:
                         type: array
                         items:
-                          $ref: '#/components/schemas/OrderListItem'
+                          $ref: '#/components/schemas/TransactionListItem'
                       pagination:
                         $ref: '#/components/schemas/Pagination'
         '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
+          $ref: '#/components/responses/Unauthorized'
 
-  /orders/{order_id}/status:
-    put:
-      tags:
-        - Orders
-      summary: Update Order Status
-      description: Update order status (Admin/Staff only)
-      operationId: updateOrderStatus
+  /transactions/{id}:
+    get:
+      tags: [Transactions]
+      summary: 取得交易詳情
+      operationId: getTransaction
       security:
         - BearerAuth: []
       parameters:
-        - name: order_id
+        - name: id
           in: path
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/TransactionDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Transactions]
+      summary: 刪除交易
+      operationId: deleteTransaction
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 刪除成功
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /budget/summary:
+    get:
+      tags: [Budget]
+      summary: 取得本月預算摘要
+      operationId: getBudgetSummary
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: month
+          in: query
+          description: 月份 (YYYY-MM)，預設當月
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}$'
+            example: '2026-03'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/BudgetSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /budget/categories:
+    get:
+      tags: [Budget]
+      summary: 取得類別預算列表
+      operationId: getCategoryBudgets
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      categories:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CategoryBudget'
+
+    post:
+      tags: [Budget]
+      summary: 新增自訂類別（PRD-F-012）
+      description: 使用者確認 AI 建議的新類別時呼叫此端點。類別數量上限 20。
+      operationId: createCategory
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - status
+              required: [category]
               properties:
-                status:
+                category:
                   type: string
-                  enum:
-                    - confirmed
-                    - preparing
-                    - ready
-                    - completed
-                    - cancelled
-                remark:
-                  type: string
+                  minLength: 2
+                  maxLength: 50
+                  example: 寵物
+                budget_limit:
+                  type: number
+                  format: decimal
+                  minimum: 0
+                  default: 0
+      responses:
+        '201':
+          description: 類別新增成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 201
+                  message:
+                    type: string
+                    example: 類別新增成功
+                  data:
+                    $ref: '#/components/schemas/CategoryBudget'
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: 類別已存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: 類別數量已達上限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Budget]
+      summary: 批量更新類別預算
+      operationId: updateCategoryBudgets
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [categories]
+              properties:
+                categories:
+                  type: array
+                  items:
+                    type: object
+                    required: [category, budget_limit]
+                    properties:
+                      category:
+                        type: string
+                      budget_limit:
+                        type: number
+                        format: decimal
+                        minimum: 0
       responses:
         '200':
-          description: Order status updated successfully
+          description: 更新成功
           content:
             application/json:
               schema:
@@ -683,59 +648,56 @@ paths:
                   data:
                     type: object
                     properties:
-                      id:
-                        type: integer
-                        format: int64
-                      order_no:
-                        type: string
-                      status:
-                        type: string
-                      updated_at:
-                        type: string
-                        format: date-time
+                      categories:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CategoryBudget'
         '400':
-          $ref: '#/components/responses/BadRequestError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
+          $ref: '#/components/responses/BadRequest'
 
-  /admin/analytics:
-    get:
-      tags:
-        - Analytics
-      summary: Get Analytics Data
-      description: Get analytics and statistics (Admin only)
-      operationId: getAnalytics
+  /budget/categories/{category}:
+    delete:
+      tags: [Budget]
+      summary: 刪除自訂類別（PRD-F-012）
+      description: 刪除使用者自訂類別。預設類別不可刪除。關聯交易記錄將重新歸類至「其他」。
+      operationId: deleteCategory
       security:
         - BearerAuth: []
       parameters:
-        - name: date
-          in: query
+        - name: category
+          in: path
+          required: true
           schema:
             type: string
-            format: date
-        - name: start_date
+      responses:
+        '204':
+          description: 刪除成功
+        '400':
+          description: 不可刪除預設類別
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /stats/distribution:
+    get:
+      tags: [Stats]
+      summary: 取得消費類別分佈
+      operationId: getDistribution
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: month
           in: query
+          description: 月份 (YYYY-MM)，預設當月
           schema:
             type: string
-            format: date
-        - name: end_date
-          in: query
-          schema:
-            type: string
-            format: date
-        - name: type
-          in: query
-          schema:
-            type: string
-            enum:
-              - daily
-              - monthly
-              - yearly
+            pattern: '^\d{4}-\d{2}$'
       responses:
         '200':
-          description: Analytics data retrieved
+          description: 成功
           content:
             application/json:
               schema:
@@ -746,18 +708,16 @@ paths:
                   data:
                     type: object
                     properties:
-                      summary:
-                        type: object
-                      daily_stats:
+                      month:
+                        type: string
+                      total_spent:
+                        type: number
+                      distribution:
                         type: array
-                      top_items:
-                        type: array
-                      table_stats:
-                        type: array
+                        items:
+                          $ref: '#/components/schemas/CategoryDistribution'
         '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
+          $ref: '#/components/responses/Unauthorized'
 
 components:
   securitySchemes:
@@ -767,51 +727,107 @@ components:
       bearerFormat: JWT
 
   schemas:
-    Restaurant:
+    User:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
+          type: string
+          format: uuid
         name:
           type: string
-        address:
+        email:
           type: string
-        phone:
+          format: email
+        persona:
           type: string
-        owner_id:
-          type: integer
-          format: int64
-
-    MenuItem:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        category_id:
-          type: integer
-          format: int64
-        category_name:
+          enum: [sarcastic, gentle, guilt_trip]
+        ai_engine:
           type: string
-        name:
-          type: string
-        description:
-          type: string
-        price:
+          enum: [gemini, openai]
+          default: gemini
+          description: 使用者偏好的 AI 引擎（PRD-F-013）
+        monthly_budget:
           type: number
           format: decimal
-        image_url:
+        currency:
           type: string
-        is_recommended:
+        created_at:
+          type: string
+          format: date-time
+
+    ParsedTransaction:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: decimal
+          nullable: true
+        category:
+          type: string
+          nullable: true
+          description: 匹配到的現有類別代碼；若 is_new_category 為 true 則為 null
+        merchant:
+          type: string
+        date:
+          type: string
+          format: date
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        is_new_category:
           type: boolean
-        status:
+          description: 是否為新類別建議（PRD-F-012）
+          default: false
+        suggested_category:
           type: string
-          enum:
-            - active
-            - inactive
-            - sold_out
-            - deleted
+          nullable: true
+          description: LLM 建議的新類別名稱，僅當 is_new_category 為 true 時有值
+
+    AIFeedbackContent:
+      type: object
+      properties:
+        text:
+          type: string
+        emotion_tag:
+          type: string
+
+    BudgetContext:
+      type: object
+      properties:
+        monthly_budget:
+          type: number
+        spent_this_month:
+          type: number
+        remaining:
+          type: number
+        used_ratio:
+          type: number
+        category_spent:
+          type: number
+        category_limit:
+          type: number
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        category:
+          type: string
+        merchant:
+          type: string
+        raw_text:
+          type: string
+        note:
+          type: string
+        transaction_date:
+          type: string
+          format: date
         created_at:
           type: string
           format: date-time
@@ -819,107 +835,129 @@ components:
           type: string
           format: date-time
 
-    Order:
+    TransactionListItem:
       type: object
       properties:
         id:
-          type: integer
-          format: int64
-        order_no:
           type: string
-        restaurant_id:
-          type: integer
-          format: int64
-        table_id:
-          type: integer
-          format: int64
-        table_number:
-          type: string
-        status:
-          type: string
-          enum:
-            - pending
-            - confirmed
-            - preparing
-            - ready
-            - completed
-            - cancelled
-        total_amount:
+          format: uuid
+        amount:
           type: number
           format: decimal
-        discount_amount:
-          type: number
-          format: decimal
-        final_amount:
-          type: number
-          format: decimal
-        customer_count:
-          type: integer
-        remark:
+        category:
           type: string
-        items:
+        merchant:
+          type: string
+        transaction_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    TransactionDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        category:
+          type: string
+        merchant:
+          type: string
+        raw_text:
+          type: string
+        note:
+          type: string
+        transaction_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+        feedback:
+          type: object
+          nullable: true
+          properties:
+            feedback_text:
+              type: string
+            emotion_tag:
+              type: string
+            persona_used:
+              type: string
+
+    AIFeedback:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        feedback_text:
+          type: string
+        emotion_tag:
+          type: string
+        persona_used:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    BudgetSummary:
+      type: object
+      properties:
+        month:
+          type: string
+        monthly_budget:
+          type: number
+        total_spent:
+          type: number
+        remaining:
+          type: number
+        used_ratio:
+          type: number
+        transaction_count:
+          type: integer
+        category_summary:
           type: array
           items:
             type: object
             properties:
-              id:
-                type: integer
-                format: int64
-              menu_item_id:
-                type: integer
-                format: int64
-              menu_item_name:
+              category:
                 type: string
-              quantity:
-                type: integer
-              price:
+              spent:
                 type: number
-                format: decimal
-              remark:
-                type: string
-              subtotal:
+              budget_limit:
                 type: number
-                format: decimal
-              item_status:
-                type: string
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
+              used_ratio:
+                type: number
 
-    OrderListItem:
+    CategoryBudget:
       type: object
       properties:
-        id:
-          type: integer
-          format: int64
-        order_no:
+        category:
           type: string
-        table_id:
-          type: integer
-          format: int64
-        table_number:
-          type: string
-        status:
-          type: string
-        total_amount:
+        budget_limit:
           type: number
           format: decimal
-        final_amount:
+        is_custom:
+          type: boolean
+          description: 是否為使用者自訂類別
+          default: false
+
+    CategoryDistribution:
+      type: object
+      properties:
+        category:
+          type: string
+        amount:
           type: number
-          format: decimal
-        customer_count:
+        ratio:
+          type: number
+        count:
           type: integer
-        item_count:
-          type: integer
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
 
     Pagination:
       type: object
@@ -932,104 +970,69 @@ components:
           type: integer
         pages:
           type: integer
-        has_next:
-          type: boolean
-        has_prev:
-          type: boolean
 
-    SuccessResponse:
+    ErrorResponse:
       type: object
       properties:
         code:
           type: integer
         message:
           type: string
-        data:
-          type: object
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              reason:
+                type: string
         timestamp:
           type: string
           format: date-time
 
   responses:
-    BadRequestError:
-      description: Bad Request
+    BadRequest:
+      description: 參數驗證失敗
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                example: 400
-              message:
-                type: string
-              errors:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    field:
-                      type: string
-                    code:
-                      type: string
-                    reason:
-                      type: string
-              timestamp:
-                type: string
-                format: date-time
+            $ref: '#/components/schemas/ErrorResponse'
 
-    UnauthorizedError:
-      description: Unauthorized
+    Unauthorized:
+      description: 未認證或 Token 過期
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                example: 401
-              message:
-                type: string
-                example: Unauthorized
+            $ref: '#/components/schemas/ErrorResponse'
 
-    ForbiddenError:
-      description: Forbidden
+    NotFound:
+      description: 資源不存在
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                example: 403
-              message:
-                type: string
-                example: Forbidden
-
-    NotFoundError:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                example: 404
-              message:
-                type: string
-                example: Resource not found
+            $ref: '#/components/schemas/ErrorResponse'
 
     RateLimitExceeded:
-      description: Too Many Requests
+      description: 超出速率限制
+      headers:
+        X-RateLimit-Limit:
+          description: 每分鐘允許的最大請求數
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          description: 當前時間窗口內剩餘請求數
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          description: 速率限制重置的 Unix 時間戳
+          schema:
+            type: integer
+        Retry-After:
+          description: 建議等待秒數
+          schema:
+            type: integer
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                example: 429
-              message:
-                type: string
-                example: Rate limit exceeded
+            $ref: '#/components/schemas/ErrorResponse'

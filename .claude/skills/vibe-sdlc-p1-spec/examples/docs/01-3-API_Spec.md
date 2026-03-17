@@ -1,9 +1,9 @@
 # 01-3 API 規範文件
 
-> **項目名稱**：Easy Dine — 小型餐廳點餐系統
+> **專案名稱**：Vibe Money Book — 語音記帳應用
 > **API 版本**：v1.0
 > **文檔版本**：v1.0
-> **最後更新**：2026-03-12
+> **最後更新**：2026-03-17
 
 ---
 
@@ -15,64 +15,47 @@
 4. [API 端點清單](#4-api-端點清單)
 5. [詳細端點規範](#5-詳細端點規範)
 6. [錯誤處理](#6-錯誤處理)
-7. [分頁與篩選](#7-分頁與篩選)
 
 ---
 
 ## 1. API 總覽
 
-### 1.1 基礎信息
+### 1.1 基礎資訊
 
 | 項目 | 說明 |
 |------|------|
-| **API 基礎 URL** | `https://api.easydine.example.com/api/v1` |
+| **API 基礎 URL** | `http://localhost:3000/api/v1` (開發) |
 | **API 版本** | v1.0 |
-| **協議** | HTTPS（TLS 1.2+） |
-| **數據格式** | JSON |
-| **字符編碼** | UTF-8 |
-| **超時時間** | 30 秒 |
+| **協議** | HTTPS（生產環境） |
+| **資料格式** | JSON |
+| **字元編碼** | UTF-8 |
 
 ### 1.2 請求格式
 
-**請求頭 (HTTP Headers)**：
 ```
 Content-Type: application/json
-Authorization: Bearer <JWT_TOKEN>  # 認證端點除外
-User-Agent: <Client-Identifier>
-X-Request-ID: <Optional-Request-ID>
-```
-
-**請求 URL 結構**：
-```
-https://api.easydine.example.com/api/v1/{resource}/{id}/{subresource}?param1=value1&param2=value2
+Authorization: Bearer <JWT_TOKEN>  # 需認證端點
 ```
 
 ### 1.3 響應格式
 
-**成功響應（HTTP 200 / 201）**：
+**成功響應**：
 ```json
 {
   "code": 200,
   "message": "success",
-  "data": {
-    // 業務數據
-  },
-  "timestamp": "2026-03-12T12:00:00Z"
+  "data": { },
+  "timestamp": "2026-03-16T12:00:00Z"
 }
 ```
 
-**錯誤響應（HTTP 4xx / 5xx）**：
+**錯誤響應**：
 ```json
 {
   "code": 400,
-  "message": "參數驗證失敗",
-  "errors": [
-    {
-      "field": "price",
-      "reason": "價格必須為正數"
-    }
-  ],
-  "timestamp": "2026-03-12T12:00:00Z"
+  "message": "驗證失敗",
+  "errors": [{ "field": "amount", "reason": "金額必須為正數" }],
+  "timestamp": "2026-03-16T12:00:00Z"
 }
 ```
 
@@ -80,75 +63,24 @@ https://api.easydine.example.com/api/v1/{resource}/{id}/{subresource}?param1=val
 
 ## 2. 認證與授權
 
-### 2.1 JWT Token 格式
+### 2.1 JWT Token
 
-**Token 結構**：
-```
-Header.Payload.Signature
-```
+- **算法**：HS256
+- **有效期**：7 天
+- **傳遞方式**：`Authorization: Bearer <token>`
 
-**Header**：
+### 2.2 登出策略
+
+登出操作由前端處理（清除 localStorage 中的 JWT Token 與 LLM API Key），無需後端端點。
+
+### 2.3 Token Payload
+
 ```json
 {
-  "alg": "HS256",
-  "typ": "JWT"
-}
-```
-
-**Payload**：
-```json
-{
-  "sub": "admin_id",
-  "username": "admin",
-  "restaurant_id": 1,
-  "role": "owner",
-  "exp": 1678502400,
+  "sub": "user_uuid",
+  "email": "user@example.com",
   "iat": 1678416000,
-  "jti": "unique-token-id"
-}
-```
-
-**簽名**：使用 HMAC-SHA256 算法簽名
-
-**有效期**：12 小時（43200 秒）
-
-### 2.2 使用 Token 進行 API 請求
-
-在 HTTP 請求頭中添加授權信息：
-
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-### 2.3 角色與權限對應表
-
-| 角色 | 名稱 | 權限清單 |
-|------|------|--------|
-| **admin** | 管理員 | 菜單管理、訂單管理、桌位管理、用戶管理、分析數據、系統設置 |
-| **staff** | 店員 | 查看訂單、更新訂單狀態、查看桌位、打印出餐單 |
-| **customer** | 顧客 | 瀏覽菜單、提交訂單、查看購物車（前端實現，無 API 認證） |
-
-### 2.4 刷新 Token
-
-**端點**：`POST /auth/refresh`
-
-**請求**：
-```json
-{
-  "refresh_token": "eyJhbGc..."
-}
-```
-
-**響應**：
-```json
-{
-  "code": 200,
-  "message": "Token refreshed successfully",
-  "data": {
-    "access_token": "new_jwt_token",
-    "refresh_token": "new_refresh_token",
-    "expires_in": 43200
-  }
+  "exp": 1679020800
 }
 ```
 
@@ -160,571 +92,595 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 | 狀態碼 | 含義 | 使用場景 |
 |--------|------|--------|
-| **200** | OK | 請求成功，返回數據 |
-| **201** | Created | 資源創建成功 |
-| **204** | No Content | 操作成功但無返回內容 |
-| **400** | Bad Request | 請求參數錯誤或驗證失敗 |
-| **401** | Unauthorized | 未認證或 Token 過期 |
-| **403** | Forbidden | 已認證但無權限 |
-| **404** | Not Found | 資源不存在 |
-| **409** | Conflict | 資源衝突（如菜品名稱重複） |
-| **429** | Too Many Requests | 超出速率限制 |
-| **500** | Internal Server Error | 服務器內部錯誤 |
-| **503** | Service Unavailable | 服務暫時不可用 |
+| 200 | OK | 請求成功 |
+| 201 | Created | 資源建立成功 |
+| 204 | No Content | 刪除成功 |
+| 400 | Bad Request | 參數驗證失敗 |
+| 401 | Unauthorized | 未認證或 Token 過期 |
+| 404 | Not Found | 資源不存在 |
+| 429 | Too Many Requests | 超出速率限制（含 `X-RateLimit-Limit`、`X-RateLimit-Remaining`、`X-RateLimit-Reset`、`Retry-After` Response Headers） |
+| 500 | Internal Server Error | 伺服器內部錯誤 |
 
 ### 3.2 時間格式
 
-所有時間戳使用 ISO 8601 格式：
+所有時間戳使用 ISO 8601：`2026-03-16T12:00:00Z`
+
+日期欄位使用：`2026-03-16`
+
+### 3.3 分頁參數
 
 ```
-2026-03-12T12:00:00Z          # UTC 時區
-2026-03-12T20:00:00+08:00     # 帶時區偏移量
+?page=1&limit=20
 ```
-
-### 3.3 數字格式
-
-- **整數**：不帶小數點
-- **小數**：Decimal 型別（如價格），精度保留 2 位
-- **大數字**：避免使用浮點數，使用字符串表示
-
-### 3.4 布爾值
-
-- **true** / **false**（小寫）
-- 不使用 0 / 1 或 yes / no
-
-### 3.5 空值處理
-
-- **Null** vs **Empty String** vs **Omitted Field**
-  - `null`：明確表示無值
-  - `""`：空字符串
-  - 省略字段：不在響應中出現
 
 ---
 
 ## 4. API 端點清單
 
-### 4.1 認證模塊
+### 4.1 認證模組
 
 | 方法 | 端點 | 描述 | 認證 |
 |------|------|------|------|
-| POST | /auth/login | 管理員登入 | ✗ |
-| POST | /auth/refresh | 刷新 Token | ✗ |
-| POST | /auth/logout | 登出 | ✓ |
+| POST | /auth/register | 使用者註冊 | ✗ |
+| POST | /auth/login | 使用者登入 | ✗ |
 
-### 4.2 用戶模塊
+### 4.2 使用者模組
 
-| 方法 | 端點 | 描述 | 認證 | 權限 |
-|------|------|------|------|------|
-| GET | /users/profile | 獲取用戶信息 | ✓ | - |
-| PUT | /users/profile | 更新用戶信息 | ✓ | - |
-| POST | /users/change-password | 修改密碼 | ✓ | - |
+| 方法 | 端點 | 描述 | 認證 |
+|------|------|------|------|
+| GET | /users/profile | 取得個人資料 | ✓ |
+| PUT | /users/profile | 更新個人資料（人設、預算、AI 引擎偏好） | ✓ |
 
-### 4.3 餐廳模塊
+### 4.3 AI 記帳模組
 
-| 方法 | 端點 | 描述 | 認證 | 權限 |
-|------|------|------|------|------|
-| GET | /restaurants/{id} | 獲取餐廳詳情 | ✗ | - |
-| GET | /restaurants/{id}/tables | 獲取餐廳的所有餐桌 | ✗ | - |
-| GET | /admin/restaurants | 獲取我管理的餐廳 | ✓ | Admin |
-| PUT | /admin/restaurants/{id} | 編輯餐廳信息 | ✓ | Admin |
+| 方法 | 端點 | 描述 | 認證 |
+|------|------|------|------|
+| POST | /ai/validate-key | 驗證使用者提供的 LLM API Key 是否有效（PRD-F-013） | ✓ |
+| POST | /ai/parse | 解析自然語言輸入（資料萃取 + 人設回饋） | ✓ |
 
-### 4.4 菜單模塊
+### 4.4 交易模組
 
-| 方法 | 端點 | 描述 | 認證 | 權限 |
-|------|------|------|------|------|
-| GET | /restaurants/{id}/categories | 獲取分類列表 | ✗ | - |
-| GET | /restaurants/{id}/menu | 獲取菜單（分類和菜品） | ✗ | - |
-| GET | /restaurants/{id}/menu-items/{itemId} | 獲取單個菜品詳情 | ✗ | - |
-| POST | /restaurants/{id}/menu-items | 新增菜品 | ✓ | Admin |
-| PUT | /restaurants/{id}/menu-items/{itemId} | 編輯菜品 | ✓ | Admin |
-| DELETE | /restaurants/{id}/menu-items/{itemId} | 刪除菜品 | ✓ | Admin |
+| 方法 | 端點 | 描述 | 認證 |
+|------|------|------|------|
+| POST | /transactions | 建立交易記錄 | ✓ |
+| GET | /transactions | 查詢交易列表（支援分頁/篩選） | ✓ |
+| GET | /transactions/:id | 取得單筆交易詳情（含 AI 回饋） | ✓ |
+| DELETE | /transactions/:id | 刪除交易記錄 | ✓ |
 
-### 4.5 購物車模塊
+### 4.5 預算模組
 
-| 方法 | 端點 | 描述 | 認證 | 備註 |
-|------|------|------|------|------|
-| GET | /carts | 獲取我的購物車 | ✗ | 前端存儲 |
-| POST | /carts/items | 加入購物車 | ✗ | 前端存儲 |
-| PUT | /carts/items/{cartItemId} | 更新購物車項目數量 | ✗ | 前端存儲 |
-| DELETE | /carts/items/{cartItemId} | 移除購物車項目 | ✗ | 前端存儲 |
-| DELETE | /carts | 清空購物車 | ✗ | 前端存儲 |
+| 方法 | 端點 | 描述 | 認證 |
+|------|------|------|------|
+| GET | /budget/summary | 取得本月預算摘要 | ✓ |
+| GET | /budget/categories | 取得類別預算列表 | ✓ |
+| POST | /budget/categories | 新增自訂類別（PRD-F-012） | ✓ |
+| PUT | /budget/categories | 批量更新類別預算 | ✓ |
+| DELETE | /budget/categories/:category | 刪除自訂類別（PRD-F-012） | ✓ |
 
-### 4.6 訂單模塊
+### 4.6 統計模組
 
-| 方法 | 端點 | 描述 | 認證 | 權限 |
-|------|------|------|------|------|
-| POST | /orders | 提交訂單 | ✗ | - |
-| GET | /orders/{orderId} | 獲取訂單詳情 | ✗ | - |
-| GET | /restaurants/{id}/orders | 獲取餐廳訂單列表 | ✓ | Admin/Staff |
-| PUT | /orders/{orderId}/status | 更新訂單狀態 | ✓ | Admin/Staff |
-| DELETE | /orders/{orderId} | 取消訂單 | ✓ | Admin/Staff |
-
-### 4.7 桌位管理模塊
-
-| 方法 | 端點 | 描述 | 認證 | 權限 |
-|------|------|------|------|------|
-| GET | /admin/tables | 獲取餐廳桌位列表 | ✓ | Admin |
-| POST | /admin/tables | 新增桌位 | ✓ | Admin |
-| PUT | /admin/tables/{tableId} | 更新桌位信息 | ✓ | Admin |
-| DELETE | /admin/tables/{tableId} | 刪除桌位 | ✓ | Admin |
-| PUT | /admin/tables/{tableId}/status | 更新桌位狀態 | ✓ | Admin/Staff |
-| GET | /admin/tables/{tableId}/qrcode | 獲取桌位 QR Code | ✓ | Admin |
-
-### 4.8 分析與統計模塊
-
-| 方法 | 端點 | 描述 | 認證 | 權限 |
-|------|------|------|------|------|
-| GET | /admin/analytics | 獲取分析數據 | ✓ | Admin |
-| GET | /admin/analytics/orders | 訂單統計 | ✓ | Admin |
-| GET | /admin/analytics/menu | 菜品銷售排行 | ✓ | Admin |
-| GET | /admin/analytics/tables | 桌位使用率 | ✓ | Admin |
+| 方法 | 端點 | 描述 | 認證 |
+|------|------|------|------|
+| GET | /stats/distribution | 取得消費類別分佈 | ✓ |
 
 ---
 
 ## 5. 詳細端點規範
 
-### 5.1 認證模塊
+### 5.1 認證模組
 
-#### POST /auth/login — 管理員登入
+#### POST /auth/register — 使用者註冊
 
-**描述**：驗證管理員帳號密碼，返回 JWT Token
-
-**請求參數**：
+**請求**：
 ```json
 {
-  "username": "admin",
-  "password": "password123",
-  "restaurant_id": 1  // 可選，如果系統支持多店面
+  "name": "小明",
+  "email": "ming@example.com",
+  "password": "MyP@ssw0rd"
 }
 ```
 
-**請求驗證**：
-- `username`：必填，長度 3-50 字符
-- `password`：必填，長度 6-100 字符
+**驗證**：
+- `name`：必填，2-50 字元
+- `email`：必填，有效 email 格式
+- `password`：必填，8-100 字元
 
-**成功響應（HTTP 200）**：
-```json
-{
-  "code": 200,
-  "message": "Login successful",
-  "data": {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_in": 43200,
-    "user": {
-      "id": 1,
-      "username": "admin",
-      "email": "admin@example.com",
-      "role": "owner",
-      "restaurant_id": 1,
-      "restaurant_name": "紅油餐廳"
-    }
-  },
-  "timestamp": "2026-03-12T12:00:00Z"
-}
-```
-
-**錯誤響應**：
-- **401 Unauthorized**：用戶名或密碼錯誤
-- **403 Forbidden**：帳號被禁用
-- **429 Too Many Requests**：登入失敗超過 5 次
-
-#### POST /auth/refresh — 刷新 Token
-
-**描述**：使用 Refresh Token 獲取新的 Access Token
-
-**請求參數**：
-```json
-{
-  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-**成功響應（HTTP 200）**：
-```json
-{
-  "code": 200,
-  "message": "Token refreshed successfully",
-  "data": {
-    "access_token": "new_jwt_token",
-    "refresh_token": "new_refresh_token",
-    "expires_in": 43200
-  },
-  "timestamp": "2026-03-12T12:00:00Z"
-}
-```
-
-**錯誤響應**：
-- **401 Unauthorized**：Refresh Token 無效或過期
-
-#### POST /auth/logout — 登出
-
-**描述**：登出用戶，使 Token 失效
-
-**請求參數**：無
-
-**成功響應（HTTP 200）**：
-```json
-{
-  "code": 200,
-  "message": "Logout successful",
-  "data": null,
-  "timestamp": "2026-03-12T12:00:00Z"
-}
-```
-
----
-
-### 5.2 菜單模塊
-
-#### GET /restaurants/{id}/menu — 獲取菜單
-
-**描述**：獲取餐廳的完整菜單，包括分類和菜品
-
-**請求參數**：
-- 路徑參數：`restaurant_id` (必填)
-- 查詢參數：
-  - `include_categories`: boolean (可選，默認 true)
-  - `include_recommended`: boolean (可選，默認 true)
-
-**請求示例**：
-```
-GET /api/v1/restaurants/1/menu?include_categories=true&include_recommended=true
-```
-
-**成功響應（HTTP 200）**：
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "restaurant": {
-      "id": 1,
-      "name": "紅油餐廳"
-    },
-    "recommended_items": [
-      {
-        "id": 101,
-        "name": "紅油抄手",
-        "price": 25.00,
-        "image_url": "https://cdn.example.com/1.jpg",
-        "description": "麻辣爽口",
-        "is_recommended": true,
-        "status": "active",
-        "category_id": 1,
-        "category_name": "主食"
-      }
-    ],
-    "categories": [
-      {
-        "id": 1,
-        "name": "主食",
-        "sort_order": 1,
-        "icon_url": "https://cdn.example.com/icon-main.png",
-        "items": [
-          {
-            "id": 101,
-            "name": "紅油抄手",
-            "price": 25.00,
-            "image_url": "https://cdn.example.com/1.jpg",
-            "description": "麻辣爽口",
-            "is_recommended": true,
-            "status": "active"
-          }
-        ]
-      }
-    ]
-  },
-  "timestamp": "2026-03-12T12:00:00Z"
-}
-```
-
-**錯誤響應**：
-- **404 Not Found**：餐廳不存在
-
----
-
-### 5.3 訂單模塊
-
-#### POST /orders — 提交訂單
-
-**描述**：顧客提交訂單
-
-**請求參數**：
-```json
-{
-  "table_id": 5,
-  "items": [
-    {
-      "menu_item_id": 101,
-      "quantity": 2,
-      "remark": "不要香菜"
-    },
-    {
-      "menu_item_id": 102,
-      "quantity": 1,
-      "remark": ""
-    }
-  ],
-  "customer_count": 4,  // 可選
-  "remark": ""  // 可選，訂單備註
-}
-```
-
-**請求驗證**：
-- `table_id`：必填，必須存在
-- `items`：必填，非空數組，最多 50 項
-- `items[].menu_item_id`：必填，必須存在
-- `items[].quantity`：必填，> 0，< 100
-- `items[].remark`：可選，最多 200 字符
-
-**成功響應（HTTP 201）**：
+**成功響應 (201)**：
 ```json
 {
   "code": 201,
-  "message": "Order created successfully",
+  "message": "註冊成功",
   "data": {
-    "order": {
-      "id": 1001,
-      "order_no": "ORD-20260312-001",
-      "table_id": 5,
-      "table_number": "A1",
-      "status": "pending",
-      "total_amount": 75.00,
-      "discount_amount": 0.00,
-      "final_amount": 75.00,
-      "customer_count": 4,
-      "items": [
-        {
-          "id": 1,
-          "menu_item_id": 101,
-          "menu_item_name": "紅油抄手",
-          "quantity": 2,
-          "price": 25.00,
-          "remark": "不要香菜",
-          "subtotal": 50.00,
-          "item_status": "pending"
-        }
-      ],
-      "created_at": "2026-03-12T12:00:00Z",
-      "updated_at": "2026-03-12T12:00:00Z"
+    "user": {
+      "id": "uuid-xxx",
+      "name": "小明",
+      "email": "ming@example.com",
+      "persona": "gentle",
+      "ai_engine": "gemini",
+      "monthly_budget": 30000.00,
+      "currency": "TWD"
     },
-    "print_content": {
-      "order_no": "ORD-20260312-001",
-      "table_number": "A1",
-      "items": [
-        {
-          "name": "紅油抄手",
-          "quantity": 2,
-          "remark": "不要香菜"
-        }
-      ],
-      "total_amount": 75.00
-    }
+    "token": "eyJhbGci..."
   },
-  "timestamp": "2026-03-12T12:00:00Z"
+  "timestamp": "2026-03-16T12:00:00Z"
 }
 ```
 
-**錯誤響應**：
-- **400 Bad Request**：參數驗證失敗
-- **404 Not Found**：桌位或菜品不存在
-- **409 Conflict**：菜品已售完或下架
+**錯誤**：
+- 400：參數驗證失敗
+- 409：Email 已被註冊
 
-#### GET /orders/{orderId} — 獲取訂單詳情
+#### POST /auth/login — 使用者登入
 
-**描述**：獲取訂單的詳細信息
+**請求**：
+```json
+{
+  "email": "ming@example.com",
+  "password": "MyP@ssw0rd"
+}
+```
 
-**請求參數**：
-- 路徑參數：`orderId` (必填)
-
-**成功響應（HTTP 200）**：
+**成功響應 (200)**：
 ```json
 {
   "code": 200,
-  "message": "success",
+  "message": "登入成功",
   "data": {
-    "id": 1001,
-    "order_no": "ORD-20260312-001",
-    "restaurant_id": 1,
-    "table_id": 5,
-    "table_number": "A1",
-    "status": "pending",
-    "total_amount": 75.00,
-    "discount_amount": 0.00,
-    "final_amount": 75.00,
-    "customer_count": 4,
-    "remark": "",
-    "items": [
-      {
-        "id": 1,
-        "menu_item_id": 101,
-        "menu_item_name": "紅油抄手",
-        "quantity": 2,
-        "price": 25.00,
-        "remark": "不要香菜",
-        "subtotal": 50.00,
-        "item_status": "pending"
-      }
-    ],
-    "created_at": "2026-03-12T12:00:00Z",
-    "updated_at": "2026-03-12T12:00:00Z"
+    "user": {
+      "id": "uuid-xxx",
+      "name": "小明",
+      "email": "ming@example.com",
+      "persona": "sarcastic",
+      "ai_engine": "gemini",
+      "monthly_budget": 30000.00,
+      "currency": "TWD"
+    },
+    "token": "eyJhbGci..."
   },
-  "timestamp": "2026-03-12T12:00:00Z"
+  "timestamp": "2026-03-16T12:00:00Z"
 }
 ```
 
-**錯誤響應**：
-- **404 Not Found**：訂單不存在
-
-#### GET /restaurants/{id}/orders — 獲取餐廳訂單列表
-
-**描述**：獲取餐廳的訂單列表（需認證和權限）
-
-**請求參數**：
-- 路徑參數：`id` (餐廳 ID)
-- 查詢參數：
-  - `page`: number (默認 1)
-  - `limit`: number (默認 10，最大 100)
-  - `status`: string (可選，如 pending/confirmed/preparing/ready/completed/cancelled)
-  - `table_id`: number (可選)
-  - `start_date`: string (可選，YYYY-MM-DD)
-  - `end_date`: string (可選，YYYY-MM-DD)
-  - `order_by`: string (默認 created_at，可選 table_number/total_amount)
-  - `sort`: string (asc/desc，默認 desc)
-
-**請求示例**：
-```
-GET /api/v1/restaurants/1/orders?page=1&limit=20&status=pending&order_by=created_at&sort=desc
-```
-
-**成功響應（HTTP 200）**：
-```json
-{
-  "code": 200,
-  "message": "success",
-  "data": {
-    "items": [
-      {
-        "id": 1001,
-        "order_no": "ORD-20260312-001",
-        "table_id": 5,
-        "table_number": "A1",
-        "status": "pending",
-        "total_amount": 75.00,
-        "final_amount": 75.00,
-        "customer_count": 4,
-        "item_count": 2,
-        "created_at": "2026-03-12T12:00:00Z",
-        "updated_at": "2026-03-12T12:00:00Z"
-      }
-    ],
-    "pagination": {
-      "total": 100,
-      "page": 1,
-      "limit": 20,
-      "pages": 5
-    }
-  },
-  "timestamp": "2026-03-12T12:00:00Z"
-}
-```
-
-#### PUT /orders/{orderId}/status — 更新訂單狀態
-
-**描述**：更新訂單狀態（需認證和權限）
-
-**請求參數**：
-```json
-{
-  "status": "confirmed",
-  "remark": "已確認訂單"  // 可選
-}
-```
-
-**允許的狀態轉換**：
-- `pending` → `confirmed` / `cancelled`
-- `confirmed` → `preparing` / `cancelled`
-- `preparing` → `ready` / `cancelled`
-- `ready` → `completed` / `cancelled`
-
-**成功響應（HTTP 200）**：
-```json
-{
-  "code": 200,
-  "message": "Order status updated successfully",
-  "data": {
-    "id": 1001,
-    "order_no": "ORD-20260312-001",
-    "status": "confirmed",
-    "updated_at": "2026-03-12T12:05:00Z"
-  },
-  "timestamp": "2026-03-12T12:05:00Z"
-}
-```
-
-**錯誤響應**：
-- **400 Bad Request**：狀態轉換無效
-- **404 Not Found**：訂單不存在
+**錯誤**：
+- 401：帳號或密碼錯誤
 
 ---
 
-### 5.4 分析模塊
+### 5.2 使用者模組
 
-#### GET /admin/analytics — 獲取分析數據
+#### GET /users/profile — 取得個人資料
 
-**描述**：獲取餐廳的分析統計數據（需認證和權限）
-
-**請求參數**：
-- 查詢參數：
-  - `date`: string (可選，YYYY-MM-DD，默認今天)
-  - `start_date`: string (可選，YYYY-MM-DD)
-  - `end_date`: string (可選，YYYY-MM-DD)
-  - `type`: string (可選，daily/monthly/yearly)
-
-**成功響應（HTTP 200）**：
+**成功響應 (200)**：
 ```json
 {
   "code": 200,
-  "message": "success",
   "data": {
-    "summary": {
-      "total_orders": 50,
-      "completed_orders": 45,
-      "cancelled_orders": 5,
-      "total_revenue": 3750.00,
-      "average_order_value": 75.00,
-      "busy_hours": "18:00-20:00"
+    "id": "uuid-xxx",
+    "name": "小明",
+    "email": "ming@example.com",
+    "persona": "sarcastic",
+    "ai_engine": "gemini",
+    "monthly_budget": 30000.00,
+    "currency": "TWD",
+    "created_at": "2026-03-01T00:00:00Z"
+  }
+}
+```
+
+#### PUT /users/profile — 更新個人資料
+
+**請求**：
+```json
+{
+  "name": "小明",
+  "persona": "sarcastic",
+  "ai_engine": "openai",
+  "monthly_budget": 35000.00
+}
+```
+
+**驗證**：
+- `persona`：可選，必須為 `sarcastic` / `gentle` / `guilt_trip`
+- `ai_engine`：可選，必須為 `gemini` / `openai`（PRD-F-013）
+- `monthly_budget`：可選，> 0，≤ 10000000
+
+**成功響應 (200)**：回傳更新後的完整 profile。
+
+---
+
+### 5.3 AI 記帳模組
+
+#### POST /ai/validate-key — 驗證 LLM API Key（PRD-F-013）
+
+**描述**：驗證使用者提供的 LLM API Key 是否有效。後端根據使用者的 `ai_engine` 偏好，使用對應引擎發送最小化測試請求，確認 Key 可用。
+
+**Request Header**：
+```
+X-LLM-API-Key: <使用者自行提供的 LLM API Key>
+```
+
+**請求**：無 Body（僅需 Header）
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "valid": true,
+    "engine": "gemini"
+  },
+  "timestamp": "2026-03-17T12:00:00Z"
+}
+```
+
+**錯誤**：
+- 401：`X-LLM-API-Key` Header 缺失或為空
+- 403：API Key 無效或 quota 耗盡，回傳具體錯誤原因（如「金鑰格式錯誤」、「配額已用盡」）
+- 429：超過速率限制
+
+---
+
+#### POST /ai/parse — 解析自然語言輸入
+
+**描述**：接收使用者的自然語言文字，呼叫 LLM 進行資料萃取與人設回饋生成，回傳結構化結果。**不會自動建立交易記錄**，需使用者在前端確認後再呼叫 `POST /transactions`。後端根據使用者的 `ai_engine` 偏好選擇對應的 LLM 引擎（PRD-F-013）。
+
+**Request Header**（PRD-F-013）：
+```
+X-LLM-API-Key: <使用者自行提供的 LLM API Key>
+```
+- 此 Key 由前端從 localStorage 讀取後附加至 Header
+- 後端用後即棄，不持久化儲存
+
+**請求**：
+```json
+{
+  "raw_text": "午餐吃拉麵 180 元"
+}
+```
+
+**驗證**：
+- `raw_text`：必填，1-500 字元
+- `X-LLM-API-Key` Header：必填，不可為空
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "parsed": {
+      "amount": 180,
+      "category": "food",
+      "merchant": "拉麵店",
+      "date": "2026-03-16",
+      "confidence": 0.95,
+      "is_new_category": false,
+      "suggested_category": null
     },
-    "daily_stats": [
+    "feedback": {
+      "text": "又是拉麵？你的胃和錢包一起在哭。",
+      "emotion_tag": "sarcastic_warning"
+    },
+    "budget_context": {
+      "monthly_budget": 30000.00,
+      "spent_this_month": 18500.00,
+      "remaining": 11500.00,
+      "used_ratio": 0.617,
+      "category_spent": 8200.00,
+      "category_limit": 10000.00
+    }
+  },
+  "timestamp": "2026-03-16T12:00:00Z"
+}
+```
+
+**新類別偵測情境（PRD-F-012）**：
+
+當 LLM 判斷消費無法歸入使用者現有類別時，回應如下：
+```json
+{
+  "code": 200,
+  "data": {
+    "parsed": {
+      "amount": 350,
+      "category": null,
+      "merchant": "寵物用品店",
+      "date": "2026-03-17",
+      "confidence": 0.90,
+      "is_new_category": true,
+      "suggested_category": "寵物"
+    },
+    "feedback": {
+      "text": "我覺得這筆消費屬於「寵物」，但你的類別中沒有這項，要新增嗎？",
+      "emotion_tag": "inquiry"
+    },
+    "budget_context": { "..." : "..." }
+  }
+}
+```
+
+前端收到 `is_new_category: true` 時，應顯示新類別確認對話框，提供三個選項：
+1. **確認新增**：呼叫 `POST /budget/categories` 建立新類別，再呼叫 `POST /transactions` 記帳
+2. **修改名稱**：使用者修改類別名稱後，同上流程
+3. **選擇現有類別**：使用者從現有類別中選擇，直接進入記帳確認流程
+
+**錯誤**：
+- 400：輸入文字為空或過長
+- 401：`X-LLM-API-Key` Header 缺失或為空（PRD-F-013）
+- 403：API Key 無效或 quota 耗盡，回傳友善提示訊息（PRD-F-013）
+- 429：超過 LLM 速率限制
+- 502：LLM 服務暫時不可用
+
+---
+
+### 5.4 交易模組
+
+#### POST /transactions — 建立交易記錄
+
+**描述**：使用者確認 AI 解析結果後，提交建立交易記錄。同時儲存 AI 回饋。
+
+> **設計說明（PRD-F-004）**：「修改」操作在前端本地完成——使用者在確認卡片上直接編輯金額、類別、商家等欄位，修改後的資料透過此端點提交，無需額外的修改 API。
+
+**請求**：
+```json
+{
+  "amount": 180,
+  "category": "food",
+  "merchant": "拉麵店",
+  "raw_text": "午餐吃拉麵 180 元",
+  "transaction_date": "2026-03-16",
+  "note": "",
+  "feedback": {
+    "text": "又是拉麵？你的胃和錢包一起在哭。",
+    "emotion_tag": "sarcastic_warning",
+    "persona_used": "sarcastic"
+  }
+}
+```
+
+**驗證**：
+- `amount`：必填，> 0
+- `category`：必填，須為合法類別
+- `raw_text`：必填
+- `transaction_date`：必填，有效日期
+- `feedback`：可選
+- `feedback.persona_used`：前端從使用者 profile 中的 `persona` 欄位取得，代表生成此回饋時使用的人設
+
+**成功響應 (201)**：
+```json
+{
+  "code": 201,
+  "message": "記帳成功",
+  "data": {
+    "transaction": {
+      "id": "uuid-txn-001",
+      "amount": 180,
+      "category": "food",
+      "merchant": "拉麵店",
+      "raw_text": "午餐吃拉麵 180 元",
+      "transaction_date": "2026-03-16",
+      "note": "",
+      "created_at": "2026-03-16T12:00:00Z"
+    },
+    "feedback": {
+      "id": "uuid-fb-001",
+      "feedback_text": "又是拉麵？你的胃和錢包一起在哭。",
+      "emotion_tag": "sarcastic_warning",
+      "persona_used": "sarcastic"
+    }
+  },
+  "timestamp": "2026-03-16T12:00:00Z"
+}
+```
+
+#### GET /transactions — 查詢交易列表
+
+**查詢參數**：
+- `page`：頁碼（預設 1）
+- `limit`：每頁筆數（預設 20，最大 100）
+- `category`：按類別篩選（可選）
+- `start_date`：起始日期（可選，YYYY-MM-DD）
+- `end_date`：結束日期（可選，YYYY-MM-DD）
+- `sort`：排序方向（asc/desc，預設 desc）
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "items": [
       {
-        "date": "2026-03-12",
-        "orders": 50,
-        "revenue": 3750.00,
-        "customers": 180,
-        "avg_dining_time": 45
+        "id": "uuid-txn-001",
+        "amount": 180,
+        "category": "food",
+        "merchant": "拉麵店",
+        "transaction_date": "2026-03-16",
+        "created_at": "2026-03-16T12:00:00Z"
       }
     ],
-    "top_items": [
+    "pagination": {
+      "total": 50,
+      "page": 1,
+      "limit": 20,
+      "pages": 3
+    }
+  }
+}
+```
+
+#### GET /transactions/:id — 取得單筆交易詳情
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "id": "uuid-txn-001",
+    "amount": 180,
+    "category": "food",
+    "merchant": "拉麵店",
+    "raw_text": "午餐吃拉麵 180 元",
+    "note": "",
+    "transaction_date": "2026-03-16",
+    "created_at": "2026-03-16T12:00:00Z",
+    "feedback": {
+      "feedback_text": "又是拉麵？你的胃和錢包一起在哭。",
+      "emotion_tag": "sarcastic_warning",
+      "persona_used": "sarcastic"
+    }
+  }
+}
+```
+
+#### DELETE /transactions/:id — 刪除交易
+
+**成功響應 (204)**：無內容。
+
+**錯誤**：
+- 404：交易不存在
+
+---
+
+### 5.5 預算模組
+
+#### GET /budget/summary — 本月預算摘要
+
+**查詢參數**：
+- `month`：月份（可選，YYYY-MM，預設當月）
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "month": "2026-03",
+    "monthly_budget": 30000.00,
+    "total_spent": 18500.00,
+    "remaining": 11500.00,
+    "used_ratio": 0.617,
+    "transaction_count": 42,
+    "category_summary": [
       {
-        "id": 101,
-        "name": "紅油抄手",
-        "quantity": 120,
-        "revenue": 3000.00,
-        "rank": 1
-      }
-    ],
-    "table_stats": [
+        "category": "food",
+        "spent": 8200.00,
+        "budget_limit": 10000.00,
+        "used_ratio": 0.82
+      },
       {
-        "table_id": 1,
-        "table_number": "A1",
-        "orders_count": 5,
-        "total_revenue": 375.00,
-        "avg_dining_time": 45
+        "category": "transport",
+        "spent": 2100.00,
+        "budget_limit": 3000.00,
+        "used_ratio": 0.70
       }
     ]
+  }
+}
+```
+
+#### GET /budget/categories — 取得類別預算列表
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "categories": [
+      { "category": "food", "budget_limit": 8000.00, "is_custom": false },
+      { "category": "transport", "budget_limit": 3000.00, "is_custom": false },
+      { "category": "entertainment", "budget_limit": 3000.00, "is_custom": false },
+      { "category": "shopping", "budget_limit": 3000.00, "is_custom": false },
+      { "category": "daily", "budget_limit": 2000.00, "is_custom": false },
+      { "category": "medical", "budget_limit": 2000.00, "is_custom": false },
+      { "category": "education", "budget_limit": 2000.00, "is_custom": false },
+      { "category": "other", "budget_limit": 0, "is_custom": false }
+    ]
+  }
+}
+```
+
+#### POST /budget/categories — 新增自訂類別（PRD-F-012）
+
+**描述**：使用者確認新增 AI 建議的類別時呼叫此端點。新增類別後可選擇設定預算限額。
+
+**請求**：
+```json
+{
+  "category": "寵物",
+  "budget_limit": 3000.00
+}
+```
+
+**驗證**：
+- `category`：必填，2-50 字元，不可與該使用者現有類別重複（大小寫不敏感）
+- `budget_limit`：可選，≥ 0，預設 0
+- 使用者類別總數不可超過 20
+
+**成功響應 (201)**：
+```json
+{
+  "code": 201,
+  "message": "類別新增成功",
+  "data": {
+    "category": "寵物",
+    "budget_limit": 3000.00,
+    "is_custom": true
   },
-  "timestamp": "2026-03-12T12:00:00Z"
+  "timestamp": "2026-03-17T12:00:00Z"
+}
+```
+
+**錯誤**：
+- 400：類別名稱為空或過長
+- 409：類別已存在
+- 422：類別數量已達上限（20）
+
+#### DELETE /budget/categories/:category — 刪除自訂類別（PRD-F-012）
+
+**描述**：刪除使用者自訂的類別。預設類別不可刪除。若該類別下有交易記錄，需將這些記錄重新歸類至「其他」。
+
+**成功響應 (204)**：無內容。
+
+**錯誤**：
+- 400：不可刪除預設類別
+- 404：類別不存在
+
+#### PUT /budget/categories — 批量更新類別預算
+
+**請求**：
+```json
+{
+  "categories": [
+    { "category": "food", "budget_limit": 12000.00 },
+    { "category": "transport", "budget_limit": 4000.00 }
+  ]
+}
+```
+
+**成功響應 (200)**：回傳更新後的完整類別預算列表。
+
+---
+
+### 5.6 統計模組
+
+#### GET /stats/distribution — 消費類別分佈
+
+**查詢參數**：
+- `month`：月份（可選，YYYY-MM，預設當月）
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "month": "2026-03",
+    "total_spent": 18500.00,
+    "distribution": [
+      { "category": "food", "amount": 8200.00, "ratio": 0.443, "count": 20 },
+      { "category": "transport", "amount": 2100.00, "ratio": 0.114, "count": 15 },
+      { "category": "entertainment", "amount": 3500.00, "ratio": 0.189, "count": 4 },
+      { "category": "shopping", "amount": 2800.00, "ratio": 0.151, "count": 2 },
+      { "category": "daily", "amount": 1900.00, "ratio": 0.103, "count": 1 }
+    ]
+  }
 }
 ```
 
@@ -732,107 +688,21 @@ GET /api/v1/restaurants/1/orders?page=1&limit=20&status=pending&order_by=created
 
 ## 6. 錯誤處理
 
-### 6.1 錯誤響應格式
+### 6.1 錯誤碼對照表
 
-```json
-{
-  "code": 400,
-  "message": "Parameter validation failed",
-  "errors": [
-    {
-      "field": "price",
-      "code": "INVALID_VALUE",
-      "reason": "Price must be a positive number"
-    },
-    {
-      "field": "quantity",
-      "code": "OUT_OF_RANGE",
-      "reason": "Quantity must be between 1 and 100"
-    }
-  ],
-  "timestamp": "2026-03-12T12:00:00Z"
-}
-```
-
-### 6.2 常見錯誤碼
-
-| 錯誤碼 | HTTP 狀態 | 中文 | 描述 |
-|--------|-----------|------|------|
-| **INVALID_REQUEST** | 400 | 無效請求 | 請求格式錯誤或缺少必填參數 |
-| **INVALID_VALUE** | 400 | 無效值 | 參數值不符合規範 |
-| **VALIDATION_ERROR** | 400 | 驗證失敗 | 業務邏輯驗證失敗 |
-| **UNAUTHORIZED** | 401 | 未授權 | 缺少或無效的認證信息 |
-| **FORBIDDEN** | 403 | 禁止訪問 | 無權限執行此操作 |
-| **NOT_FOUND** | 404 | 不存在 | 請求的資源不存在 |
-| **CONFLICT** | 409 | 衝突 | 資源衝突（如重複名稱） |
-| **RATE_LIMIT_EXCEEDED** | 429 | 超出限流 | 請求過於頻繁 |
-| **INTERNAL_ERROR** | 500 | 服務器錯誤 | 未預期的服務器錯誤 |
-| **SERVICE_UNAVAILABLE** | 503 | 服務不可用 | 服務暫時不可用 |
-
----
-
-## 7. 分頁與篩選
-
-### 7.1 分頁規範
-
-**查詢參數**：
-```
-page=1&limit=20
-```
-
-- `page`：頁碼，從 1 開始（默認 1）
-- `limit`：每頁數量，1-100（默認 10）
-
-**分頁響應**：
-```json
-{
-  "code": 200,
-  "data": {
-    "items": [...],
-    "pagination": {
-      "total": 500,
-      "page": 1,
-      "limit": 20,
-      "pages": 25,
-      "has_next": true,
-      "has_prev": false
-    }
-  }
-}
-```
-
-### 7.2 排序規範
-
-**查詢參數**：
-```
-order_by=created_at&sort=desc
-```
-
-- `order_by`：排序字段（默認 created_at）
-- `sort`：排序方向，asc（升序）/ desc（降序，默認）
-
-### 7.3 篩選規範
-
-**常見篩選字段**：
-- `status`：單值或多值（如 status=pending,confirmed）
-- `category_id`：分類 ID
-- `date_range`：時間範圍（start_date / end_date）
-- `price_range`：價格範圍（min_price / max_price）
-
-**查詢示例**：
-```
-GET /api/v1/restaurants/1/orders?status=pending,confirmed&start_date=2026-03-01&end_date=2026-03-31&order_by=created_at&sort=desc&page=1&limit=20
-```
-
----
-
-## 版本歷史
-
-| 版本 | 日期 | 說明 |
-|------|------|------|
-| v1.0 | 2026-03-12 | 初始版本 |
+| 錯誤碼 | HTTP 狀態 | 描述 |
+|--------|-----------|------|
+| VALIDATION_ERROR | 400 | 參數驗證失敗 |
+| UNAUTHORIZED | 401 | 未認證或 Token 過期 |
+| NOT_FOUND | 404 | 資源不存在 |
+| LLM_API_KEY_MISSING | 401 | LLM API Key 未提供（PRD-F-013） |
+| LLM_API_KEY_INVALID | 403 | LLM API Key 無效或 quota 耗盡（PRD-F-013） |
+| CONFLICT | 409 | 資源衝突（如 email 重複） |
+| RATE_LIMIT_EXCEEDED | 429 | 超出速率限制 |
+| LLM_SERVICE_ERROR | 502 | LLM 服務呼叫失敗 |
+| INTERNAL_ERROR | 500 | 伺服器內部錯誤 |
 
 ---
 
 **文檔責任人**：技術架構團隊
-**最後修訂日期**：2026-03-12
+**最後修訂日期**：2026-03-16
