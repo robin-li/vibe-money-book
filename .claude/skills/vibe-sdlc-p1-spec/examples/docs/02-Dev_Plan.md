@@ -145,7 +145,10 @@ gantt
 - **A-Backend**：依據 SRD 生成 Schema/Prisma Models 與 Seed Data，初始化框架骨架，設定全局中間件，並實作 Auth API (JWT/Bcrypt)。
 - **A-Frontend**：初始化 React/Vite 架構，設定 Tailwind，實作 Login UI。
 - **A-DevOps**：在前後端骨架完成後，建立基礎 CI Workflow (GitHub Actions)，確保後續所有 PR 皆受 CI 保護。
-- A-Backend 與 A-Frontend 的骨架任務無依賴，可 **完全並行**；CI 建設在骨架完成後進行；Auth 任務在 CI 就緒後進行。
+- T-101 + T-102（A-Backend）為同一 Agent 內部依序執行，合併為一個 PR；與 T-103（A-Frontend）**跨 Agent 並行**。
+- CI 建設（T-104）在骨架完成後進行；Auth 任務在 CI 就緒後進行。
+
+> **Bootstrap 說明**：T-101 ~ T-104 屬於專案初始化階段，CI Pipeline 尚未建立，PR 直接由 H-Director 審查合併（`gh pr create --reviewer <H-Director-username>`）。T-104 合併後，後續所有 PR（T-105 起）必須通過 CI 檢查。
 
 **交付物**：
 - 完整 DB Schema 及遷移檔案。
@@ -210,15 +213,15 @@ gantt
 
 ### 4.1 任務總覽
 
-| ID | 任務名稱 | 優先權 | 負責角色 | 前置任務 | 預估耗時 |
-|----|---------|-------|---------|---------|----------|
-| T-101 | Schema 與 DB 初始化 | P0 | A-Backend | — | ~2 AI Sessions |
-| T-102 | 後端骨架與中介軟體 | P0 | A-Backend | — | ~3 AI Sessions |
-| T-103 | 前端骨架與路由 | P0 | A-Frontend | — | ~3 AI Sessions |
-| T-104 | CI 基礎建設 (GitHub Actions) | P0 | A-DevOps | T-102, T-103 | ~2 AI Sessions |
-| T-105 | 認證 API 開發 | P0 | A-Backend | T-101, T-102, T-104 | ~4 AI Sessions |
-| T-106 | 登入頁與前端 Auth | P0 | A-Frontend | T-103, T-104 | ~3 AI Sessions |
-| ⛳ M1 | M1 驗收門 | P0 | H-Director | T-105, T-106 | ~2 HRH |
+| ID | 任務名稱 | 優先權 | 負責角色 | 前置任務 | PR 策略 | 預估耗時 |
+|----|---------|-------|---------|---------|--------|----------|
+| T-101 | Schema 與 DB 初始化 | P0 | A-Backend | — | 與 T-102 合併 | ~2 AI Sessions |
+| T-102 | 後端骨架與中介軟體 | P0 | A-Backend | — | 與 T-101 合併 | ~3 AI Sessions |
+| T-103 | 前端骨架與路由 | P0 | A-Frontend | — | 獨立 PR | ~3 AI Sessions |
+| T-104 | CI 基礎建設 (GitHub Actions) | P0 | A-DevOps | T-102, T-103 | 獨立 PR | ~2 AI Sessions |
+| T-105 | 認證 API 開發 | P0 | A-Backend | T-101, T-102, T-104 | 獨立 PR | ~4 AI Sessions |
+| T-106 | 登入頁與前端 Auth | P0 | A-Frontend | T-103, T-104 | 獨立 PR | ~3 AI Sessions |
+| ⛳ M1 | M1 驗收門 | P0 | H-Director | T-105, T-106 | — | ~2 HRH |
 | T-201 | 菜單與訂單 API | P0 | A-Backend | T-105 | ~8 AI Sessions |
 | T-202 | 顧客端訂單 UI | P0 | A-Frontend | T-106 | ~10 AI Sessions |
 | T-203 | 訂單狀態機 Review | P1 | A-Main | T-201 | ~2 AI Sessions |
@@ -375,20 +378,17 @@ gantt
 
 ```mermaid
 flowchart TB
-    START(("🚀 開始")) --> T101 & T102 & T103
+    START(("🚀 開始")) --> BE_INIT & T103
 
-    T101["T-101 Schema 初始化<br/>(A-Backend)"]
-    T102["T-102 後端骨架<br/>(A-Backend)"]
+    subgraph BE_INIT["A-Backend 初始化 (一個 PR)"]
+        T101["T-101 Schema 初始化"] --> T102["T-102 後端骨架"]
+    end
     T103["T-103 前端骨架<br/>(A-Frontend)"]
 
-    T102 & T103 --> T104
-    T104["T-104 CI 基礎建設<br/>(A-DevOps)"]
+    T102 & T103 --> T104["T-104 CI 基礎建設<br/>(A-DevOps)"]
 
-    T101 & T102 & T104 --> T105
-    T103 & T104 --> T106
-
-    T105["T-105 認證 API<br/>(A-Backend)"]
-    T106["T-106 登入頁 UI<br/>(A-Frontend)"]
+    T102 & T104 --> T105["T-105 認證 API<br/>(A-Backend)"]
+    T103 & T104 --> T106["T-106 登入頁 UI<br/>(A-Frontend)"]
 
     T105 & T106 --> M1G["⛳ M1 驗收門<br/>(H-Director)"]
 
@@ -545,24 +545,39 @@ feat/<agent>/<issue-N>-<簡述>
 | A-DevOps | `feat/devops/issue-20-docker` |
 | A-Main | `feat/main/issue-40-integration` |
 
-#### PR 審查流程 (雙層審查)
+#### Bootstrap 階段（CI 建立前的 PR 處理）
+
+T-101 ~ T-104 屬於專案初始化階段，CI Pipeline 尚未建立：
+
+- **Bootstrap PR** 直接由 H-Director 審查合併，不經過 CI 閘門與 A-Main 初審。
+- Sub Agent 建立 PR 時直接指定：`gh pr create --reviewer <H-Director-username>`
+- T-104 合併後，恢復標準雙層審查流程。
+
+#### H-Director 通知機制
+
+| 場景 | 通知方式 |
+|------|---------|
+| **Bootstrap 階段** | `gh pr create --reviewer <H-Director-username>`，GitHub 自動發送 Review Request 通知 |
+| **標準流程** | A-Main 初審通過後執行 `gh pr edit --add-reviewer <H-Director-username>`，GitHub 自動通知 |
+| **Milestone 驗收** | A-Main 在 GitHub Issue 中 `@H-Director` 並附上驗收檢查清單 |
+
+#### PR 審查流程（標準流程，CI 就緒後適用）
 
 ```mermaid
 flowchart LR
-    SUB["Sub Agent<br/>提交 PR"] --> CI["GitHub Actions<br/>CI 檢查"]
-    CI -->|通過| MAIN["A-Main<br/>初審"]
+    SUB["Sub Agent<br/>gh pr create"] --> CI["GitHub Actions<br/>CI 檢查"]
+    CI -->|通過| MAIN["A-Main 初審"]
     CI -->|失敗| SUB
-    MAIN -->|通過| DIR["H-Director<br/>終審 & Merge"]
+    MAIN -->|通過| REQ["A-Main 執行<br/>gh pr edit<br/>--add-reviewer H-Director"]
+    REQ --> DIR["H-Director<br/>收到 GitHub 通知<br/>終審 & Merge"]
     MAIN -->|駁回| SUB
-    DIR -->|要求修改| SUB
-    DIR -->|核准| MERGE["合併至 main"]
 ```
 
 | 審查層 | 審查者 | 檢查重點 |
 |--------|--------|---------|
 | **CI 自動檢查** | GitHub Actions | Lint、Type Check、Unit Test、Build |
 | **初審** | A-Main | PR 範圍是否僅限負責目錄、無跨域修改、邏輯正確性 |
-| **終審** | H-Director | 架構合理性、商業邏輯正確性、最終 Merge 決策 |
+| **終審** | H-Director | 架構合理性、商業邏輯正確性、最終 Merge 決策（透過 GitHub Review Request 通知） |
 
 #### PR 範圍限制
 
