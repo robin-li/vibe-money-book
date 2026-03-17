@@ -313,7 +313,7 @@ gantt
 - **任務描述**：實作後端認證模組（註冊、登入、JWT 中間件）與使用者 Profile 模組（取得/更新個人資料），撰寫單元測試。
 - **主要步驟**：
   1. 安裝依賴：`bcrypt`、`jsonwebtoken`、`zod`
-  2. 實作 Auth Service：`register()`（bcrypt 密碼加密）、`login()`（密碼驗證 + JWT 生成）
+  2. 實作 Auth Service：`register()`（bcrypt 密碼加密、**自動初始化 8 個預設類別預算**，見 SRD §3.4）、`login()`（密碼驗證 + JWT 生成）
   3. 實作 Auth Controller：`POST /auth/register`、`POST /auth/login`
   4. 實作 Auth Middleware：驗證 Bearer Token、注入 `req.userId`
   5. 實作 User Controller：`GET /users/profile`、`PUT /users/profile`（含人設、預算、AI 引擎偏好更新）
@@ -366,7 +366,7 @@ gantt
   11. 撰寫單元測試：使用 Mock Provider 測試引擎切換邏輯、Prompt 組裝、錯誤處理
   12. 準備至少 10 組測試案例（含邊界情境：無金額、多筆消費、模糊類別）
 - **前置任務**：T-105（Auth API，需認證中間件）
-- **輸入**：`01-2-SRD.md` (§4 LLM 整合設計、§3.4 自訂類別機制、§4.3 多引擎抽象架構)、`API_Spec.yaml` (AI 端點)
+- **輸入**：`01-2-SRD.md` (§4 LLM 整合設計、§3.5 自訂類別機制、§4.3 多引擎抽象架構)、`API_Spec.yaml` (AI 端點)
 - **產出**：`llmService.ts`、`llmProvider.ts` (介面)、`geminiProvider.ts`、`openaiProvider.ts`、`/prompts/*.ts`、`aiController.ts`、單元測試
 - **驗證**：
   - ✅ 自動：單元測試通過 — Mock Provider 驗證引擎切換、Prompt 組裝、10 組固定輸入/輸出案例、錯誤處理與重試
@@ -463,7 +463,7 @@ gantt
   6. 實作 `GET /stats/distribution`：消費分佈比例（各類別佔總消費百分比）
   7. 撰寫單元測試：摘要計算、分佈比例加總驗證、類別上限檢查、刪除後歸類邏輯
 - **前置任務**：T-202（Transaction API，需交易資料基礎）
-- **輸入**：`API_Spec.yaml` (Budget/Stats 端點)、`01-2-SRD.md` (§3.4 自訂類別機制)
+- **輸入**：`API_Spec.yaml` (Budget/Stats 端點)、`01-2-SRD.md` (§3.5 自訂類別機制)
 - **產出**：`budgetController.ts`、`budgetService.ts`、`statsController.ts`、`statsService.ts`、單元測試
 - **驗證**：
   - ✅ 自動：單元測試通過 — 摘要數據正確計算、分佈比例加總為 1.0

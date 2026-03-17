@@ -584,11 +584,11 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
   "code": 200,
   "data": {
     "categories": [
-      { "category": "food", "budget_limit": 10000.00, "is_custom": false },
+      { "category": "food", "budget_limit": 8000.00, "is_custom": false },
       { "category": "transport", "budget_limit": 3000.00, "is_custom": false },
-      { "category": "entertainment", "budget_limit": 5000.00, "is_custom": false },
-      { "category": "shopping", "budget_limit": 5000.00, "is_custom": false },
-      { "category": "daily", "budget_limit": 3000.00, "is_custom": false },
+      { "category": "entertainment", "budget_limit": 3000.00, "is_custom": false },
+      { "category": "shopping", "budget_limit": 3000.00, "is_custom": false },
+      { "category": "daily", "budget_limit": 2000.00, "is_custom": false },
       { "category": "medical", "budget_limit": 2000.00, "is_custom": false },
       { "category": "education", "budget_limit": 2000.00, "is_custom": false },
       { "category": "other", "budget_limit": 0, "is_custom": false }
