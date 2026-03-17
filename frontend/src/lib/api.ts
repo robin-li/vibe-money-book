@@ -24,6 +24,7 @@ api.interceptors.response.use(
     // 401 時可導向登入頁
     if (error.response?.status === 401) {
       localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
       window.location.href = '/login'
     }
     return Promise.reject(error)
