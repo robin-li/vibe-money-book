@@ -218,22 +218,22 @@ gantt
 | T-105 | 認證與使用者模組 API 開發 | P0 | A-Backend | T-101, T-102, T-104 | 獨立 PR | ~4 Sessions |
 | T-106 | 登入/註冊頁面與 Auth | P0 | A-Frontend | T-103, T-104 | 獨立 PR | ~3 Sessions |
 | ⛳ M1 | M1 驗收門 | P0 | H-Director | T-105, T-106 | — | ~2 HRH |
-| T-201 | LLM 雙引擎（含新類別偵測 + 多引擎） | P0 | A-Backend | T-105 | ~12 Sessions |
-| T-202 | 交易 CRUD API | P0 | A-Backend | T-105 | ~4 Sessions |
-| T-203 | 語音輸入組件 | P0 | A-Frontend | T-106 | ~5 Sessions |
-| T-204 | 儀表板式記帳介面（含新類別確認） | P0 | A-Frontend | T-203; T-201, T-202 (串接) | ~10 Sessions |
-| T-205 | LLM Prompt Review | P1 | A-Main | T-201 | ~2 Sessions |
-| ⛳ M2 | M2 驗收門 | P0 | H-Director | T-201~T-205 | ~3 HRH |
-| T-301 | 預算與統計 API（含類別 CRUD） | P0 | A-Backend | T-202 | ~6 Sessions |
-| T-302 | 預算血條與圖表 UI | P0 | A-Frontend | T-204 | ~5 Sessions |
-| T-303 | 交易記錄列表 | P1 | A-Frontend | T-204 | ~3 Sessions |
-| T-304 | 設定頁面（含類別管理 + AI 引擎選擇） | P1 | A-Frontend | T-204 | ~6 Sessions |
-| T-305 | PWA 配置 | P1 | A-Frontend | T-103 | ~2 Sessions |
-| ⛳ M3 | M3 驗收門 | P0 | H-Director | T-301~T-305 | ~2 HRH |
-| T-401 | Docker 容器化與 CI 擴充 | P0 | A-DevOps | T-301~T-305 | ~2 Sessions |
-| T-402 | E2E 測試 | P0 | A-QA | T-301~T-304 | ~5 Sessions |
-| T-403 | 全域整合與 Vibe Check | P0 | A-Main | T-401, T-402 | ~5 Sessions |
-| ⛳ M4 | M4 Go/No-Go | P0 | H-Director, H-Reviewer | T-403 | ~3 HRH |
+| T-201 | LLM 雙引擎（含新類別偵測 + 多引擎） | P0 | A-Backend | T-105 | 獨立 PR | ~12 Sessions |
+| T-202 | 交易 CRUD API | P0 | A-Backend | T-105 | 獨立 PR | ~4 Sessions |
+| T-203 | 語音輸入組件 | P0 | A-Frontend | T-106 | 獨立 PR | ~5 Sessions |
+| T-204 | 儀表板式記帳介面（含新類別確認） | P0 | A-Frontend | T-203; T-201, T-202 (串接) | 獨立 PR | ~10 Sessions |
+| T-205 | LLM Prompt Review | P1 | A-Main | T-201 | — | ~2 Sessions |
+| ⛳ M2 | M2 驗收門 | P0 | H-Director | T-201~T-205 | — | ~3 HRH |
+| T-301 | 預算與統計 API（含類別 CRUD） | P0 | A-Backend | T-202 | 獨立 PR | ~6 Sessions |
+| T-302 | 預算血條與圖表 UI | P0 | A-Frontend | T-204 | 獨立 PR | ~5 Sessions |
+| T-303 | 交易記錄列表 | P1 | A-Frontend | T-204 | 獨立 PR | ~3 Sessions |
+| T-304 | 設定頁面（含類別管理 + AI 引擎選擇） | P1 | A-Frontend | T-204 | 獨立 PR | ~6 Sessions |
+| T-305 | PWA 配置 | P1 | A-Frontend | T-103 | 獨立 PR | ~2 Sessions |
+| ⛳ M3 | M3 驗收門 | P0 | H-Director | T-301~T-305 | — | ~2 HRH |
+| T-401 | Docker 容器化與 CI 擴充 | P0 | A-DevOps | T-301~T-305 | 獨立 PR | ~2 Sessions |
+| T-402 | E2E 測試 | P0 | A-QA | T-301~T-304 | 獨立 PR | ~5 Sessions |
+| T-403 | 全域整合與 Vibe Check | P0 | A-Main | T-401, T-402 | 獨立 PR | ~5 Sessions |
+| ⛳ M4 | M4 Go/No-Go | P0 | H-Director, H-Reviewer | T-403 | — | ~3 HRH |
 
 ### 4.2 任務詳細描述
 
