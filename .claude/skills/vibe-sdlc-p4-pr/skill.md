@@ -30,6 +30,7 @@ user_invocable: true
 
 - Phase 3 已完成，PR 已建立（由 Phase 3 自動推送與建立）
 - PR 正在等待 CI 結果或開發者 Code Review
+- 若需修正 CI 失敗，建議先同步工作目錄（參見 P3「工作目錄同步規範」），確保修正基於最新程式碼
 
 ## 操作步驟
 
@@ -130,9 +131,10 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
    - CI 通過：通知開發者可進行 Code Review
    - CI 失敗：讀取失敗報告，分析原因，修正後推送新 commit
 4. 開發者 Merge 後：
+   - **先同步工作目錄**：`git fetch origin && git rebase origin/main`（確保包含剛合併的變更）
    - 讀取 `/docs/02-Dev_Plan.md`
    - 找到對應任務，將 `- [ ]` 改為 `- [x]`
-   - 提交更新
+   - 提交更新並推送
 7. 檢查該任務是否有對應的手動驗證 Issues（標籤 `verification`，標題以 `[驗證] T-{ID}` 開頭）：
    - 若有：提醒開發者通知對應的審查角色（H-Reviewer / H-UxReviewer）開始驗證
    - 列出相關驗證 Issues 的編號與標題
