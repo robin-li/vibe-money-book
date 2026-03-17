@@ -102,6 +102,36 @@ body {
   }
 }
 
+/* ===== Budget Pulse Animation ===== */
+
+@keyframes budget-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-budget-pulse {
+  animation: budget-pulse 1.5s ease-in-out infinite;
+}
+
+/* ===== Slide-up Animation ===== */
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 300ms ease-out;
+}
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,
