@@ -1,16 +1,135 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAppStore } from '../stores/index'
+import { useDashboardStore } from '../stores/dashboardStore'
 import VoiceInput from '../components/VoiceInput'
+import BudgetCard from '../components/BudgetCard'
+import AIFeedbackCard from '../components/AIFeedbackCard'
+import RecentTransactions from '../components/RecentTransactions'
+import ParsedResultCard from '../components/ParsedResultCard'
+import NewCategoryDialog from '../components/NewCategoryDialog'
+
+const DEFAULT_CATEGORIES = [
+  'food',
+  'transport',
+  'entertainment',
+  'shopping',
+  'daily',
+  'medical',
+  'education',
+  'other',
+]
 
 function DashboardPage() {
-  const handleSubmit = useCallback((text: string) => {
-    // TODO: integrate with AI parse API in future issues
-    console.log('Submit:', text)
-  }, [])
+  const navigate = useNavigate()
+  const settings = useAppStore((s) => s.settings)
+
+  const {
+    status,
+    parsedResult,
+    aiFeedback,
+    budgetSummary,
+    recentTransactions,
+    errorMessage,
+    lastFeedbackText,
+    parseInput,
+    confirmTransaction,
+    createCategory,
+    fetchBudgetSummary,
+    fetchRecentTransactions,
+    resetParsedResult,
+  } = useDashboardStore()
+
+  useEffect(() => {
+    fetchBudgetSummary()
+    fetchRecentTransactions()
+  }, [fetchBudgetSummary, fetchRecentTransactions])
+
+  const handleSubmit = useCallback(
+    (text: string) => {
+      parseInput(text)
+    },
+    [parseInput]
+  )
+
+  const handleConfirmTransaction = useCallback(
+    async (data: {
+      amount: number
+      category: string
+      merchant: string
+      date: string
+    }) => {
+      await confirmTransaction({
+        ...data,
+        rawText: parsedResult?.merchant ?? data.merchant,
+        feedback: aiFeedback ?? undefined,
+      })
+      fetchBudgetSummary()
+    },
+    [confirmTransaction, parsedResult, aiFeedback, fetchBudgetSummary]
+  )
+
+  const handleNewCategoryConfirm = useCallback(
+    async (categoryName: string) => {
+      try {
+        await createCategory(categoryName)
+        if (parsedResult) {
+          await confirmTransaction({
+            amount: parsedResult.amount ?? 0,
+            category: categoryName,
+            merchant: parsedResult.merchant,
+            date: parsedResult.date,
+            rawText: parsedResult.merchant,
+            feedback: aiFeedback ?? undefined,
+          })
+          fetchBudgetSummary()
+        }
+      } catch {
+        // Error handled by store
+      }
+    },
+    [
+      createCategory,
+      confirmTransaction,
+      parsedResult,
+      aiFeedback,
+      fetchBudgetSummary,
+    ]
+  )
+
+  const handleSelectExistingCategory = useCallback(
+    async (category: string) => {
+      if (parsedResult) {
+        await confirmTransaction({
+          amount: parsedResult.amount ?? 0,
+          category,
+          merchant: parsedResult.merchant,
+          date: parsedResult.date,
+          rawText: parsedResult.merchant,
+          feedback: aiFeedback ?? undefined,
+        })
+        fetchBudgetSummary()
+      }
+    },
+    [confirmTransaction, parsedResult, aiFeedback, fetchBudgetSummary]
+  )
+
+  const isParsing = status === 'parsing'
+  const isSaving = status === 'saving'
+  const showParsedResult =
+    status === 'parsed' && parsedResult && !parsedResult.isNewCategory
+  const showNewCategoryDialog =
+    status === 'parsed' && parsedResult?.isNewCategory
+
+  const feedbackText =
+    lastFeedbackText ||
+    '歡迎使用 Vibe Money Book！開始記錄你的第一筆消費吧～'
 
   return (
     <>
-      <div className="p-2xl pb-[120px]">
-        <header className="flex items-center justify-between h-14 mb-lg">
+      <div className="pt-2xl pb-[120px]">
+        {/* Header */}
+        <header className="flex items-center justify-between h-14 px-2xl mb-lg">
           <div className="flex items-center gap-sm">
             <div className="w-8 h-8 bg-primary rounded-sm flex items-center justify-center text-surface text-lg">
               💰
@@ -24,46 +143,81 @@ function DashboardPage() {
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => navigate('/settings')}
+            className="w-6 h-6 text-text-secondary"
+            aria-label="設定"
+          >
+            ⚙️
+          </button>
         </header>
 
-        <section
-          className="bg-surface rounded-lg shadow-card p-lg mb-xl"
-          aria-label="預算概覽"
-        >
-          <h2 className="text-[var(--font-size-caption)] text-text-secondary mb-sm">
-            預算剩餘
-          </h2>
-          <p className="text-[var(--font-size-display)] font-bold text-text-primary">
-            --
-          </p>
-          <p className="text-[var(--font-size-caption)] text-text-secondary mt-sm">
-            尚未設定預算
-          </p>
-        </section>
+        {/* Budget Card */}
+        <BudgetCard summary={budgetSummary} />
 
-        <section
-          className="bg-primary-light rounded-lg p-lg mb-xl"
-          aria-label="AI 回饋"
-        >
-          <p className="text-[var(--font-size-caption)] text-text-secondary mb-xs">
-            溫柔管家 💖 的即時回饋
-          </p>
-          <p className="text-[var(--font-size-body)] text-primary-dark">
-            「歡迎使用 Vibe Money Book！開始記錄你的第一筆消費吧～」
-          </p>
-        </section>
+        {/* AI Feedback Card */}
+        <AIFeedbackCard
+          feedbackText={
+            isParsing ? 'AI 正在分析...' : feedbackText
+          }
+          persona={settings.persona}
+        />
 
-        <section aria-label="最近帳目">
-          <h2 className="text-[var(--font-size-title)] font-semibold text-text-primary mb-md">
-            🕐 最近帳目
-          </h2>
-          <p className="text-[var(--font-size-body)] text-text-tertiary text-center py-3xl">
-            還沒有記帳紀錄，開始記帳吧！
+        {/* Error toast */}
+        {status === 'error' && errorMessage && (
+          <div
+            className="mx-2xl mb-md px-lg py-sm rounded-md bg-danger text-surface text-[var(--font-size-body)] text-center"
+            role="alert"
+          >
+            {errorMessage}
+          </div>
+        )}
+
+        {/* Skeleton loading */}
+        {isParsing && (
+          <div className="mx-2xl mb-md">
+            <div className="bg-surface rounded-lg shadow-card p-lg animate-pulse">
+              <div className="h-4 bg-border rounded w-1/3 mb-md" />
+              <div className="h-4 bg-border rounded w-2/3 mb-sm" />
+              <div className="h-4 bg-border rounded w-1/2" />
+            </div>
+          </div>
+        )}
+
+        {/* Parsed Result Card */}
+        {showParsedResult && (
+          <ParsedResultCard
+            result={parsedResult}
+            onConfirm={handleConfirmTransaction}
+            onCancel={resetParsedResult}
+            categories={DEFAULT_CATEGORIES}
+          />
+        )}
+
+        {/* New Category Dialog */}
+        {showNewCategoryDialog && parsedResult.suggestedCategory && (
+          <NewCategoryDialog
+            suggestedCategory={parsedResult.suggestedCategory}
+            persona={settings.persona}
+            existingCategories={DEFAULT_CATEGORIES}
+            onConfirm={handleNewCategoryConfirm}
+            onSelectExisting={handleSelectExistingCategory}
+          />
+        )}
+
+        {/* Recent Transactions */}
+        <RecentTransactions transactions={recentTransactions} />
+
+        {/* Footer */}
+        <div className="text-center py-sm mt-xl">
+          <p className="text-[var(--font-size-small)] text-text-tertiary tracking-[1px]">
+            POWERED BY AI · 精準記帳 · 情緒滿分
           </p>
-        </section>
+        </div>
       </div>
 
-      <VoiceInput onSubmit={handleSubmit} />
+      <VoiceInput onSubmit={handleSubmit} disabled={isParsing || isSaving} />
     </>
   )
 }
