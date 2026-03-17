@@ -1,50 +1,48 @@
 ---
 name: vibe-sdlc-p4-pr
 description: >
-  Vibe-SDLC Phase 4：自動化驗證與合併 (CI/CD Gates)。推送程式碼、建立 PR、處理 CI 結果。
-  使用時機：Phase 3 Vibe Check 通過後，需要推送程式碼並建立 Pull Request。
+  Vibe-SDLC Phase 4：CI 監控、失敗修正與合併後作業。處理 CI 結果、修正失敗、Merge 後更新 Dev Plan。
+  使用時機：PR 已建立（由 Phase 3 自動建立），需要監控 CI、處理失敗、或執行合併後作業。
 user_invocable: true
 ---
 
-# Phase 4：自動化驗證與合併 (CI/CD Gates)
+# Phase 4：CI 監控與合併後作業 (CI/CD Gates)
 
 ## 目的
 
-透過自動化測試與人工審閱雙重門檻，確保合併至 `main` 的程式碼符合品質標準。
+監控 PR 的 CI 結果，處理失敗修正，並在合併後執行 Dev Plan 更新與驗證提醒。
+
+> **注意**：PR 的建立已在 Phase 3 中自動完成。Phase 4 聚焦於 CI 監控、失敗修正與合併後作業。
 
 ## 你的角色
 
 你是 AI 助手（執行者）。在此階段你的職責是：
-- 推送程式碼至遠端
-- 建立 Pull Request，撰寫變更摘要並關聯 Issue
+- 監控 CI 執行結果
 - 若 CI 失敗，根據錯誤報告修正程式碼並重新提交
 - Merge 後更新 `02-Dev_Plan.md` 標記任務完成
+- 提醒開發者相關的手動驗證 Issues
 
 **你不應該**：
 - 自行 Merge PR，由開發者執行
 - 跳過 CI 失敗不處理
-- 在未獲開發者指示的情況下推送程式碼
 
 ## 前置條件
 
-- Phase 3 所有完成條件已達成（Vibe Check 通過）
-- 目前在 feature 分支上，所有變更已 commit
+- Phase 3 已完成，PR 已建立（由 Phase 3 自動推送與建立）
+- PR 正在等待 CI 結果或開發者 Code Review
 
 ## 操作步驟
 
 | 步驟 | 執行者 | 操作 | 產出 |
 |------|--------|------|------|
-| 1 | **開發者** | 指示 AI 推送程式碼並建立 PR | — |
-| 2 | **AI 助手** | 執行 `git push`，建立 Pull Request | Pull Request |
-| 3 | **GitHub** | 自動觸發 Actions，執行 CI 檢查 | CI 報告 |
-| 4a | *CI 通過* | **開發者**進行 Code Review，審閱程式碼邏輯 | Review 意見 |
-| 4b | *CI 失敗* | **開發者**將 CI 報告轉交 AI | — |
-| 5b | *CI 失敗* | **AI 助手**根據 CI 錯誤報告修正程式碼，推送新 commit | 修正 commit |
-|    |           | → 回到步驟 3，GitHub 重新執行 CI | — |
-| 5a | *Review 通過* | **開發者**點擊 Merge，合併至 `main` | Merge commit |
-| 6 | **GitHub** | 觸發 CD pipeline（如已配置） | 部署 |
-| 7 | **AI 助手** | 將 `02-Dev_Plan.md` 中對應任務標記為 `[x] Completed` | Dev Plan 更新 |
-| 8 | **AI 助手** | 提醒開發者：若該任務有對應的手動驗證 Issues，現在可交由審查角色開始驗證 | 驗證提醒 |
+| 1 | **AI 助手** | 使用 `gh pr checks` 監控 CI 結果 | CI 狀態報告 |
+| 2a | *CI 通過* | **AI 助手** 通知開發者可進行 Code Review | — |
+| 2b | *CI 失敗* | **AI 助手** 讀取失敗報告，分析原因，修正程式碼，推送新 commit | 修正 commit |
+|    |           | → 回到步驟 1，GitHub 重新執行 CI | — |
+| 3 | **開發者** | Code Review，核准後點擊 Merge | Merge commit |
+| 4 | **GitHub** | 觸發 CD pipeline（如已配置） | 部署 |
+| 5 | **AI 助手** | 將 `02-Dev_Plan.md` 中對應任務標記為 `[x] Completed` | Dev Plan 更新 |
+| 6 | **AI 助手** | 提醒開發者：若該任務有對應的手動驗證 Issues，現在可交由審查角色開始驗證 | 驗證提醒 |
 
 ## PR 格式規範
 
@@ -124,17 +122,14 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
 當使用者呼叫此 skill 時：
 
 1. 先確認前置條件：
-   - 是否在 feature 分支上？
-   - 是否有未 commit 的變更？
-   - Vibe Check 是否已通過？
-2. 若前置條件未滿足，提示使用者先完成 Phase 3（`/vibe-sdlc-p3-dev`）
-3. 執行 `git push -u origin <branch>`
-4. 使用 `gh pr create` 建立 PR，按格式規範撰寫內容
-5. 等待 CI 結果：
+   - 是否有已建立的 open PR？（由 Phase 3 自動建立）
+   - 若無 open PR，提示使用者先完成 Phase 3（`/vibe-sdlc-p3-dev`）
+2. 列出所有 open PR，使用 `gh pr list` 查看
+3. 監控 CI 結果：
    - 使用 `gh pr checks <PR-number>` 查看 CI 狀態
    - CI 通過：通知開發者可進行 Code Review
    - CI 失敗：讀取失敗報告，分析原因，修正後推送新 commit
-6. 開發者 Merge 後：
+4. 開發者 Merge 後：
    - 讀取 `/docs/02-Dev_Plan.md`
    - 找到對應任務，將 `- [ ]` 改為 `- [x]`
    - 提交更新

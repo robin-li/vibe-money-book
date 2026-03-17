@@ -22,8 +22,8 @@ user_invocable: true
 |-------|------|-----------|----------|
 | 1 | 定義規格文件與計畫 | `/vibe-sdlc-p1-spec` | 專案啟動，需撰寫或審查規格 |
 | 2 | 任務掛載 (Plan → Issues) | `/vibe-sdlc-p2-issues` | 規格定稿，需建立 GitHub Issues |
-| 3 | 開發循環 (Execution Loop) | `/vibe-sdlc-p3-dev` | 日常開發，領取 Issue 進行實作 |
-| 4 | 自動化驗證 (CI/CD Gates) | `/vibe-sdlc-p4-pr` | 本地驗證通過，需推送 PR |
+| 3 | 開發循環 (Execution Loop) | `/vibe-sdlc-p3-dev` | 日常開發，領取 Issue 進行實作，Vibe Check 通過後自動建 PR |
+| 4 | CI 監控與合併後作業 | `/vibe-sdlc-p4-pr` | PR 已建立，需監控 CI、處理失敗、或 Merge 後更新 Dev Plan |
 | 5 | 交付與迭代 (Release) | `/vibe-sdlc-p5-release` | 里程碑完成，需部署與收集回饋 |
 
 ## 角色定義

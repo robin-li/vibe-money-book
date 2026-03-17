@@ -1,7 +1,7 @@
 ---
 name: vibe-sdlc-p3-dev
 description: >
-  Vibe-SDLC Phase 3：開發循環 (Execution Loop)。領取 Issue 進行開發、測試，並執行 Vibe Check。
+  Vibe-SDLC Phase 3：開發循環 (Execution Loop)。領取 Issue 進行開發、測試、Vibe Check，通過後自動建立 PR。
   使用時機：日常開發，需要從看板領取 Issue 並實作功能。
 user_invocable: true
 ---
@@ -10,7 +10,7 @@ user_invocable: true
 
 ## 目的
 
-按 Issue 順序逐一完成開發，確保每個任務皆通過本地驗證後才進入審核流程。
+按 Issue 順序逐一完成開發，確保每個任務皆通過本地驗證後自動建立 PR 進入審核流程。
 
 ## 你的角色
 
@@ -20,11 +20,12 @@ user_invocable: true
 - 參考 SRD 技術規範與 API Spec 實作程式碼
 - 撰寫並執行單元測試
 - 向開發者報告 Vibe Check 結果
+- **Vibe Check 通過後，自動推送分支並建立 PR**
 
 **你不應該**：
 - 自行挑選 Issue，由開發者指派
 - 跳過測試直接提交
-- 在未獲開發者核准的情況下進入 Phase 4
+- 在 Vibe Check 未通過時建立 PR
 
 ### Sub Agent 情境
 若 Dev Plan 的角色定義中指定了 Sub Agent 角色（如 `A-Backend`、`A-Frontend`），請遵守以下規範：
@@ -45,6 +46,7 @@ user_invocable: true
   - `/docs/01-2-SRD.md`（技術規範）
   - `/docs/01-3-API_Spec.md`（API 規格）
   - `/docs/API_Spec.yaml`（OpenAPI 合約）
+  - `/docs/01-4-UI_UX_Design.md` (UI/UX規格)
 
 ## 操作步驟
 
@@ -56,9 +58,13 @@ user_invocable: true
 | 4 | **AI 助手** | 參考 SRD 技術規範與 API Spec，實作功能程式碼 | 功能程式碼 |
 | 5 | **AI 助手** | 撰寫對應的單元測試 | 測試程式碼 |
 | 6 | **AI 助手** | 執行本地測試，確認全部通過 | 測試結果 |
-| 7 | **AI 助手** | 向開發者報告本地驗證結果（Vibe Check） | 驗證報告 |
-| 8 | **開發者** | 審閱 Vibe Check 結果，決定是否進入 Phase 4 | 核准 / 駁回 |
+| 7 | **AI 助手** | 向開發者報告本地驗證結果（Vibe Check），含 PR 預覽 | 驗證報告 |
+| 8 | **開發者** | 審閱 Vibe Check 結果，核准或駁回 | 核准 / 駁回 |
 | — | *若駁回* | **開發者**指出問題，回到步驟 4 修正 | — |
+| 9 | **AI 助手** | 核准後自動：推送分支 → 建立 PR（含 `Closes #N`） → 回報 PR 連結 | Pull Request |
+| 10 | **AI 助手** | 提醒開發者進行 Code Review，或等待 CI 結果 | — |
+
+> **關鍵變更**：Vibe Check 通過後，AI 自動完成「推送 + 建 PR」，無需額外呼叫 `/vibe-sdlc-p4-pr`。Phase 4 僅在需要處理 CI 失敗或 PR 後續作業時使用。
 
 ## Vibe Check 報告格式
 
@@ -92,11 +98,49 @@ user_invocable: true
 - [通過 / 未通過]：[若未通過，說明原因]
 ```
 
+## PR 自動建立規範
+
+Vibe Check 通過且開發者核准後，**AI 助手必須自動完成以下動作**（無需開發者額外指示）：
+
+1. **推送分支**：`git push -u origin <branch-name>`
+2. **建立 PR**：使用 `gh pr create`，格式如下：
+   - **標題**：`feat(<scope>): <簡述> (<任務編號>)`，例如 `feat(backend): Schema 與 DB 初始化 + 後端骨架 (T-101, T-102)`
+   - **Body**：包含變更摘要、`Closes #N` 關聯 Issue、變更清單、測試結果
+   - **Reviewer**：
+     - **Bootstrap 階段**（CI 尚未建立時）：直接指定 H-Director 為 reviewer（`--reviewer <H-Director-username>`）
+     - **標準流程**（CI 已就緒時）：等 CI 通過後由 A-Main 指定 reviewer
+3. **回報 PR 連結**：在 Vibe Check 報告末尾附上 PR URL
+
+### PR Body 格式
+
+```markdown
+## Summary
+- [變更摘要，1-3 bullet points]
+
+Closes #N
+
+## 變更內容
+| 目錄/檔案 | 說明 |
+|-----------|------|
+
+## Test plan
+- [x] [測試項目 1]
+- [x] [測試項目 2]
+```
+
+### Multi Sub Agent PR 建立
+
+當多個 Sub Agent 並行開發時，每個 Agent 在自己的 Vibe Check 通過後**獨立建立 PR**：
+- 各 Agent 的 PR 僅包含自己負責範圍的檔案
+- PR 分支命名遵循 `feat/<agent>/issue-N-簡述`
+- A-Main 在 Vibe Check 報告中彙整所有 Sub Agent 的結果，核准後**批量推送與建立 PR**
+
 ## 完成條件
 
 - [ ] 功能程式碼已完成且符合 SRD 規範
 - [ ] 單元測試全部通過
 - [ ] 開發者已核准 Vibe Check 結果
+- [ ] PR 已建立並回報連結
 
 ## 行為指引
 
@@ -109,8 +153,15 @@ user_invocable: true
    - 驗收標準
    - 需參考的規格文件
 4. 獲得確認後，建立 feature 分支並開始實作
-5. 實作過程中，參考 `/docs/01-2-SRD.md` 的技術規範與 `/docs/01-3-API_Spec.md` 的介面定義
+5. 實作過程中，以下規格文件可供參考：
+  - `/docs/01-1-PRD.md`（產品需求，前端頁面與流程參考）
+  - `/docs/01-2-SRD.md`（技術規範）
+  - `/docs/01-3-API_Spec.md`（API 規格）
+  - `/docs/API_Spec.yaml`（OpenAPI 合約）
+  - `/docs/01-4-UI_UX_Design.md` (UI/UX規格)
 6. 完成後撰寫測試並執行
 7. 產出 Vibe Check 報告，等待開發者審閱
-8. 若開發者核准，提示可進入 Phase 4（`/vibe-sdlc-p4-pr`）
+8. **若開發者核准**：自動推送分支 → 建立 PR → 回報 PR 連結
+   - 提醒開發者進行 Code Review 或等待 CI 結果
+   - 若 CI 失敗需修正，可呼叫 `/vibe-sdlc-p4-pr` 處理
 9. 若開發者駁回，根據反饋修正後重新報告

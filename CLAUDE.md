@@ -32,6 +32,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 2. 文件格式我偏好 Markdown，若需描述流程圖或架構圖等請用Mermaid格式，並即時渲染成 png (或 jpg) 圖片，以利我筆記及閱讀。
 3. 要請在要求我授權執行某些指令時，請**加上簡短的備註** (請儘量使用繁體中文進行備註)，說明這次指令的目的是什麼，備註內容儘量精簡，不要超過200字。
 4. `.env` 含有敏感資訊，嚴格禁止 commit 或傳輸 ！
+5. 技能的使用與修改，請以當前專案目錄下的技能`./.claude/skills/`為優先。
 
 ### Performance & Execution Efficiency
 
@@ -50,6 +51,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Vibe-SDLC 技能
 
 本專案使用 Vibe-SDLC 流程管理開發：
+
+技能所在目錄 `./.claude/skills/`
 
 | 指令 | 說明 |
 |------|------|
