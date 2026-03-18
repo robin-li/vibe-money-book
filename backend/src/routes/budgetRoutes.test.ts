@@ -1,0 +1,355 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import request from 'supertest';
+import app from '../app';
+
+// Mock prisma
+vi.mock('../config/database', () => {
+  return {
+    default: {
+      user: {
+        findUnique: vi.fn(),
+      },
+      categoryBudget: {
+        findUnique: vi.fn(),
+        findMany: vi.fn(),
+        create: vi.fn(),
+        update: vi.fn(),
+        delete: vi.fn(),
+        count: vi.fn(),
+      },
+      transaction: {
+        findMany: vi.fn(),
+        updateMany: vi.fn(),
+      },
+    },
+  };
+});
+
+// Mock auth middleware
+vi.mock('../middlewares/auth', () => ({
+  authMiddleware: (req: any, _res: any, next: any) => {
+    req.userId = 'test-user-id';
+    next();
+  },
+  AuthRequest: {},
+}));
+
+import prisma from '../config/database';
+
+const mockedPrisma = vi.mocked(prisma);
+
+describe('Budget Routes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // ==========================================
+  // POST /budget/categories
+  // ==========================================
+  describe('POST /api/v1/budget/categories', () => {
+    it('should create a new category', async () => {
+      mockedPrisma.categoryBudget.count.mockResolvedValue(5);
+      mockedPrisma.categoryBudget.findUnique.mockResolvedValue(null);
+      mockedPrisma.categoryBudget.create.mockResolvedValue({
+        id: 'cat-1',
+        userId: 'test-user-id',
+        category: 'food',
+        budgetLimit: 0 as any,
+        isCustom: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const res = await request(app)
+        .post('/api/v1/budget/categories')
+        .send({ category: 'food' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.category).toBe('food');
+    });
+
+    it('should create a category with budget_limit', async () => {
+      mockedPrisma.categoryBudget.count.mockResolvedValue(5);
+      mockedPrisma.categoryBudget.findUnique.mockResolvedValue(null);
+      mockedPrisma.categoryBudget.create.mockResolvedValue({
+        id: 'cat-2',
+        userId: 'test-user-id',
+        category: 'transport',
+        budgetLimit: 5000 as any,
+        isCustom: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const res = await request(app)
+        .post('/api/v1/budget/categories')
+        .send({ category: 'transport', budget_limit: 5000 });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.budget_limit).toBe(5000);
+    });
+
+    it('should reject duplicate category name', async () => {
+      mockedPrisma.categoryBudget.count.mockResolvedValue(5);
+      mockedPrisma.categoryBudget.findUnique.mockResolvedValue({
+        id: 'cat-1',
+        userId: 'test-user-id',
+        category: 'food',
+        budgetLimit: 0 as any,
+        isCustom: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const res = await request(app)
+        .post('/api/v1/budget/categories')
+        .send({ category: 'food' });
+
+      expect(res.status).toBe(409);
+      expect(res.body.message).toContain('已存在');
+    });
+
+    it('should reject when category limit of 20 reached', async () => {
+      mockedPrisma.categoryBudget.count.mockResolvedValue(20);
+
+      const res = await request(app)
+        .post('/api/v1/budget/categories')
+        .send({ category: 'newcat' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('上限');
+    });
+
+    it('should reject empty category name', async () => {
+      const res = await request(app)
+        .post('/api/v1/budget/categories')
+        .send({ category: '' });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  // ==========================================
+  // PUT /budget/categories
+  // ==========================================
+  describe('PUT /api/v1/budget/categories', () => {
+    it('should batch update category budget limits', async () => {
+      mockedPrisma.categoryBudget.findUnique.mockResolvedValue({
+        id: 'cat-1',
+        userId: 'test-user-id',
+        category: 'food',
+        budgetLimit: 0 as any,
+        isCustom: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      mockedPrisma.categoryBudget.update.mockResolvedValue({
+        id: 'cat-1',
+        userId: 'test-user-id',
+        category: 'food',
+        budgetLimit: 8000 as any,
+        isCustom: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const res = await request(app)
+        .put('/api/v1/budget/categories')
+        .send({
+          categories: [{ category: 'food', budget_limit: 8000 }],
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data[0].category).toBe('food');
+      expect(res.body.data[0].budget_limit).toBe(8000);
+    });
+
+    it('should reject when category does not exist', async () => {
+      mockedPrisma.categoryBudget.findUnique.mockResolvedValue(null);
+
+      const res = await request(app)
+        .put('/api/v1/budget/categories')
+        .send({
+          categories: [{ category: 'nonexistent', budget_limit: 1000 }],
+        });
+
+      expect(res.status).toBe(404);
+    });
+
+    it('should reject empty categories array', async () => {
+      const res = await request(app)
+        .put('/api/v1/budget/categories')
+        .send({ categories: [] });
+
+      expect(res.status).toBe(400);
+    });
+
+    it('should reject negative budget_limit', async () => {
+      const res = await request(app)
+        .put('/api/v1/budget/categories')
+        .send({
+          categories: [{ category: 'food', budget_limit: -100 }],
+        });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  // ==========================================
+  // DELETE /budget/categories/:category
+  // ==========================================
+  describe('DELETE /api/v1/budget/categories/:category', () => {
+    it('should delete a custom category and reassign transactions', async () => {
+      mockedPrisma.categoryBudget.findUnique.mockResolvedValue({
+        id: 'cat-1',
+        userId: 'test-user-id',
+        category: 'snacks',
+        budgetLimit: 0 as any,
+        isCustom: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+      mockedPrisma.transaction.updateMany.mockResolvedValue({ count: 3 });
+      mockedPrisma.categoryBudget.delete.mockResolvedValue({
+        id: 'cat-1',
+        userId: 'test-user-id',
+        category: 'snacks',
+        budgetLimit: 0 as any,
+        isCustom: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const res = await request(app)
+        .delete('/api/v1/budget/categories/snacks');
+
+      expect(res.status).toBe(200);
+      expect(res.body.message).toContain('刪除成功');
+
+      // Verify transactions were reassigned to "other"
+      expect(mockedPrisma.transaction.updateMany).toHaveBeenCalledWith({
+        where: { userId: 'test-user-id', category: 'snacks' },
+        data: { category: 'other' },
+      });
+    });
+
+    it('should reject deleting non-custom (system) category', async () => {
+      mockedPrisma.categoryBudget.findUnique.mockResolvedValue({
+        id: 'cat-sys',
+        userId: 'test-user-id',
+        category: 'food',
+        budgetLimit: 0 as any,
+        isCustom: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const res = await request(app)
+        .delete('/api/v1/budget/categories/food');
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('系統預設');
+    });
+
+    it('should return 404 for non-existent category', async () => {
+      mockedPrisma.categoryBudget.findUnique.mockResolvedValue(null);
+
+      const res = await request(app)
+        .delete('/api/v1/budget/categories/nonexistent');
+
+      expect(res.status).toBe(404);
+    });
+  });
+
+  // ==========================================
+  // GET /budget/summary
+  // ==========================================
+  describe('GET /api/v1/budget/summary', () => {
+    it('should return monthly summary with category breakdown', async () => {
+      mockedPrisma.user.findUnique.mockResolvedValue({
+        id: 'test-user-id',
+        name: 'Test',
+        email: 'test@test.com',
+        passwordHash: 'hash',
+        persona: 'gentle',
+        aiEngine: 'gemini',
+        monthlyBudget: 30000 as any,
+        currency: 'TWD',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      mockedPrisma.transaction.findMany.mockResolvedValue([
+        {
+          id: 't1',
+          userId: 'test-user-id',
+          amount: 5000 as any,
+          category: 'food',
+          merchant: null,
+          rawText: '午餐',
+          note: null,
+          transactionDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 't2',
+          userId: 'test-user-id',
+          amount: 3000 as any,
+          category: 'transport',
+          merchant: null,
+          rawText: '計程車',
+          note: null,
+          transactionDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      mockedPrisma.categoryBudget.findMany.mockResolvedValue([
+        {
+          id: 'cb1',
+          userId: 'test-user-id',
+          category: 'food',
+          budgetLimit: 8000 as any,
+          isCustom: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 'cb2',
+          userId: 'test-user-id',
+          category: 'transport',
+          budgetLimit: 5000 as any,
+          isCustom: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      const res = await request(app).get('/api/v1/budget/summary');
+
+      expect(res.status).toBe(200);
+      const data = res.body.data;
+      expect(data.monthly_budget).toBe(30000);
+      expect(data.total_spent).toBe(8000);
+      expect(data.remaining).toBe(22000);
+      expect(data.used_ratio).toBeCloseTo(0.27, 1);
+      expect(data.transaction_count).toBe(2);
+      expect(data.categories).toHaveLength(2);
+
+      const foodCat = data.categories.find((c: any) => c.category === 'food');
+      expect(foodCat.budget_limit).toBe(8000);
+      expect(foodCat.spent).toBe(5000);
+      expect(foodCat.remaining).toBe(3000);
+    });
+
+    it('should return 404 for non-existent user', async () => {
+      mockedPrisma.user.findUnique.mockResolvedValue(null);
+
+      const res = await request(app).get('/api/v1/budget/summary');
+
+      expect(res.status).toBe(404);
+    });
+  });
+});
