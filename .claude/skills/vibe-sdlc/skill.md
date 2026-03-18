@@ -37,8 +37,9 @@ user_invocable: true
 - 交叉比對規格文件，產出差異報告
 - 根據 Dev Plan 建立 GitHub Issues
 - 在 feature 分支上實作程式碼與測試
-- 建立 PR、處理 CI 失敗修正
-- 更新 Dev Plan 任務狀態
+- Vibe Check 通過後自動建立 PR（無需等待人類核准）
+- 處理 CI 失敗修正、更新 Dev Plan 任務狀態
+- 遇到問題優先自行調查與解決，無法解決時才上報開發者
 
 > **角色代號映射**：Dev Plan 中使用 `H-Director`（導演）、`H-Reviewer`（審查員）等人類角色代號，以及 `A-Main`、`A-Backend`、`A-Frontend`、`A-QA`、`A-DevOps` 等 AI 角色代號，以支援多 Sub Agent 並行開發情境。詳見 Dev Plan 的「角色定義 (Role Registry)」章節。
 
@@ -64,12 +65,13 @@ user_invocable: true
 
 ### 步驟 0：同步工作目錄
 
-在收集任何數據之前，先確保本地工作目錄與遠端同步：
+在收集任何數據之前，若工作目錄已經建立本地git倉庫及遠端 Github (或 Gitlab) 倉庫，則應先確保本地工作目錄與遠端同步：
 
 1. 執行 `git fetch origin` 取得遠端最新狀態
 2. 若當前分支為 `main`，執行 `git pull origin main` 拉取最新變更
 3. 若當前分支非 `main`，僅提示使用者目前所在分支，不自動 pull（避免覆蓋開發中的變更）
 4. 若工作目錄有未提交的變更（unstaged/staged），先警告使用者並詢問是否繼續
+5. 檢查是否有已合併的本地分支或無用的 worktree，若有則列出清單提醒開發者可清理（詳細清理流程見 P3 skill「清理已合併分支與 Worktree」章節）
 
 > **注意**：此步驟確保後續的 GitHub 數據收集與本地 Dev Plan 讀取基於一致的最新狀態。
 
@@ -136,6 +138,11 @@ gh pr checks {PR-number} -R {owner}/{repo}
 - 使用 `█`（已完成）和 `░`（未完成），共 10 格
 - 例：60% → `██████░░░░`
 
+**同步 Dev Plan 狀態**
+
+若已存在 Dev Plan ，則應視需要檢查  Dev Plan 任務狀態是否一致，若不一致，則應自動同步 Dev Plan 任務狀態，並提示使用者。
+
+
 ### 步驟 4：判斷當前 Phase 並建議
 
 根據收集到的數據判斷：
@@ -148,6 +155,7 @@ gh pr checks {PR-number} -R {owner}/{repo}
 | 有 open PR 待審 | Phase 4 | 審閱 PR，決定 Merge 或要求修改 |
 | 某 Milestone 所有 Issue closed | Phase 5 | 呼叫 `/vibe-sdlc-p5-release` 驗收 |
 | 有待驗證 Issue（`verification` 標籤） | Phase 5 | 提醒進行手動驗證 |
+
 
 ### 步驟 5：若使用者不確定
 
