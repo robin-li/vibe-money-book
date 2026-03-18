@@ -38,12 +38,24 @@ user_invocable: true
 |------|--------|------|------|
 | 1 | **AI 助手** | 使用 `gh pr checks` 監控 CI 結果 | CI 狀態報告 |
 | 2a | *CI 通過* | **AI 助手** 通知開發者可進行 Code Review | — |
-| 2b | *CI 失敗* | **AI 助手** 讀取失敗報告，分析原因，修正程式碼，推送新 commit | 修正 commit |
+| 2b | *CI 失敗* | **AI 助手** 讀取失敗報告，分析原因，修正程式碼，**確認 PR 仍為 OPEN 後**推送新 commit | 修正 commit |
 |    |           | → 回到步驟 1，GitHub 重新執行 CI | — |
 | 3 | **開發者** | Code Review，核准後點擊 Merge | Merge commit |
 | 4 | **GitHub** | 觸發 CD pipeline（如已配置） | 部署 |
 | 5 | **AI 助手** | 將 `02-Dev_Plan.md` 中對應任務標記為 `[x] Completed` | Dev Plan 更新 |
-| 6 | **AI 助手** | 提醒開發者：若該任務有對應的手動驗證 Issues，現在可交由審查角色開始驗證 | 驗證提醒 |
+| 6 | **AI 助手** | 更新看板狀態為 `Done`，並在 Issue 發佈完成 Comment | 狀態更新 |
+| 7 | **AI 助手** | 提醒開發者：若該任務有對應的手動驗證 Issues，現在可交由審查角色開始驗證 | 驗證提醒 |
+
+### Merge 後 Issue Comment
+
+PR 合併後，**AI 助手必須**在對應 Issue 發佈完成 Comment：
+
+```markdown
+🎉 **任務完成**
+- **PR**：#{PR_NUMBER}（已合併）
+- **Dev Plan**：已更新為 `[x] Completed`
+- **待驗證**：{列出相關驗證 Issues，若無則寫「無」}
+```
 
 ## PR 格式規範
 
@@ -129,16 +141,23 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
 3. 監控 CI 結果：
    - 使用 `gh pr checks <PR-number>` 查看 CI 狀態
    - CI 通過：通知開發者可進行 Code Review
-   - CI 失敗：讀取失敗報告，分析原因，修正後推送新 commit
+   - CI 失敗：讀取失敗報告，分析原因，修正程式碼
+   - **推送前必須確認 PR 狀態**：`gh pr view <PR-number> --json state -q '.state'`
+     - `OPEN` → 正常推送
+     - `MERGED` → 禁止推送，從最新 main 建新分支與新 PR
+     - `CLOSED` → 確認是否需重新開啟或建新 PR
 4. 開發者 Merge 後：
    - **先同步工作目錄**：`git fetch origin && git rebase origin/main`（確保包含剛合併的變更）
    - 讀取 `/docs/02-Dev_Plan.md`
    - 找到對應任務，將 `- [ ]` 改為 `- [x]`
    - 提交更新並推送
-7. 檢查該任務是否有對應的手動驗證 Issues（標籤 `verification`，標題以 `[驗證] T-{ID}` 開頭）：
+5. 更新 Issue 狀態：
+   - 更新看板狀態為 `Done`（或以可行的方式標註）
+   - 在 Issue 發佈「🎉 任務完成」Comment（含 PR 編號、Dev Plan 更新確認、待驗證 Issues 清單）
+6. 檢查該任務是否有對應的手動驗證 Issues（標籤 `verification`，標題以 `[驗證] T-{ID}` 開頭）：
    - 若有：提醒開發者通知對應的審查角色（H-Reviewer / H-UxReviewer）開始驗證
    - 列出相關驗證 Issues 的編號與標題
-8. 提示開發者：
+7. 提示開發者：
    - 若還有待處理的開發 Issue → 回到 Phase 3（`/vibe-sdlc-p3-dev`）
    - 若當前里程碑的開發 Issues 已全部完成，但仍有未關閉的驗證 Issues → 提醒等待驗證完成
    - 若當前里程碑所有 Issues（開發 + 驗證）皆已關閉 → 進入 Phase 5（`/vibe-sdlc-p5-release`）
