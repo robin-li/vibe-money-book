@@ -101,6 +101,31 @@ export async function getTransaction(userId: string, id: string) {
   return formatTransactionDetail(transaction);
 }
 
+export async function updateTransaction(
+  userId: string,
+  id: string,
+  input: { amount?: number; category?: string; merchant?: string; transaction_date?: string; note?: string }
+) {
+  const transaction = await prisma.transaction.findUnique({ where: { id } });
+  if (!transaction) throw new AppError('交易記錄不存在', 404);
+  if (transaction.userId !== userId) throw new AppError('交易記錄不存在', 404);
+
+  const data: Record<string, unknown> = {};
+  if (input.amount !== undefined) data.amount = input.amount;
+  if (input.category !== undefined) data.category = input.category;
+  if (input.merchant !== undefined) data.merchant = input.merchant;
+  if (input.transaction_date !== undefined) data.transactionDate = new Date(input.transaction_date);
+  if (input.note !== undefined) data.note = input.note;
+
+  const updated = await prisma.transaction.update({
+    where: { id },
+    data,
+    include: { aiFeedback: true },
+  });
+
+  return formatTransaction(updated);
+}
+
 export async function deleteTransaction(userId: string, id: string) {
   const transaction = await prisma.transaction.findUnique({
     where: { id },
@@ -166,6 +191,7 @@ function formatTransactionListItem(t: {
   amount: unknown;
   category: string;
   merchant: string | null;
+  note: string | null;
   transactionDate: Date;
   createdAt: Date;
 }) {
@@ -174,6 +200,7 @@ function formatTransactionListItem(t: {
     amount: Number(t.amount),
     category: t.category,
     merchant: t.merchant,
+    note: t.note,
     transaction_date: t.transactionDate.toISOString().split('T')[0],
     created_at: t.createdAt.toISOString(),
   };

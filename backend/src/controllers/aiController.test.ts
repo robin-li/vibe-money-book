@@ -263,12 +263,6 @@ describe('POST /api/v1/ai/parse', () => {
 
   // --- 案例 11: LLM API Key 無效 ---
   it('應在 LLM API Key 無效時回傳 403', async () => {
-    mockExtractData.mockRejectedValue(
-      Object.assign(new Error('Gemini API Key 無效，請確認您的 API Key'), {
-        statusCode: 403,
-      })
-    );
-    // Re-mock to throw AppError
     const { AppError } = await import('../middlewares/errorHandler');
     mockExtractData.mockRejectedValue(new AppError('Gemini API Key 無效，請確認您的 API Key', 403));
 

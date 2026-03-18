@@ -140,6 +140,24 @@ body {
   animation: slide-up 300ms ease-out;
 }
 
+/* ===== Slide-down Animation (accordion) ===== */
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 200ms ease-out;
+  overflow: hidden;
+}
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,

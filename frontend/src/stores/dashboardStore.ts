@@ -67,6 +67,8 @@ interface DashboardState {
     feedback?: AIFeedbackContent
   }) => Promise<void>
   createCategory: (category: string) => Promise<void>
+  updateTransaction: (id: string, data: { amount: number; category: string; merchant: string; date: string; note?: string }) => Promise<void>
+  deleteTransaction: (id: string) => Promise<void>
   fetchBudgetSummary: () => Promise<void>
   fetchRecentTransactions: () => Promise<void>
   resetParsedResult: () => void
@@ -222,6 +224,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
             category: t.category as string,
             merchant: t.merchant as string,
             rawText: '',
+            note: (t.note as string) ?? undefined,
             transactionDate: t.transaction_date as string,
             createdAt: t.created_at as string,
           }) satisfies Transaction
@@ -229,6 +232,46 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       set({ recentTransactions: items })
     } catch {
       // Silently fail
+    }
+  },
+
+  updateTransaction: async (id: string, data) => {
+    try {
+      await api.put(`/transactions/${id}`, {
+        amount: data.amount,
+        category: data.category,
+        merchant: data.merchant,
+        transaction_date: data.date,
+        note: data.note ?? undefined,
+      })
+      set((state) => ({
+        recentTransactions: state.recentTransactions.map((tx) =>
+          tx.id === id
+            ? { ...tx, amount: data.amount, category: data.category, merchant: data.merchant, transactionDate: data.date, note: data.note }
+            : tx
+        ),
+      }))
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? '更新失敗，請稍後重試'
+      set({ status: 'error', errorMessage: message })
+      throw err
+    }
+  },
+
+  deleteTransaction: async (id: string) => {
+    try {
+      await api.delete(`/transactions/${id}`)
+      set((state) => ({
+        recentTransactions: state.recentTransactions.filter((tx) => tx.id !== id),
+      }))
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? '刪除失敗，請稍後重試'
+      set({ status: 'error', errorMessage: message })
+      throw err
     }
   },
 
