@@ -101,13 +101,16 @@ git rebase origin/main
 #### 檢查指令
 
 ```bash
-# 列出已合併至 main 的本地分支（排除 main 本身）
+# 1. 同步遠端已刪除的分支引用（清除本地殘留的 remote tracking ref）
+git fetch --prune
+
+# 2. 列出已合併至 main 的本地分支（排除 main 本身）
 git branch --merged main | grep -v '^\*\|main'
 
-# 列出對應的遠端已合併分支
-git branch -r --merged origin/main | grep -v 'main' | grep 'origin/'
+# 3. 列出對應的遠端已合併分支（排除 main 與 HEAD）
+git branch -r --merged origin/main | grep -v 'main\|HEAD' | grep 'origin/'
 
-# 列出所有 worktree
+# 4. 列出所有 worktree
 git worktree list
 ```
 
@@ -118,7 +121,7 @@ git worktree list
 | 1 | 執行上述檢查指令，收集待清理項目 |
 | 2 | 若無待清理項目，跳過此步驟 |
 | 3 | 向開發者列出清單，格式如下，**等待確認後才執行刪除** |
-| 4 | 開發者確認後，依序執行 `git worktree remove` → `git branch -d` → `git push origin --delete` |
+| 4 | 開發者確認後，依序執行：`git worktree remove` → `git branch -d` → `git push origin --delete` → `git fetch --prune`（最終確認遠端 ref 已同步） |
 
 #### 清理確認清單格式
 

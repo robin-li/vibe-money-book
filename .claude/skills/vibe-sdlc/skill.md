@@ -71,7 +71,53 @@ user_invocable: true
 2. 若當前分支為 `main`，執行 `git pull origin main` 拉取最新變更
 3. 若當前分支非 `main`，僅提示使用者目前所在分支，不自動 pull（避免覆蓋開發中的變更）
 4. 若工作目錄有未提交的變更（unstaged/staged），先警告使用者並詢問是否繼續
-5. 檢查是否有已合併的本地分支或無用的 worktree，若有則列出清單提醒開發者可清理（詳細清理流程見 P3 skill「清理已合併分支與 Worktree」章節）
+5. 檢查是否有已合併的本地分支、遠端已合併分支或無用的 worktree，若有則列出清單提醒開發者可清理（詳細清理流程見 P3 skill「清理已合併分支與 Worktree」章節）
+
+**受保護分支**（以下分支無論是否已合併，皆**不可刪除**）：
+
+| 類型 | 分支名稱 |
+|------|---------|
+| 主線 | `main`, `master` |
+| 開發 | `develop`, `dev` |
+| 測試 | `testing`, `test` |
+| 預發 | `staging`, `uat` |
+| 發布 | `release/*`（如 `release/1.0.0`） |
+
+**必須執行以下三項檢查**（可並行），並在結果中排除受保護分支：
+
+```bash
+# 受保護分支的 grep 排除模式（本地與遠端共用）
+PROTECTED='main$\|master$\|develop$\|dev$\|testing$\|test$\|staging$\|uat$\|release/'
+
+# 5a. 已合併至 main 的本地分支（排除受保護分支）
+git branch --merged main | grep -v "^\*\|$PROTECTED"
+
+# 5b. 已合併至 main 的遠端分支（排除受保護分支與 HEAD）
+git branch -r --merged origin/main | grep -v "origin/HEAD\|$PROTECTED"
+
+# 5c. 列出所有 worktree，檢查是否有指向已合併分支的 worktree
+git worktree list
+```
+
+若任一項有輸出結果，以下列格式彙整提醒：
+
+```
+🧹 可清理資源
+├─ 本地已合併分支：{N} 個
+│  - {branch-name}
+├─ 遠端已合併分支：{N} 個
+│  - {remote/branch-name}
+└─ 無用 Worktree：{N} 個
+   - {path} [{branch}]
+🔒 受保護分支（已自動排除）：main, master, develop, dev, testing, test, staging, uat, release/*
+
+💡 執行清理指令：
+   git branch -d {branch}              # 刪除本地分支
+   git push origin --delete {branch}   # 刪除遠端分支
+   git worktree remove {path}          # 移除 worktree
+```
+
+若三項皆無輸出，顯示 `✅ 無需清理的分支或 worktree`。
 
 > **注意**：此步驟確保後續的 GitHub 數據收集與本地 Dev Plan 讀取基於一致的最新狀態。
 
