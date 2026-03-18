@@ -68,9 +68,37 @@ user_invocable: true
 在收集任何數據之前，若工作目錄已經建立本地git倉庫及遠端 Github (或 Gitlab) 倉庫，則應先確保本地工作目錄與遠端同步：
 
 1. 執行 `git fetch origin` 取得遠端最新狀態
-2. 若當前分支為 `main`，執行 `git pull origin main` 拉取最新變更
-3. 若當前分支非 `main`，僅提示使用者目前所在分支，不自動 pull（避免覆蓋開發中的變更）
-4. 若工作目錄有未提交的變更（unstaged/staged），先警告使用者並詢問是否繼續
+2. 偵測主線分支名稱（`main` 或 `master`，以下統稱 `{main}`）
+3. **若當前分支為 `{main}`**：執行 `git pull origin {main}` 拉取最新變更
+4. **若當前分支非 `{main}`**（人類正在操作 feature 分支）：
+   - 執行 `git status --short` 檢查工作目錄狀態
+   - **工作目錄乾淨**（無修改）：提示使用者目前所在分支，建議切回 `{main}` 以便查看最新儀表板，並詢問是否自動切換
+   - **工作目錄有未提交變更**（unstaged/staged/untracked）：以下列格式警告，並**暫停等待使用者指示**，不繼續後續步驟：
+
+     ```
+     ⚠️ 非主線分支且有未提交變更
+     ├─ 當前分支：{branch-name}
+     ├─ 未提交變更：
+     │  {git status --short 輸出，逐行列出}
+     └─ 建議操作：
+        1. 提交變更 → 推送分支 → 建立 PR → 切回 {main}
+        2. 暫存變更（git stash）→ 切回 {main}
+        3. 忽略，直接在當前分支查看儀表板（數據可能與 {main} 不同步）
+
+     請選擇操作（1/2/3），或輸入其他指示：
+     ```
+
+     若使用者選擇 **1**，依序執行：
+     1. `git add` 相關檔案（排除 `.env` 等敏感檔案）
+     2. 引導使用者確認 commit message 後執行 `git commit`
+     3. `git push origin {branch-name}`
+     4. 檢查該分支是否已有 open PR，若無則提示是否建立 PR
+     5. `git checkout {main} && git pull origin {main}`
+
+     若使用者選擇 **2**，執行 `git stash` → `git checkout {main}` → `git pull origin {main}`
+
+     若使用者選擇 **3**，繼續後續步驟（不切換分支）
+
 5. 檢查是否有已合併的本地分支、遠端已合併分支或無用的 worktree，若有則列出清單提醒開發者可清理（詳細清理流程見 P3 skill「清理已合併分支與 Worktree」章節）
 
 **受保護分支**（以下分支無論是否已合併，皆**不可刪除**）：
