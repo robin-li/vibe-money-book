@@ -56,16 +56,90 @@ user_invocable: true
 | 步驟 | 執行者 | 操作 | 產出 |
 |------|--------|------|------|
 | 1 | **開發者** | 從看板 `Todo` 欄位挑選最高優先級 Issue，指派給 AI | — |
-| 2 | **AI 助手** | 讀取 Issue 內容，確認理解任務範圍與驗收標準；將 Issue 在看板上移至 `In Progress` | 任務確認 |
-| 3 | **AI 助手** | **同步工作目錄**（詳見下方「工作目錄同步規範」） | 最新 main |
-| 4 | **AI 助手** | 從 `main` 建立 feature 分支（命名：`feat/<agent>/issue-N-簡述`） | feature 分支 |
-| 5 | **AI 助手** | 參考 SRD 技術規範與 API Spec，實作功能程式碼 | 功能程式碼 |
-| 6 | **AI 助手** | 撰寫對應的單元測試 | 測試程式碼 |
-| 7 | **AI 助手** | 執行本地測試（Vibe Check），確認全部通過 | 測試結果 |
-| 8 | **AI 助手** | Vibe Check 通過 → 自動推送分支 → 建立 PR（含 `Closes #N`） | Pull Request |
-| 9 | **AI 助手** | 向開發者彙報 Vibe Check 結果 + PR 連結，提醒進行 Code Review | 完成報告 |
+| 2 | **AI 助手** | 讀取 Issue 內容，確認理解任務範圍與驗收標準 | 任務確認 |
+| 3 | **AI 助手** | **領取 Issue**：更新看板狀態為 `In Progress`，發佈「領取 Comment」（詳見下方「Issue 狀態追蹤規範」） | Issue Comment |
+| 4 | **AI 助手** | **同步工作目錄**（詳見下方「工作目錄同步規範」） | 最新 main |
+| 5 | **AI 助手** | 從 `main` 建立 feature 分支（命名：`feat/<agent>/issue-N-簡述`） | feature 分支 |
+| 6 | **AI 助手** | 參考 SRD 技術規範與 API Spec，實作功能程式碼 | 功能程式碼 |
+| 7 | **AI 助手** | 撰寫對應的單元測試 | 測試程式碼 |
+| 8 | **AI 助手** | 執行本地測試（Vibe Check），確認全部通過 | 測試結果 |
+| 9 | **AI 助手** | Vibe Check 通過 → 自動推送分支 → 建立 PR（含 `Closes #N`） | Pull Request |
+| 10 | **AI 助手** | 向開發者彙報 Vibe Check 結果 + PR 連結，提醒進行 Code Review | 完成報告 |
 
 > **核心原則**：Vibe Check 通過 = 自動推送 + 建 PR，**無需等待人類核准**。人類審核集中在 GitHub PR 的 Code Review 環節。Phase 4 僅在需要處理 CI 失敗或合併後作業時使用。
+
+## Issue 狀態追蹤規範
+
+> **Issue 是跨 session 的唯一溝通媒介。** 所有角色（AI 與人類）都應能透過 Issue Comments 了解任務的最新進展，而無需進入特定的 session 或 worktree。
+
+### 看板狀態更新
+
+使用 GitHub CLI 更新 Project 看板的 `Status` 欄位：
+
+```bash
+# 取得 Issue 在 Project 中的 Item ID
+ITEM_ID=$(gh project item-list <PROJECT_NUMBER> --owner <OWNER> --format json \
+  | jq -r '.items[] | select(.content.number == <ISSUE_NUMBER>) | .id')
+
+# 更新狀態
+gh project item-edit --project-id <PROJECT_ID> --id "$ITEM_ID" --field-id <STATUS_FIELD_ID> --single-select-option-id <OPTION_ID>
+```
+
+> **提示**：若 `gh project item-edit` 操作複雜，可改用 `gh issue edit` 加 label 方式標註進度（如 `in-progress`），或直接在 Issue Comment 中說明狀態變更。選擇最簡單可行的方式即可。
+
+### Issue Comment 規範
+
+在以下時機**必須**發佈 Issue Comment：
+
+#### 1. 領取任務時（步驟 3）
+
+```markdown
+🚀 **任務領取**
+- **角色**：{角色代號}（如 A-Backend、A-Frontend、A-Main）
+- **分支**：`feat/<agent>/issue-N-簡述`
+- **Worktree**：`../worktree-<agent>`（若適用）
+- **開始時間**：{YYYY-MM-DD HH:MM}
+```
+
+#### 2. 重要進度更新時（視情況）
+
+當遇到以下情況時，應在 Issue 發佈進度 Comment：
+- 完成重要階段（如「API 端點已實作完成，開始撰寫單元測試」）
+- 遇到阻塞或需要等待其他任務（如「前端串接需等待 T-201 API 完成」）
+- 發現規格疑問或需要開發者決策
+- 任務範圍超出預期，需要調整
+
+```markdown
+📋 **進度更新**
+- **已完成**：{已完成的項目}
+- **進行中**：{目前正在做的}
+- **阻塞/待處理**：{阻塞原因或待處理事項}（若無則省略）
+```
+
+#### 3. Vibe Check 完成時（步驟 9，建立 PR 後）
+
+```markdown
+✅ **Vibe Check 通過**
+- **PR**：#{PR_NUMBER}
+- **測試結果**：單元測試 {passed}/{total} 通過
+- **備註**：{任何需要 reviewer 注意的事項}（若無則省略）
+```
+
+### 何時發佈 Comment
+
+| 時機 | 是否必須 | Comment 類型 |
+|------|---------|-------------|
+| 領取任務 | **必須** | 🚀 任務領取 |
+| 完成重要階段 | 建議 | 📋 進度更新 |
+| 遇到阻塞 | **必須** | 📋 進度更新（含阻塞原因） |
+| 發現規格疑問 | **必須** | 📋 進度更新（含問題描述） |
+| Vibe Check 通過 | **必須** | ✅ Vibe Check 通過 |
+
+### 原則
+
+- **簡潔為主**：Comment 不需冗長，重點在於讓他人快速了解狀態
+- **避免噪音**：不需要為每一行程式碼的變更發佈 Comment，僅在有意義的節點更新
+- **跨 Agent 溝通**：Sub Agent 之間不直接溝通，但可透過 Issue Comment 讓 A-Main 了解進度與阻塞
 
 ## 工作目錄同步規範
 
@@ -289,18 +363,23 @@ Vibe Check 階段可能遇到「非本次變更造成的測試失敗」（既有
    - 任務範圍
    - 驗收標準
    - 需參考的規格文件
-4. 獲得確認後，**先執行工作目錄同步**（git fetch → 處理未提交變更 → rebase origin/main），確認本地 main 為最新狀態
-5. 從最新 main 建立 feature 分支並開始實作
-6. 實作過程中，以下規格文件可供參考：
+4. 獲得確認後，**領取 Issue**：
+   - 將看板狀態更新為 `In Progress`（或以可行的方式標註）
+   - 發佈「🚀 任務領取」Comment 至 Issue（含角色、分支名稱、worktree 路徑）
+5. **執行工作目錄同步**（git fetch → 處理未提交變更 → rebase origin/main），確認本地 main 為最新狀態
+6. 從最新 main 建立 feature 分支並開始實作
+7. 實作過程中，以下規格文件可供參考：
    - `/docs/01-1-PRD.md`（產品需求，前端頁面與流程參考）
    - `/docs/01-2-SRD.md`（技術規範）
    - `/docs/01-3-API_Spec.md`（API 規格）
    - `/docs/API_Spec.yaml`（OpenAPI 合約）
    - `/docs/01-4-UI_UX_Design.md` (UI/UX規格)
-7. 完成後撰寫測試並執行
-8. Vibe Check 通過後，**立即自動推送分支 → 建立 PR → 回報 PR 連結**（無需等待人類核准）
-   - 向開發者彙報 Vibe Check 結果 + PR 連結，提醒進行 Code Review
-   - 若 CI 失敗需修正，可呼叫 `/vibe-sdlc-p4-pr` 處理
-9. 若 Vibe Check 未通過，自行修正後重新執行測試，直到通過為止
-10. 若 Issue 屬於 Review 類任務（PR 策略為「無 PR」），參照上方「Review 類任務處理流程」：
+8. 完成後撰寫測試並執行
+9. 若遇到阻塞或重要進度節點，發佈「📋 進度更新」Comment 至 Issue
+10. Vibe Check 通過後，**立即自動推送分支 → 建立 PR → 回報 PR 連結**（無需等待人類核准）
+    - 發佈「✅ Vibe Check 通過」Comment 至 Issue（含 PR 連結與測試結果）
+    - 向開發者彙報 Vibe Check 結果 + PR 連結，提醒進行 Code Review
+    - 若 CI 失敗需修正，可呼叫 `/vibe-sdlc-p4-pr` 處理
+11. 若 Vibe Check 未通過，自行修正後重新執行測試，直到通過為止
+12. 若 Issue 屬於 Review 類任務（PR 策略為「無 PR」），參照上方「Review 類任務處理流程」：
     - 審查 → 發現確定性 bug → 直接修正 → 測試 → 建 PR → 一併報告 Review 結果與 PR 連結
