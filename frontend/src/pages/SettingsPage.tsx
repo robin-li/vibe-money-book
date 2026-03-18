@@ -40,7 +40,9 @@ function SettingsPage() {
   } = useSettingsStore()
 
   // Local state for budget input (so user can type freely)
-  const [budgetInput, setBudgetInput] = useState('')
+  const [budgetInput, setBudgetInput] = useState(() =>
+    monthlyBudget > 0 ? String(monthlyBudget) : ''
+  )
   const [budgetEditing, setBudgetEditing] = useState(false)
 
   // Local state for API key
@@ -49,10 +51,12 @@ function SettingsPage() {
 
   // Load profile on mount and sync budget input
   useEffect(() => {
-    fetchProfile().then(() => {
+    const load = async () => {
+      await fetchProfile()
       const budget = useSettingsStore.getState().monthlyBudget
       if (budget > 0) setBudgetInput(String(budget))
-    })
+    }
+    load()
   }, [fetchProfile])
 
   const handleBudgetSave = useCallback(() => {

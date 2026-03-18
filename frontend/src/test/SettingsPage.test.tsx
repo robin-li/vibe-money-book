@@ -116,13 +116,15 @@ describe('SettingsPage', () => {
 
     it('calls updateBudget on blur', async () => {
       const updateBudget = vi.fn()
-      useSettingsStore.setState({ updateBudget })
+      useSettingsStore.setState({ updateBudget, monthlyBudget: 0 })
       renderSettings()
 
-      const input = screen.getByLabelText('每月預算金額')
+      const input = screen.getByLabelText('每月預算金額') as HTMLInputElement
+      await userEvent.click(input)
       await userEvent.clear(input)
       await userEvent.type(input, '30000')
-      await userEvent.tab() // triggers blur
+      // Trigger blur by tabbing
+      await userEvent.tab()
       expect(updateBudget).toHaveBeenCalledWith(30000)
     })
   })
