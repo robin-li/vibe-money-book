@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { LLMProvider } from './llmProvider';
 import { ParsedTransaction, AIFeedbackContent } from '../../types/llm';
+import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { AppError } from '../../middlewares/errorHandler';
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-lite';
@@ -29,14 +30,16 @@ export class GeminiProvider implements LLMProvider {
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-        const result = await model.generateContent({
+        const generatePromise = model.generateContent({
           contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
         });
 
-        clearTimeout(timeout);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Gemini API timeout')), TIMEOUT_MS)
+        );
+
+        const result = await Promise.race([generatePromise, timeoutPromise]);
+
         const text = result.response.text();
         if (!text) {
           throw new Error('Gemini 回傳空結果');
@@ -61,8 +64,7 @@ export class GeminiProvider implements LLMProvider {
   }
 
   async extractData(prompt: string, apiKey: string): Promise<ParsedTransaction> {
-    const systemPrompt = '你是一個精確的記帳資料萃取引擎。你只能回傳 JSON 格式的結果，不能包含任何其他文字。';
-    const text = await this.callWithRetry(apiKey, systemPrompt, prompt, 0, 200);
+    const text = await this.callWithRetry(apiKey, DATA_EXTRACTOR_SYSTEM_PROMPT, prompt, 0, 200);
     return this.parseJSON<ParsedTransaction>(text);
   }
 
