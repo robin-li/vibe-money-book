@@ -47,25 +47,24 @@ function SettingsPage() {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('llm_api_key') ?? '')
   const [showApiKey, setShowApiKey] = useState(false)
 
-  // Load profile on mount
+  // Load profile on mount and sync budget input
   useEffect(() => {
-    fetchProfile()
+    fetchProfile().then(() => {
+      const budget = useSettingsStore.getState().monthlyBudget
+      if (budget > 0) setBudgetInput(String(budget))
+    })
   }, [fetchProfile])
-
-  // Sync budget from store to local input when not editing
-  useEffect(() => {
-    if (!budgetEditing) {
-      setBudgetInput(monthlyBudget > 0 ? String(monthlyBudget) : '')
-    }
-  }, [monthlyBudget, budgetEditing])
 
   const handleBudgetSave = useCallback(() => {
     const val = parseInt(budgetInput, 10)
     if (!isNaN(val) && val >= 0) {
       updateBudget(val)
+    } else {
+      // Reset to store value if invalid
+      setBudgetInput(monthlyBudget > 0 ? String(monthlyBudget) : '')
     }
     setBudgetEditing(false)
-  }, [budgetInput, updateBudget])
+  }, [budgetInput, updateBudget, monthlyBudget])
 
   const handleApiKeySave = useCallback(() => {
     localStorage.setItem('llm_api_key', apiKey)
