@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import App from '../App'
 import { useAuthStore } from '../stores/authStore.ts'
+import { useSettingsStore } from '../stores/settingsStore.ts'
 
 function renderWithRouter(initialRoute = '/') {
   return render(
@@ -63,6 +64,7 @@ describe('App Routing', () => {
     })
 
     it('renders settings page at /settings', () => {
+      useSettingsStore.setState({ loading: false, fetchProfile: vi.fn() })
       renderWithRouter('/settings')
       expect(screen.getByText('⚙️ 設定')).toBeInTheDocument()
     })
