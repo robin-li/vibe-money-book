@@ -4,8 +4,8 @@ import { ParsedTransaction, AIFeedbackContent } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { AppError } from '../../middlewares/errorHandler';
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash-lite';
-const TIMEOUT_MS = 3000;
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 10000;
 const MAX_RETRIES = 2;
 
 export class GeminiProvider implements LLMProvider {
@@ -64,7 +64,7 @@ export class GeminiProvider implements LLMProvider {
   }
 
   async extractData(prompt: string, apiKey: string): Promise<ParsedTransaction> {
-    const text = await this.callWithRetry(apiKey, DATA_EXTRACTOR_SYSTEM_PROMPT, prompt, 0, 200);
+    const text = await this.callWithRetry(apiKey, DATA_EXTRACTOR_SYSTEM_PROMPT, prompt, 0, 2048);
     return this.parseJSON<ParsedTransaction>(text);
   }
 
@@ -73,7 +73,7 @@ export class GeminiProvider implements LLMProvider {
     const parts = prompt.split('\n---SYSTEM---\n');
     const systemPrompt = parts.length > 1 ? parts[0] : '';
     const userPrompt = parts.length > 1 ? parts[1] : prompt;
-    const text = await this.callWithRetry(apiKey, systemPrompt, userPrompt, 0.8, 150);
+    const text = await this.callWithRetry(apiKey, systemPrompt, userPrompt, 0.8, 1024);
     return this.parseJSON<AIFeedbackContent>(text);
   }
 

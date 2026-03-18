@@ -5,7 +5,7 @@ import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt'
 import { AppError } from '../../middlewares/errorHandler';
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-const TIMEOUT_MS = 3000;
+const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 10000;
 const MAX_RETRIES = 2;
 
 export class OpenAIProvider implements LLMProvider {
