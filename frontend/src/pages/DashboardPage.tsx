@@ -135,10 +135,10 @@ function DashboardPage() {
               💰
             </div>
             <div>
-              <h1 className="text-[var(--font-size-title)] font-semibold text-text-primary leading-tight">
+              <h1 className="text-title font-semibold text-text-primary leading-tight">
                 Vibe Money Book
               </h1>
-              <p className="text-[var(--font-size-small)] text-text-secondary tracking-[2px]">
+              <p className="text-small text-text-secondary tracking-[2px]">
                 語音記帳教練
               </p>
             </div>
@@ -167,7 +167,7 @@ function DashboardPage() {
         {/* Error toast */}
         {status === 'error' && errorMessage && (
           <div
-            className="mx-2xl mb-md px-lg py-sm rounded-md bg-danger text-surface text-[var(--font-size-body)] text-center"
+            className="mx-2xl mb-md px-lg py-sm rounded-md bg-danger text-surface text-body text-center"
             role="alert"
           >
             {errorMessage}
@@ -211,7 +211,7 @@ function DashboardPage() {
 
         {/* Footer */}
         <div className="text-center py-sm mt-xl">
-          <p className="text-[var(--font-size-small)] text-text-tertiary tracking-[1px]">
+          <p className="text-small text-text-tertiary tracking-[1px]">
             POWERED BY AI · 精準記帳 · 情緒滿分
           </p>
         </div>

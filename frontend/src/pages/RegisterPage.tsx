@@ -75,17 +75,17 @@ function RegisterPage() {
       <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center text-3xl mb-lg">
         💰
       </div>
-      <h1 className="text-[var(--font-size-title)] font-semibold text-text-primary mb-xs">
+      <h1 className="text-title font-semibold text-text-primary mb-xs">
         Vibe Money Book
       </h1>
-      <p className="text-[var(--font-size-small)] text-text-secondary tracking-[2px] mb-3xl">
+      <p className="text-small text-text-secondary tracking-[2px] mb-3xl">
         語音記帳教練
       </p>
 
-      <form onSubmit={handleSubmit} className="w-full max-w-sm" noValidate>
+      <form onSubmit={handleSubmit} className="w-full max-w-[384px]" noValidate>
         {error && (
           <div
-            className="mb-lg p-md rounded-md bg-danger-light text-danger text-[var(--font-size-caption)] text-center"
+            className="mb-lg p-md rounded-md bg-danger-light text-danger text-caption text-center"
             role="alert"
           >
             {error}
@@ -101,7 +101,7 @@ function RegisterPage() {
               setName(e.target.value)
               clearFieldError('name')
             }}
-            className={`w-full h-12 rounded-md border bg-surface px-lg text-[var(--font-size-body)] outline-none transition-colors ${
+            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${
               validationErrors.name
                 ? 'border-danger focus:border-danger'
                 : 'border-border focus:border-primary'
@@ -111,7 +111,7 @@ function RegisterPage() {
             autoComplete="name"
           />
           {validationErrors.name && (
-            <p className="mt-xs text-[var(--font-size-small)] text-danger" role="alert">
+            <p className="mt-xs text-small text-danger" role="alert">
               {validationErrors.name}
             </p>
           )}
@@ -126,7 +126,7 @@ function RegisterPage() {
               setEmail(e.target.value)
               clearFieldError('email')
             }}
-            className={`w-full h-12 rounded-md border bg-surface px-lg text-[var(--font-size-body)] outline-none transition-colors ${
+            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${
               validationErrors.email
                 ? 'border-danger focus:border-danger'
                 : 'border-border focus:border-primary'
@@ -136,7 +136,7 @@ function RegisterPage() {
             autoComplete="email"
           />
           {validationErrors.email && (
-            <p className="mt-xs text-[var(--font-size-small)] text-danger" role="alert">
+            <p className="mt-xs text-small text-danger" role="alert">
               {validationErrors.email}
             </p>
           )}
@@ -151,7 +151,7 @@ function RegisterPage() {
               setPassword(e.target.value)
               clearFieldError('password')
             }}
-            className={`w-full h-12 rounded-md border bg-surface px-lg text-[var(--font-size-body)] outline-none transition-colors ${
+            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${
               validationErrors.password
                 ? 'border-danger focus:border-danger'
                 : 'border-border focus:border-primary'
@@ -161,7 +161,7 @@ function RegisterPage() {
             autoComplete="new-password"
           />
           {validationErrors.password && (
-            <p className="mt-xs text-[var(--font-size-small)] text-danger" role="alert">
+            <p className="mt-xs text-small text-danger" role="alert">
               {validationErrors.password}
             </p>
           )}
@@ -176,7 +176,7 @@ function RegisterPage() {
               setConfirmPassword(e.target.value)
               clearFieldError('confirmPassword')
             }}
-            className={`w-full h-12 rounded-md border bg-surface px-lg text-[var(--font-size-body)] outline-none transition-colors ${
+            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${
               validationErrors.confirmPassword
                 ? 'border-danger focus:border-danger'
                 : 'border-border focus:border-primary'
@@ -186,7 +186,7 @@ function RegisterPage() {
             autoComplete="new-password"
           />
           {validationErrors.confirmPassword && (
-            <p className="mt-xs text-[var(--font-size-small)] text-danger" role="alert">
+            <p className="mt-xs text-small text-danger" role="alert">
               {validationErrors.confirmPassword}
             </p>
           )}
@@ -195,12 +195,12 @@ function RegisterPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-12 bg-primary text-surface rounded-md font-semibold text-[var(--font-size-body)] hover:bg-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full h-12 bg-primary text-surface rounded-md font-semibold text-body hover:bg-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loading ? '註冊中...' : '註冊'}
         </button>
 
-        <p className="text-center mt-xl text-[var(--font-size-caption)]">
+        <p className="text-center mt-xl text-caption">
           <span className="text-text-secondary">已有帳號？</span>
           <Link to="/login" className="text-primary underline ml-xs">
             返回登入

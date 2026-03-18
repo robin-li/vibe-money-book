@@ -11,13 +11,13 @@ function BudgetCard({ summary }: BudgetCardProps) {
         className="bg-surface rounded-lg shadow-card p-lg mx-2xl mb-xl"
         aria-label="預算概覽"
       >
-        <h2 className="text-[var(--font-size-caption)] text-text-secondary mb-sm">
+        <h2 className="text-caption text-text-secondary mb-sm">
           預算剩餘
         </h2>
-        <p className="text-[var(--font-size-display)] font-bold text-text-primary">
+        <p className="text-display font-bold text-text-primary">
           --
         </p>
-        <p className="text-[var(--font-size-caption)] text-text-secondary mt-sm">
+        <p className="text-caption text-text-secondary mt-sm">
           尚未設定預算
         </p>
       </section>
@@ -55,22 +55,22 @@ function BudgetCard({ summary }: BudgetCardProps) {
     >
       <div className="flex justify-between items-start mb-sm">
         <div>
-          <p className="text-[var(--font-size-caption)] text-text-secondary">
+          <p className="text-caption text-text-secondary">
             預算剩餘
           </p>
           <p
-            className={`text-[var(--font-size-display)] font-bold ${getPercentColor()}`}
+            className={`text-display font-bold ${getPercentColor()}`}
             aria-live="polite"
           >
             {isOverBudget ? '超支' : `${remainingPercent}%`}
           </p>
         </div>
         <div className="text-right">
-          <p className="text-[var(--font-size-caption)] text-text-secondary">
+          <p className="text-caption text-text-secondary">
             本月支出
           </p>
           <p
-            className="text-[var(--font-size-headline)] font-bold text-danger"
+            className="text-headline font-bold text-danger"
             aria-live="polite"
           >
             {formatMoney(totalSpent)}
@@ -94,10 +94,10 @@ function BudgetCard({ summary }: BudgetCardProps) {
       </div>
 
       <div className="flex justify-between">
-        <span className="text-[var(--font-size-small)] text-text-secondary">
+        <span className="text-small text-text-secondary">
           $0
         </span>
-        <span className="text-[var(--font-size-small)] text-text-secondary">
+        <span className="text-small text-text-secondary">
           目標：{formatMoney(monthlyBudget)}
         </span>
       </div>

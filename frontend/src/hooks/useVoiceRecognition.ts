@@ -61,7 +61,7 @@ export function useVoiceRecognition(
     const recognition = new SpeechRecognitionClass()
     recognition.lang = lang
     recognition.interimResults = true
-    recognition.continuous = false
+    recognition.continuous = true
     recognition.maxAlternatives = 1
 
     recognition.onstart = () => {
@@ -84,17 +84,21 @@ export function useVoiceRecognition(
         }
       }
 
-      if (interim) {
-        setInterimTranscript(interim)
+      // In continuous mode, show combined final + interim as live feedback
+      const liveText = finalTranscript + interim
+      if (liveText) {
+        setInterimTranscript(liveText)
         setStatus('recognizing')
-        callbacksRef.current.onInterimResult?.(interim)
+        callbacksRef.current.onInterimResult?.(liveText)
       }
+    }
 
-      if (finalTranscript) {
-        setTranscript(finalTranscript)
-        setInterimTranscript('')
-        callbacksRef.current.onResult?.(finalTranscript)
-      }
+    // When stop() is called, onend fires — deliver accumulated result
+    recognition.onspeechend = () => {
+      // Collect all final results
+      const recognition_ = recognitionRef.current
+      if (!recognition_) return
+      // The final result will be delivered via onresult before onend
     }
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -116,6 +120,14 @@ export function useVoiceRecognition(
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
       recognitionRef.current.stop()
+      // Deliver whatever we have as final result
+      setInterimTranscript((current) => {
+        if (current) {
+          setTranscript(current)
+          callbacksRef.current.onResult?.(current)
+        }
+        return ''
+      })
     }
   }, [])
 

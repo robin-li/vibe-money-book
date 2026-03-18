@@ -26,11 +26,11 @@ function AIFeedbackCard({ feedbackText, persona }: AIFeedbackCardProps) {
         <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-surface text-lg">
           {config.icon}
         </div>
-        <p className="text-[var(--font-size-caption)] text-text-secondary">
+        <p className="text-caption text-text-secondary">
           {config.name} {config.emoji} 的即時回饋
         </p>
       </div>
-      <p className="text-[var(--font-size-body)] text-primary-dark">
+      <p className="text-body text-primary-dark">
         「{feedbackText}」
       </p>
     </section>

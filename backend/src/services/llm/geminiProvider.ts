@@ -5,7 +5,7 @@ import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt'
 import { AppError } from '../../middlewares/errorHandler';
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 10000;
+const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 30000;
 const MAX_RETRIES = 2;
 
 export class GeminiProvider implements LLMProvider {
@@ -14,15 +14,22 @@ export class GeminiProvider implements LLMProvider {
     systemPrompt: string,
     userPrompt: string,
     temperature: number,
-    maxTokens: number
+    maxTokens: number,
+    responseMimeType?: string
   ): Promise<string> {
     const genAI = new GoogleGenerativeAI(apiKey);
+    const generationConfig: Record<string, unknown> = {
+      temperature,
+      maxOutputTokens: maxTokens,
+      // Disable thinking to reduce latency and token usage
+      thinkingConfig: { thinkingBudget: 0 },
+    };
+    if (responseMimeType) {
+      generationConfig.responseMimeType = responseMimeType;
+    }
     const model = genAI.getGenerativeModel({
       model: GEMINI_MODEL,
-      generationConfig: {
-        temperature,
-        maxOutputTokens: maxTokens,
-      },
+      generationConfig,
       systemInstruction: systemPrompt,
     });
 
@@ -54,17 +61,18 @@ export class GeminiProvider implements LLMProvider {
     }
 
     const message = lastError?.message || '';
+    console.error('[Gemini Error]', message, lastError);
     if (message.includes('API_KEY_INVALID') || message.includes('PERMISSION_DENIED')) {
       throw new AppError('Gemini API Key 無效，請確認您的 API Key', 403);
     }
     if (message.includes('RESOURCE_EXHAUSTED') || message.includes('quota')) {
       throw new AppError('Gemini API 額度已用盡，請檢查您的配額或切換引擎', 403);
     }
-    throw new AppError('LLM 服務暫時不可用，請稍後再試', 502);
+    throw new AppError(`LLM 服務暫時不可用，請稍後再試 (${message})`, 502);
   }
 
   async extractData(prompt: string, apiKey: string): Promise<ParsedTransaction> {
-    const text = await this.callWithRetry(apiKey, DATA_EXTRACTOR_SYSTEM_PROMPT, prompt, 0, 2048);
+    const text = await this.callWithRetry(apiKey, DATA_EXTRACTOR_SYSTEM_PROMPT, prompt, 0, 2048, 'application/json');
     return this.parseJSON<ParsedTransaction>(text);
   }
 
@@ -73,19 +81,34 @@ export class GeminiProvider implements LLMProvider {
     const parts = prompt.split('\n---SYSTEM---\n');
     const systemPrompt = parts.length > 1 ? parts[0] : '';
     const userPrompt = parts.length > 1 ? parts[1] : prompt;
-    const text = await this.callWithRetry(apiKey, systemPrompt, userPrompt, 0.8, 1024);
+    const text = await this.callWithRetry(apiKey, systemPrompt, userPrompt, 0.8, 4096, 'application/json');
     return this.parseJSON<AIFeedbackContent>(text);
   }
 
   private parseJSON<T>(text: string): T {
-    // Strip markdown code blocks if present
     let cleaned = text.trim();
+
+    // Strip thinking tags (e.g. <think>...</think>)
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+    // Strip markdown code blocks if present
     if (cleaned.startsWith('```')) {
       cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
     }
+
+    // Try direct parse first
     try {
       return JSON.parse(cleaned) as T;
     } catch {
+      // Fallback: extract first JSON object from text
+      const match = cleaned.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          return JSON.parse(match[0]) as T;
+        } catch {
+          // fall through
+        }
+      }
       throw new AppError('LLM 回傳格式異常，無法解析', 502);
     }
   }

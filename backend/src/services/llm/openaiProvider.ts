@@ -70,12 +70,26 @@ export class OpenAIProvider implements LLMProvider {
 
   private parseJSON<T>(text: string): T {
     let cleaned = text.trim();
+
+    // Strip thinking tags
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+
+    // Strip markdown code blocks
     if (cleaned.startsWith('```')) {
       cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
     }
+
     try {
       return JSON.parse(cleaned) as T;
     } catch {
+      const match = cleaned.match(/\{[\s\S]*\}/);
+      if (match) {
+        try {
+          return JSON.parse(match[0]) as T;
+        } catch {
+          // fall through
+        }
+      }
       throw new AppError('LLM 回傳格式異常，無法解析', 502);
     }
   }

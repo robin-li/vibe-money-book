@@ -91,7 +91,7 @@ function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
       {/* Error message */}
       {showError && errorMessage && (
         <div
-          className="mb-sm px-lg py-sm rounded-md text-[var(--font-size-small)] text-danger bg-danger-light text-center"
+          className="mb-sm px-lg py-sm rounded-md text-small text-danger bg-danger-light text-center"
           role="alert"
         >
           {errorMessage}
@@ -107,7 +107,7 @@ function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
           onKeyDown={handleKeyDown}
           placeholder={getPlaceholder()}
           disabled={disabled || isActive}
-          className={`flex-1 h-[44px] rounded-xl px-lg text-[var(--font-size-body)] border outline-none transition-colors duration-[var(--transition-fast)] ${
+          className={`flex-1 h-[44px] rounded-xl px-lg text-body border outline-none transition-colors duration-[var(--transition-fast)] ${
             isActive
               ? 'bg-primary-light border-primary'
               : 'bg-bg border-border focus:border-primary'

@@ -53,13 +53,13 @@ function ParsedResultCard({
       role="region"
       aria-label="AI 解析結果"
     >
-      <h3 className="text-[var(--font-size-body)] font-semibold text-text-primary mb-md">
+      <h3 className="text-body font-semibold text-text-primary mb-md">
         ✨ AI 幫你整理好了
       </h3>
 
       <div className="space-y-sm mb-lg">
         <div className="flex items-center gap-md">
-          <span className="text-[var(--font-size-caption)] text-text-secondary w-[60px] shrink-0">
+          <span className="text-caption text-text-secondary w-[60px] shrink-0">
             金額
           </span>
           {isEditing ? (
@@ -67,27 +67,27 @@ function ParsedResultCard({
               type="number"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="flex-1 h-9 rounded-md border border-border px-sm text-[var(--font-size-body)] text-danger font-semibold"
+              className="flex-1 h-9 rounded-md border border-border px-sm text-body text-danger font-semibold"
               min="0.01"
               step="1"
               aria-label="金額"
             />
           ) : (
-            <span className="text-[var(--font-size-body)] text-danger font-semibold">
+            <span className="text-body text-danger font-semibold">
               ${result.amount?.toLocaleString() ?? '--'}
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-md">
-          <span className="text-[var(--font-size-caption)] text-text-secondary w-[60px] shrink-0">
+          <span className="text-caption text-text-secondary w-[60px] shrink-0">
             類別
           </span>
           {isEditing ? (
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="flex-1 h-9 rounded-md border border-border px-sm text-[var(--font-size-body)]"
+              className="flex-1 h-9 rounded-md border border-border px-sm text-body"
               aria-label="類別"
             >
               {categories.map((cat) => (
@@ -97,14 +97,14 @@ function ParsedResultCard({
               ))}
             </select>
           ) : (
-            <span className="text-[var(--font-size-body)] text-text-primary">
+            <span className="text-body text-text-primary">
               {categoryNames[result.category ?? ''] ?? result.category ?? '--'}
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-md">
-          <span className="text-[var(--font-size-caption)] text-text-secondary w-[60px] shrink-0">
+          <span className="text-caption text-text-secondary w-[60px] shrink-0">
             商家
           </span>
           {isEditing ? (
@@ -112,18 +112,18 @@ function ParsedResultCard({
               type="text"
               value={merchant}
               onChange={(e) => setMerchant(e.target.value)}
-              className="flex-1 h-9 rounded-md border border-border px-sm text-[var(--font-size-body)]"
+              className="flex-1 h-9 rounded-md border border-border px-sm text-body"
               aria-label="商家"
             />
           ) : (
-            <span className="text-[var(--font-size-body)] text-text-primary">
+            <span className="text-body text-text-primary">
               {result.merchant || '--'}
             </span>
           )}
         </div>
 
         <div className="flex items-center gap-md">
-          <span className="text-[var(--font-size-caption)] text-text-secondary w-[60px] shrink-0">
+          <span className="text-caption text-text-secondary w-[60px] shrink-0">
             日期
           </span>
           {isEditing ? (
@@ -131,11 +131,11 @@ function ParsedResultCard({
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="flex-1 h-9 rounded-md border border-border px-sm text-[var(--font-size-body)]"
+              className="flex-1 h-9 rounded-md border border-border px-sm text-body"
               aria-label="日期"
             />
           ) : (
-            <span className="text-[var(--font-size-body)] text-text-primary">
+            <span className="text-body text-text-primary">
               {result.date ?? '--'}
             </span>
           )}
@@ -153,14 +153,14 @@ function ParsedResultCard({
               setIsEditing(true)
             }
           }}
-          className="flex-1 h-10 rounded-sm border border-border text-text-secondary text-[var(--font-size-body)] transition-colors duration-[var(--transition-fast)] hover:bg-bg"
+          className="flex-1 h-10 rounded-sm border border-border text-text-secondary text-body transition-colors duration-[var(--transition-fast)] hover:bg-bg"
         >
           {isEditing ? '取消' : '修改'}
         </button>
         <button
           type="button"
           onClick={handleConfirm}
-          className="flex-1 h-10 rounded-sm bg-primary text-surface font-semibold text-[var(--font-size-body)] transition-opacity duration-[var(--transition-fast)] hover:opacity-90"
+          className="flex-1 h-10 rounded-sm bg-primary text-surface font-semibold text-body transition-opacity duration-[var(--transition-fast)] hover:opacity-90"
         >
           ✓ 確認記帳
         </button>

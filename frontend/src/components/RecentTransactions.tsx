@@ -38,12 +38,12 @@ const categoryNames: Record<string, string> = {
 function RecentTransactions({ transactions }: RecentTransactionsProps) {
   return (
     <section className="px-2xl" aria-label="最近帳目">
-      <h2 className="text-[var(--font-size-title)] font-semibold text-text-primary mb-md">
+      <h2 className="text-title font-semibold text-text-primary mb-md">
         🕐 最近帳目
       </h2>
 
       {transactions.length === 0 ? (
-        <p className="text-[var(--font-size-body)] text-text-tertiary text-center py-3xl">
+        <p className="text-body text-text-tertiary text-center py-3xl">
           還沒有記帳紀錄，開始記帳吧！
         </p>
       ) : (
@@ -57,19 +57,19 @@ function RecentTransactions({ transactions }: RecentTransactionsProps) {
                 {categoryIcons[tx.category] ?? '📦'}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[var(--font-size-body)] font-semibold text-text-primary truncate">
+                <p className="text-body font-semibold text-text-primary truncate">
                   {tx.merchant || tx.category}
                 </p>
                 <div className="flex items-center gap-xs">
-                  <span className="text-[var(--font-size-small)] text-text-secondary bg-[#F0F0F0] rounded-sm px-2 py-0.5">
+                  <span className="text-small text-text-secondary bg-[#F0F0F0] rounded-sm px-2 py-0.5">
                     {categoryNames[tx.category] ?? tx.category}
                   </span>
-                  <span className="text-[var(--font-size-small)] text-text-secondary">
+                  <span className="text-small text-text-secondary">
                     · {formatTime(tx.createdAt)}
                   </span>
                 </div>
               </div>
-              <p className="text-[var(--font-size-title)] font-semibold text-danger shrink-0">
+              <p className="text-title font-semibold text-danger shrink-0">
                 -${tx.amount.toLocaleString()}
               </p>
             </div>

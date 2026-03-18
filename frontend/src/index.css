@@ -43,7 +43,15 @@
   --shadow-input: 0 1px 4px rgba(0, 0, 0, 0.04);
   --shadow-fab: 0 4px 12px rgba(0, 200, 150, 0.30);
 
-  /* Font Sizes */
+  /* Font Sizes (--text-* for Tailwind v4 text-{name} utilities) */
+  --text-display: 36px;
+  --text-headline: 24px;
+  --text-title: 18px;
+  --text-body: 16px;
+  --text-caption: 14px;
+  --text-small: 12px;
+
+  /* Legacy aliases */
   --font-size-display: 36px;
   --font-size-headline: 24px;
   --font-size-title: 18px;

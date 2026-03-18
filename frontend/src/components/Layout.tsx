@@ -41,7 +41,7 @@ function Layout() {
                 <span className="text-xl leading-none" role="img" aria-hidden="true">
                   {tab.icon}
                 </span>
-                <span className="text-[var(--font-size-small)] mt-0.5">
+                <span className="text-small mt-0.5">
                   {tab.label}
                 </span>
               </>

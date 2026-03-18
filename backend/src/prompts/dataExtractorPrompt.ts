@@ -9,7 +9,7 @@ export function buildDataExtractorPrompt(input: DataExtractorInput): string {
 1. 從使用者輸入中萃取：金額、類別、商家、日期
 2. 金額必須為正數。若無法辨識金額，回傳 amount 為 null
 3. 類別必須從以下清單中選擇：[${categoriesList}]
-4. 若無法匹配任何現有類別，將 is_new_category 設為 true，並在 suggested_category 中填入建議的新類別名稱
+4. 「other」僅用於真正無法歸類的雜項消費。若消費有明確主題（如寵物、健身、才藝、育兒等），不應歸入 other，而應設 is_new_category 為 true，並在 suggested_category 中填入建議的新類別名稱（使用中文）
 5. 偵測相似類別名稱（如「咖啡」與「飲料」），避免重複建立，優先歸入現有類別
 6. 若未提及商家，根據消費內容推測合理的商家名稱
 7. 若未提及日期，使用今天的日期：${input.currentDate}
