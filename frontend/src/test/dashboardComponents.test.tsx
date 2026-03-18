@@ -127,6 +127,7 @@ describe('ParsedResultCard', () => {
     confidence: 0.95,
     isNewCategory: false,
     suggestedCategory: null,
+    note: null,
   }
   const categories = ['food', 'transport', 'entertainment', 'other']
 
@@ -186,6 +187,7 @@ describe('ParsedResultCard', () => {
 describe('NewCategoryDialog', () => {
   const defaultProps = {
     suggestedCategory: '寵物',
+    note: null,
     persona: 'gentle' as const,
     existingCategories: ['food', 'transport', 'other'],
     onConfirm: vi.fn(),

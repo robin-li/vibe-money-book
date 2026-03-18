@@ -35,6 +35,7 @@ describe('dashboardStore', () => {
           confidence: 0.9,
           isNewCategory: false,
           suggestedCategory: null,
+    note: null,
         },
         errorMessage: 'some error',
       })
@@ -66,6 +67,7 @@ describe('dashboardStore', () => {
           confidence: 0.95,
           isNewCategory: false,
           suggestedCategory: null,
+    note: null,
         },
         aiFeedback: {
           text: '享受美味',
@@ -91,6 +93,7 @@ describe('dashboardStore', () => {
           confidence: 0.9,
           isNewCategory: true,
           suggestedCategory: '寵物',
+    note: null,
         },
       })
 

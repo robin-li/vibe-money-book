@@ -142,6 +142,13 @@ describe('useVoiceRecognition', () => {
       } as unknown)
     })
 
+    // In continuous mode, results are accumulated as interim until stopRecording
+    expect(result.current.interimTranscript).toBe('午餐吃拉麵 180 元')
+
+    act(() => {
+      result.current.stopRecording()
+    })
+
     expect(result.current.transcript).toBe('午餐吃拉麵 180 元')
     expect(onResult).toHaveBeenCalledWith('午餐吃拉麵 180 元')
   })

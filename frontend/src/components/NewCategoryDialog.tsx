@@ -56,23 +56,23 @@ function NewCategoryDialog({
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30">
         <div
-          className="w-full max-w-lg bg-surface rounded-t-xl p-lg animate-slide-up"
+          className="w-full max-w-[512px] bg-surface rounded-t-xl p-lg pb-[120px] animate-slide-up"
           role="dialog"
           aria-label="修改類別名稱"
         >
-          <h3 className="text-[var(--font-size-title)] font-semibold text-text-primary mb-md">
+          <h3 className="text-title font-semibold text-text-primary mb-md">
             修改類別名稱
           </h3>
           <input
             type="text"
             value={customName}
             onChange={(e) => setCustomName(e.target.value)}
-            className="w-full h-[44px] rounded-md border border-border px-lg text-[var(--font-size-body)] mb-xs"
+            className="w-full h-[44px] rounded-md border border-border px-lg text-body mb-xs"
             maxLength={50}
             autoFocus
             aria-label="類別名稱"
           />
-          <p className="text-[var(--font-size-small)] text-text-tertiary mb-lg">
+          <p className="text-small text-text-tertiary mb-lg">
             ⚠️ 類別名稱 2–50 字元
           </p>
           <div className="flex gap-sm">
@@ -103,11 +103,11 @@ function NewCategoryDialog({
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30">
         <div
-          className="w-full max-w-lg bg-surface rounded-t-xl p-lg animate-slide-up"
+          className="w-full max-w-[512px] bg-surface rounded-t-xl p-lg pb-[120px] animate-slide-up"
           role="dialog"
           aria-label="選擇類別"
         >
-          <h3 className="text-[var(--font-size-title)] font-semibold text-text-primary mb-md">
+          <h3 className="text-title font-semibold text-text-primary mb-md">
             選擇類別
           </h3>
           <div className="flex flex-wrap gap-sm mb-lg">
@@ -116,7 +116,7 @@ function NewCategoryDialog({
                 key={cat}
                 type="button"
                 onClick={() => onSelectExisting(cat)}
-                className="px-lg py-sm rounded-sm bg-bg text-[var(--font-size-body)] text-text-primary hover:bg-border transition-colors"
+                className="px-lg py-sm rounded-sm bg-bg text-body text-text-primary hover:bg-border transition-colors"
               >
                 {categoryIcons[cat] ?? '📦'}{' '}
                 {categoryNames[cat] ?? cat}
@@ -147,7 +147,7 @@ function NewCategoryDialog({
           <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-surface text-sm shrink-0">
             {config.emoji}
           </div>
-          <p className="text-[var(--font-size-body)] text-text-primary">
+          <p className="text-body text-text-primary">
             我覺得這筆消費屬於「
             <span className="font-semibold bg-primary/20 rounded-sm px-1.5 py-0.5">
               {suggestedCategory}
@@ -163,21 +163,21 @@ function NewCategoryDialog({
           <button
             type="button"
             onClick={() => onConfirm(suggestedCategory)}
-            className="h-9 px-lg rounded-sm bg-primary text-surface text-[var(--font-size-body)] font-medium"
+            className="h-9 px-lg rounded-sm bg-primary text-surface text-body font-medium"
           >
             確認
           </button>
           <button
             type="button"
             onClick={() => setMode('rename')}
-            className="h-9 px-lg rounded-sm border border-primary text-primary text-[var(--font-size-body)]"
+            className="h-9 px-lg rounded-sm border border-primary text-primary text-body"
           >
             修改名稱
           </button>
           <button
             type="button"
             onClick={() => setMode('select')}
-            className="h-9 px-lg rounded-sm border border-border text-text-secondary text-[var(--font-size-body)]"
+            className="h-9 px-lg rounded-sm border border-border text-text-secondary text-body"
           >
             選現有
           </button>
