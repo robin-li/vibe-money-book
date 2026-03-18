@@ -5,6 +5,7 @@ import userRoutes from './userRoutes';
 import aiRoutes from './aiRoutes';
 import transactionRoutes from './transactionRoutes';
 import budgetRoutes from './budgetRoutes';
+import statsRoutes from './statsRoutes';
 
 const router = Router();
 
@@ -17,8 +18,6 @@ router.use('/api/v1/users', userRoutes);
 router.use('/api/v1/ai', aiRoutes);
 router.use('/api/v1/transactions', transactionRoutes);
 router.use('/api/v1/budget', budgetRoutes);
-
-// Future routes will be added here:
-// router.use('/api/v1/stats', statsRoutes);
+router.use('/api/v1/stats', statsRoutes);
 
 export default router;

@@ -6,17 +6,25 @@ import { ApiResponse } from '../types';
 
 const router = Router();
 
+const MAX_CATEGORIES = 20;
+
 // POST /budget/categories - 新增類別
 router.post('/categories', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
-    const { category } = req.body;
+    const { category, budget_limit } = req.body;
 
     if (!category || typeof category !== 'string' || !category.trim()) {
       throw new AppError('請提供類別名稱', 400);
     }
 
     const trimmed = category.trim();
+
+    // Check category count limit
+    const count = await prisma.categoryBudget.count({ where: { userId } });
+    if (count >= MAX_CATEGORIES) {
+      throw new AppError(`類別數量已達上限 ${MAX_CATEGORIES}`, 400);
+    }
 
     // Check duplicate
     const existing = await prisma.categoryBudget.findUnique({
@@ -27,19 +35,24 @@ router.post('/categories', authMiddleware, async (req: AuthRequest, res: Respons
       throw new AppError('該類別已存在', 409);
     }
 
+    const budgetLimit = budget_limit != null ? Number(budget_limit) : 0;
+    if (isNaN(budgetLimit) || budgetLimit < 0) {
+      throw new AppError('budget_limit 必須為非負數', 400);
+    }
+
     const created = await prisma.categoryBudget.create({
       data: {
         userId,
         category: trimmed,
         isCustom: true,
-        budgetLimit: 0,
+        budgetLimit,
       },
     });
 
-    const response: ApiResponse<{ id: string; category: string }> = {
+    const response: ApiResponse<{ id: string; category: string; budget_limit: number }> = {
       code: 201,
       message: '類別新增成功',
-      data: { id: created.id, category: created.category },
+      data: { id: created.id, category: created.category, budget_limit: Number(created.budgetLimit) },
       timestamp: new Date().toISOString(),
     };
 
@@ -71,16 +84,123 @@ router.get('/categories', authMiddleware, async (req: AuthRequest, res: Response
   }
 });
 
-// GET /budget/summary - 取得當月預算摘要
+// PUT /budget/categories - 批次更新類別預算限額
+router.put('/categories', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.userId!;
+    const { categories } = req.body;
+
+    if (!Array.isArray(categories) || categories.length === 0) {
+      throw new AppError('請提供要更新的類別清單', 400);
+    }
+
+    const results = [];
+
+    for (const item of categories) {
+      if (!item.category || typeof item.category !== 'string') {
+        throw new AppError('每個項目必須包含 category 欄位', 400);
+      }
+      if (item.budget_limit == null || isNaN(Number(item.budget_limit)) || Number(item.budget_limit) < 0) {
+        throw new AppError(`類別 "${item.category}" 的 budget_limit 必須為非負數`, 400);
+      }
+
+      const existing = await prisma.categoryBudget.findUnique({
+        where: { userId_category: { userId, category: item.category } },
+      });
+
+      if (!existing) {
+        throw new AppError(`類別 "${item.category}" 不存在`, 404);
+      }
+
+      const updated = await prisma.categoryBudget.update({
+        where: { userId_category: { userId, category: item.category } },
+        data: { budgetLimit: Number(item.budget_limit) },
+      });
+
+      results.push({
+        category: updated.category,
+        budget_limit: Number(updated.budgetLimit),
+      });
+    }
+
+    const response: ApiResponse<typeof results> = {
+      code: 200,
+      message: '類別預算更新成功',
+      data: results,
+      timestamp: new Date().toISOString(),
+    };
+
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /budget/categories/:category - 刪除自訂類別
+router.delete('/categories/:category', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.userId!;
+    const category = req.params.category as string;
+
+    const existing = await prisma.categoryBudget.findUnique({
+      where: { userId_category: { userId, category } },
+    });
+
+    if (!existing) {
+      throw new AppError('類別不存在', 404);
+    }
+
+    if (!existing.isCustom) {
+      throw new AppError('無法刪除系統預設類別', 400);
+    }
+
+    // Update related transactions to "other"
+    await prisma.transaction.updateMany({
+      where: { userId, category },
+      data: { category: 'other' },
+    });
+
+    // Delete the category
+    await prisma.categoryBudget.delete({
+      where: { userId_category: { userId, category } },
+    });
+
+    const response: ApiResponse<{ category: string }> = {
+      code: 200,
+      message: '類別刪除成功，相關交易已歸類為 other',
+      data: { category },
+      timestamp: new Date().toISOString(),
+    };
+
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /budget/summary - 取得當月預算摘要（含各類別明細）
 router.get('/summary', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError('使用者不存在', 404);
 
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    // Support optional month query param (format: YYYY-MM)
+    const monthParam = req.query.month as string | undefined;
+    let year: number, month: number;
+
+    if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
+      const parts = monthParam.split('-');
+      year = parseInt(parts[0], 10);
+      month = parseInt(parts[1], 10) - 1; // JS months are 0-indexed
+    } else {
+      const now = new Date();
+      year = now.getFullYear();
+      month = now.getMonth();
+    }
+
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
     const transactions = await prisma.transaction.findMany({
       where: {
@@ -94,16 +214,47 @@ router.get('/summary', authMiddleware, async (req: AuthRequest, res: Response, n
     const remaining = monthlyBudget - totalSpent;
     const usedRatio = monthlyBudget > 0 ? Math.round((totalSpent / monthlyBudget) * 100) / 100 : 0;
 
+    // Build category breakdown
+    const categoryBudgets = await prisma.categoryBudget.findMany({
+      where: { userId },
+    });
+
+    const categorySpentMap: Record<string, number> = {};
+    for (const t of transactions) {
+      categorySpentMap[t.category] = (categorySpentMap[t.category] || 0) + Number(t.amount);
+    }
+
+    // Include all categories that have budgets or have spending
+    const allCategories = new Set([
+      ...categoryBudgets.map(cb => cb.category),
+      ...Object.keys(categorySpentMap),
+    ]);
+
+    const categoriesDetail = Array.from(allCategories).map(cat => {
+      const budget = categoryBudgets.find(cb => cb.category === cat);
+      const budgetLimit = budget ? Number(budget.budgetLimit) : 0;
+      const spent = categorySpentMap[cat] || 0;
+      return {
+        category: cat,
+        budget_limit: budgetLimit,
+        spent,
+        remaining: budgetLimit - spent,
+      };
+    });
+
+    const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+
     const response: ApiResponse<Record<string, unknown>> = {
       code: 200,
       message: '取得成功',
       data: {
-        month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`,
+        month: monthStr,
         monthly_budget: monthlyBudget,
         total_spent: totalSpent,
         remaining,
         used_ratio: usedRatio,
         transaction_count: transactions.length,
+        categories: categoriesDetail,
       },
       timestamp: new Date().toISOString(),
     };
