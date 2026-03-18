@@ -19,13 +19,16 @@ user_invocable: true
 - 從 `main` 建立 feature 分支
 - 參考 SRD 技術規範與 API Spec 實作程式碼
 - 撰寫並執行單元測試
+- 遇到問題、Bug或錯誤時，優先嘗試自行調查與解決
 - **Vibe Check 通過後，自動推送分支、建立 PR，並向開發者彙報結果與 PR 連結**
 
 **你不應該**：
+
 - 自行挑選 Issue，由開發者指派
 - 跳過測試直接提交
 - 在 Vibe Check 未通過時建立 PR
 - 在推送與建立 PR 前等待人類核准（Vibe Check 通過即視為核准）
+- 遇到可自行排查的問題時停下來詢問開發者（應先自行調查與解決，無法解決時才上報）
 
 ### Sub Agent 情境
 若 Dev Plan 的角色定義中指定了 Sub Agent 角色（如 `A-Backend`、`A-Frontend`），請遵守以下規範：
@@ -87,6 +90,52 @@ git rebase origin/main
 # 5. 若 rebase 產生衝突：立即停止並通知開發者
 #    - 不可自行解決衝突
 #    - 報告衝突的檔案清單，等待開發者指示
+
+# 6. 清理已合併的分支與無用的 worktree（詳見下方「清理規範」）
+```
+
+### 清理已合併分支與 Worktree
+
+同步完成後，檢查是否有前次任務遺留的分支與 worktree 需要清理。**刪除前必須列出清單讓開發者確認。**
+
+#### 檢查指令
+
+```bash
+# 列出已合併至 main 的本地分支（排除 main 本身）
+git branch --merged main | grep -v '^\*\|main'
+
+# 列出對應的遠端已合併分支
+git branch -r --merged origin/main | grep -v 'main' | grep 'origin/'
+
+# 列出所有 worktree
+git worktree list
+```
+
+#### 清理流程
+
+| 步驟 | 操作 |
+|------|------|
+| 1 | 執行上述檢查指令，收集待清理項目 |
+| 2 | 若無待清理項目，跳過此步驟 |
+| 3 | 向開發者列出清單，格式如下，**等待確認後才執行刪除** |
+| 4 | 開發者確認後，依序執行 `git worktree remove` → `git branch -d` → `git push origin --delete` |
+
+#### 清理確認清單格式
+
+```markdown
+🧹 發現以下已合併的分支/worktree 可清理：
+
+**Worktree：**
+- `../worktree-backend` → 分支 `feat/backend/issue-5-auth-api`（已合併）
+
+**本地分支：**
+- `feat/backend/issue-5-auth-api`（已合併至 main）
+- `feat/frontend/issue-6-login-page`（已合併至 main）
+
+**遠端分支：**
+- `origin/feat/backend/issue-5-auth-api`（已合併至 main）
+
+是否確認刪除以上項目？
 ```
 
 ### 同步檢查清單
@@ -95,6 +144,7 @@ git rebase origin/main
 - [ ] 本地無未提交的變更（或已妥善處理）
 - [ ] `git log --oneline HEAD..origin/main` 顯示無差異（本地已追上遠端）
 - [ ] 無 rebase 衝突
+- [ ] 已合併的分支與 worktree 已清理（或無需清理）
 
 ### 何時需要同步
 
@@ -107,7 +157,7 @@ git rebase origin/main
 
 ## Vibe Check 報告格式
 
-完成開發與測試後，向開發者報告時使用以下格式：
+完成開發與測試後，向開發者報告時使用以下格式。**注意：此報告在 PR 建立後才輸出，報告中必須包含 PR 連結。**
 
 ```markdown
 # Vibe Check 報告
@@ -129,9 +179,9 @@ git rebase origin/main
   - [x] [標準 1]
   - [x] [標準 2]
 
-## 分支資訊
-- 分支名稱：`feat/<agent>/issue-N-簡述`
-- commit 數量：N
+## PR
+- 連結：[PR URL]
+- 分支：`feat/<agent>/issue-N-簡述`
 
 ## 狀態
 - [通過 / 未通過]：[若未通過，說明原因]
@@ -174,6 +224,48 @@ Closes #N
 - PR 分支命名遵循 `feat/<agent>/issue-N-簡述`
 - A-Main 在最終彙報中列出所有 PR 連結，提醒開發者進行 Code Review
 
+## Review 類任務處理流程
+
+部分 Issue 屬於 Review 類任務（如 Prompt Review、Code Review），其產出是「Review 意見」而非功能程式碼。處理方式如下：
+
+### 判斷依據
+
+檢查 Issue 的「PR 策略」欄位：
+- **有 PR 策略**（獨立 PR / 合併 PR）→ 走標準開發流程
+- **無 PR（Review 任務）** → 走 Review 流程
+
+### Review 流程
+
+| 步驟 | 操作 |
+|------|------|
+| 1 | 閱讀待審查的程式碼（如 Prompt 模板、API 實作） |
+| 2 | 對照規格文件進行品質審查 |
+| 3 | **若發現確定性 bug**（欄位不一致、邏輯錯誤、安全漏洞等）→ **直接修正**，不需停下來詢問 |
+| 4 | 修正後執行測試（Vibe Check） |
+| 5 | Vibe Check 通過 → 自動建立 fix PR |
+| 6 | 將 Review 報告發佈至 Issue Comments，並在 Vibe Check 報告中附上 PR 連結 |
+
+### 關鍵原則
+
+- **Review 發現的確定性 bug，直接修正**：不需要額外一輪對話來獲得修正許可。Review 報告本身就是修正的依據。
+- **設計層面的建議（非 bug）**：標記為「建議改善（非阻擋性）」，由開發者決定是否採納，不自行修改。
+- **Review + 修正 = 一次完成**：向開發者報告時，同時呈現 Review 結果和修正 PR，而非分兩次報告。
+
+## 既有測試失敗處理規則
+
+Vibe Check 階段可能遇到「非本次變更造成的測試失敗」（既有 bug 或 flaky test）。處理方式如下：
+
+| 情況 | 判斷方式 | 處理 |
+|------|---------|------|
+| **Flaky test**（非確定性失敗） | 重跑測試後通過；或單獨跑該測試檔案通過 | 記錄在 Vibe Check 報告中，不阻擋 PR |
+| **既有 bug**（確定性失敗） | 失敗的測試與本次修改的檔案無關 | 若修正簡單（< 10 行），一併修正在本 PR；若修正複雜，記錄在 Vibe Check 報告中，建議開發者另開 Issue |
+| **本次變更導致的失敗** | `git diff` 涉及失敗測試相關的檔案 | 必須修正後才能建立 PR |
+
+### 關鍵原則
+
+- **先自行排查，確認歸因後再決定處理方式**，不要遇到失敗就停下來問開發者。
+- **排查步驟**：單獨跑失敗的測試檔案 → 檢查 `git diff` 是否涉及相關檔案 → 判斷是 flaky / 既有 bug / 本次造成。
+
 ## 完成條件
 
 - [ ] 功能程式碼已完成且符合 SRD 規範
@@ -204,3 +296,5 @@ Closes #N
    - 向開發者彙報 Vibe Check 結果 + PR 連結，提醒進行 Code Review
    - 若 CI 失敗需修正，可呼叫 `/vibe-sdlc-p4-pr` 處理
 9. 若 Vibe Check 未通過，自行修正後重新執行測試，直到通過為止
+10. 若 Issue 屬於 Review 類任務（PR 策略為「無 PR」），參照上方「Review 類任務處理流程」：
+    - 審查 → 發現確定性 bug → 直接修正 → 測試 → 建 PR → 一併報告 Review 結果與 PR 連結
