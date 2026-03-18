@@ -889,7 +889,7 @@ A-Main 不直接存取或「注入」Sub Agent 的 session context，而是透�
 - [x] T-202 (A-Backend) 交易 CRUD API — PR #40 merged 2026-03-17
 - [x] T-203 (A-Frontend) 語音輸入組件 — PR #39 merged 2026-03-17
 - [x] T-204 (A-Frontend) 儀表板式記帳介面（含新類別確認流程） — PR #41 merged 2026-03-17
-- [ ] T-205 (A-Main) LLM Prompt Review
+- [x] T-205 (A-Main) LLM Prompt Review — PR #43 merged 2026-03-18
 - [ ] ⛳ M2 驗收門
 
 ### Milestone 3：預算視覺化與統計

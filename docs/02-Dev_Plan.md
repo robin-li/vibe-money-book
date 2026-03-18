@@ -881,7 +881,7 @@ A-Main 不直接存取或「注入」Sub Agent 的 session context，而是透�
 - [x] T-104 (A-DevOps) CI 基礎建設 (GitHub Actions) — PR #35 merged 2026-03-18
 - [x] T-105 (A-Backend) 認證與使用者模組 API 開發 — PR #36 merged 2026-03-17
 - [x] T-106 (A-Frontend) 登入/註冊頁面與 Auth — PR #37 merged 2026-03-17
-- [ ] ⛳ M1 驗收門
+- [x] ⛳ M1 驗收門 — Issue #20 closed 2026-03-18
 
 ### Milestone 2：核心記帳
 
