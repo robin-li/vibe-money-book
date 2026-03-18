@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { LLMProvider } from './llmProvider';
 import { ParsedTransaction, AIFeedbackContent } from '../../types/llm';
+import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { AppError } from '../../middlewares/errorHandler';
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o-mini';
@@ -55,8 +56,7 @@ export class OpenAIProvider implements LLMProvider {
   }
 
   async extractData(prompt: string, apiKey: string): Promise<ParsedTransaction> {
-    const systemPrompt = '你是一個精確的記帳資料萃取引擎。你只能回傳 JSON 格式的結果，不能包含任何其他文字。';
-    const text = await this.callWithRetry(apiKey, systemPrompt, prompt, 0, 200);
+    const text = await this.callWithRetry(apiKey, DATA_EXTRACTOR_SYSTEM_PROMPT, prompt, 0, 200);
     return this.parseJSON<ParsedTransaction>(text);
   }
 

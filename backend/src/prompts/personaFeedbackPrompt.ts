@@ -35,7 +35,7 @@ export function buildPersonaFeedbackPrompt(input: PersonaFeedbackInput): string 
 ## 輸出格式
 僅回傳以下 JSON，不要包含任何其他文字或 markdown 標記：
 {
-  "feedback": "<你的評論，50字以內>",
+  "text": "<你的評論，50字以內>",
   "emotion_tag": "<情緒標籤，如 sarcastic_warning, gentle_encouragement, guilt_heavy 等>"
 }`;
 }
