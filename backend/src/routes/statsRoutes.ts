@@ -1,7 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import { authMiddleware, AuthRequest } from '../middlewares/auth';
 import prisma from '../config/database';
-import { AppError } from '../middlewares/errorHandler';
 import { ApiResponse } from '../types';
 
 const router = Router();
