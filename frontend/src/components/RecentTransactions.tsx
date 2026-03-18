@@ -4,6 +4,7 @@ import { useDashboardStore } from '../stores/dashboardStore'
 
 interface RecentTransactionsProps {
   transactions: Transaction[]
+  categories?: string[]
 }
 
 const categoryIcons: Record<string, string> = {
@@ -43,7 +44,9 @@ function formatDate(dateStr: string): string {
   return dateStr.split('T')[0]
 }
 
-function RecentTransactions({ transactions }: RecentTransactionsProps) {
+const defaultCategories = ['food', 'transport', 'entertainment', 'shopping', 'daily', 'medical', 'education', 'other']
+
+function RecentTransactions({ transactions, categories = defaultCategories }: RecentTransactionsProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
@@ -193,12 +196,23 @@ function RecentTransactions({ transactions }: RecentTransactionsProps) {
                         </div>
                         <div className="flex items-center gap-md">
                           <span className="text-caption text-text-secondary w-[50px] shrink-0">類別</span>
-                          <input
-                            type="text"
+                          <select
                             value={editForm.category}
                             onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
                             className="flex-1 h-9 rounded-md border border-border px-sm text-body"
-                          />
+                          >
+                            {categories.map((cat) => (
+                              <option key={cat} value={cat}>
+                                {categoryIcons[cat] ?? '📦'} {categoryNames[cat] ?? cat}
+                              </option>
+                            ))}
+                            {/* 若目前類別不在列表中，也顯示 */}
+                            {!categories.includes(editForm.category) && (
+                              <option value={editForm.category}>
+                                📦 {editForm.category}
+                              </option>
+                            )}
+                          </select>
                         </div>
                         <div className="flex items-center gap-md">
                           <span className="text-caption text-text-secondary w-[50px] shrink-0">商家</span>
