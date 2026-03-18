@@ -87,6 +87,28 @@ export async function getTransaction(
   }
 }
 
+export async function updateTransaction(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const id = req.params.id as string;
+    const result = await transactionService.updateTransaction(req.userId!, id, req.body);
+
+    const response: ApiResponse<typeof result> = {
+      code: 200,
+      message: '交易更新成功',
+      data: result,
+      timestamp: new Date().toISOString(),
+    };
+
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function deleteTransaction(
   req: AuthRequest,
   res: Response,
