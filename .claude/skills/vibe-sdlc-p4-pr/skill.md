@@ -38,7 +38,7 @@ user_invocable: true
 |------|--------|------|------|
 | 1 | **AI 助手** | 使用 `gh pr checks` 監控 CI 結果 | CI 狀態報告 |
 | 2a | *CI 通過* | **AI 助手** 通知開發者可進行 Code Review | — |
-| 2b | *CI 失敗* | **AI 助手** 讀取失敗報告，分析原因，修正程式碼，推送新 commit | 修正 commit |
+| 2b | *CI 失敗* | **AI 助手** 讀取失敗報告，分析原因，修正程式碼，**確認 PR 仍為 OPEN 後**推送新 commit | 修正 commit |
 |    |           | → 回到步驟 1，GitHub 重新執行 CI | — |
 | 3 | **開發者** | Code Review，核准後點擊 Merge | Merge commit |
 | 4 | **GitHub** | 觸發 CD pipeline（如已配置） | 部署 |
@@ -141,7 +141,11 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
 3. 監控 CI 結果：
    - 使用 `gh pr checks <PR-number>` 查看 CI 狀態
    - CI 通過：通知開發者可進行 Code Review
-   - CI 失敗：讀取失敗報告，分析原因，修正後推送新 commit
+   - CI 失敗：讀取失敗報告，分析原因，修正程式碼
+   - **推送前必須確認 PR 狀態**：`gh pr view <PR-number> --json state -q '.state'`
+     - `OPEN` → 正常推送
+     - `MERGED` → 禁止推送，從最新 main 建新分支與新 PR
+     - `CLOSED` → 確認是否需重新開啟或建新 PR
 4. 開發者 Merge 後：
    - **先同步工作目錄**：`git fetch origin && git rebase origin/main`（確保包含剛合併的變更）
    - 讀取 `/docs/02-Dev_Plan.md`
