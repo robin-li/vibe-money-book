@@ -25,8 +25,15 @@ export function buildDataExtractorPrompt(input: DataExtractorInput): string {
   "date": "<YYYY-MM-DD>",
   "confidence": <number>,
   "is_new_category": <boolean>,
-  "suggested_category": "<string | null>"
+  "suggested_category": "<string | null>",
+  "note": "<string | null>"
 }
+
+## note 欄位規則
+- 將無法歸入金額、類別、商家、日期的有價值上下文資訊整理為備註
+- 例如地點描述、商品細節、購買原因等
+- 用自然流暢的中文撰寫，不超過 100 字
+- 若輸入內容已被結構化欄位完整涵蓋，note 為 null
 
 ## 使用者輸入
 ${input.rawText}`;

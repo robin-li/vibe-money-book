@@ -9,6 +9,7 @@ export interface ParsedTransaction {
   confidence: number;
   is_new_category: boolean;
   suggested_category: string | null;
+  note: string | null;
 }
 
 export interface AIFeedbackContent {

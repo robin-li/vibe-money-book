@@ -62,6 +62,7 @@ function DashboardPage() {
       await confirmTransaction({
         ...data,
         rawText: parsedResult?.merchant ?? data.merchant,
+        note: parsedResult?.note,
         feedback: aiFeedback ?? undefined,
       })
       fetchBudgetSummary()
@@ -80,6 +81,7 @@ function DashboardPage() {
             merchant: parsedResult.merchant,
             date: parsedResult.date,
             rawText: parsedResult.merchant,
+            note: parsedResult.note,
             feedback: aiFeedback ?? undefined,
           })
           fetchBudgetSummary()
@@ -106,6 +108,7 @@ function DashboardPage() {
           merchant: parsedResult.merchant,
           date: parsedResult.date,
           rawText: parsedResult.merchant,
+          note: parsedResult.note,
           feedback: aiFeedback ?? undefined,
         })
         fetchBudgetSummary()

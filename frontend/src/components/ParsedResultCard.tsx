@@ -140,6 +140,17 @@ function ParsedResultCard({
             </span>
           )}
         </div>
+
+        {result.note && (
+          <div className="flex items-start gap-md">
+            <span className="text-caption text-text-secondary w-[60px] shrink-0">
+              備註
+            </span>
+            <span className="text-caption text-text-secondary">
+              {result.note}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex gap-sm">

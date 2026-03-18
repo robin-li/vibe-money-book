@@ -10,6 +10,7 @@ export interface ParsedResult {
   confidence: number
   isNewCategory: boolean
   suggestedCategory: string | null
+  note: string | null
 }
 
 export interface AIFeedbackContent {
@@ -62,6 +63,7 @@ interface DashboardState {
     merchant: string
     date: string
     rawText: string
+    note?: string | null
     feedback?: AIFeedbackContent
   }) => Promise<void>
   createCategory: (category: string) => Promise<void>
@@ -102,6 +104,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
           confidence: parsed.confidence,
           isNewCategory: parsed.is_new_category ?? false,
           suggestedCategory: parsed.suggested_category ?? null,
+          note: parsed.note ?? null,
         },
         aiFeedback: feedback
           ? { text: feedback.text, emotionTag: feedback.emotion_tag }
@@ -135,6 +138,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         merchant: data.merchant,
         raw_text: data.rawText,
         transaction_date: data.date,
+        note: data.note ?? undefined,
         feedback: data.feedback
           ? {
               text: data.feedback.text,
