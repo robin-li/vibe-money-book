@@ -131,6 +131,7 @@ describe('Stats Routes', () => {
           merchant: null,
           rawText: 'test',
           note: null,
+          type: 'expense',
           transactionDate: new Date('2026-01-15'),
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -141,6 +142,100 @@ describe('Stats Routes', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.month).toBe('2026-01');
+    });
+
+    it('should filter by type=expense', async () => {
+      mockedPrisma.transaction.findMany.mockResolvedValue([
+        {
+          id: 't1',
+          userId: 'test-user-id',
+          amount: new Prisma.Decimal(5000),
+          category: 'food',
+          type: 'expense',
+          merchant: null,
+          rawText: '午餐',
+          note: null,
+          transactionDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      const res = await request(app).get('/api/v1/stats/distribution?type=expense');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.total).toBe(5000);
+      expect(res.body.data.distribution).toHaveLength(1);
+      expect(res.body.data.distribution[0].category).toBe('food');
+
+      // Verify prisma was called with type filter
+      expect(mockedPrisma.transaction.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ type: 'expense' }),
+        }),
+      );
+    });
+
+    it('should filter by type=income', async () => {
+      mockedPrisma.transaction.findMany.mockResolvedValue([
+        {
+          id: 't1',
+          userId: 'test-user-id',
+          amount: new Prisma.Decimal(50000),
+          category: 'salary',
+          type: 'income',
+          merchant: null,
+          rawText: '薪水',
+          note: null,
+          transactionDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 't2',
+          userId: 'test-user-id',
+          amount: new Prisma.Decimal(3000),
+          category: 'investment',
+          type: 'income',
+          merchant: null,
+          rawText: '股票收益',
+          note: null,
+          transactionDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      const res = await request(app).get('/api/v1/stats/distribution?type=income');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.total).toBe(53000);
+      expect(res.body.data.distribution).toHaveLength(2);
+      expect(res.body.data.distribution[0].category).toBe('salary');
+
+      expect(mockedPrisma.transaction.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ type: 'income' }),
+        }),
+      );
+    });
+
+    it('should return all transactions when type is not specified', async () => {
+      mockedPrisma.transaction.findMany.mockResolvedValue([]);
+
+      await request(app).get('/api/v1/stats/distribution');
+
+      const calledWith = mockedPrisma.transaction.findMany.mock.calls[0][0];
+      expect(calledWith?.where).not.toHaveProperty('type');
+    });
+
+    it('should ignore invalid type parameter', async () => {
+      mockedPrisma.transaction.findMany.mockResolvedValue([]);
+
+      await request(app).get('/api/v1/stats/distribution?type=invalid');
+
+      const calledWith = mockedPrisma.transaction.findMany.mock.calls[0][0];
+      expect(calledWith?.where).not.toHaveProperty('type');
     });
   });
 });

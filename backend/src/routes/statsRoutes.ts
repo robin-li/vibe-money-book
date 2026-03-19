@@ -24,14 +24,24 @@ router.get('/distribution', authMiddleware, async (req: AuthRequest, res: Respon
       month = now.getMonth();
     }
 
+    // Support optional type query param (income | expense)
+    const typeParam = req.query.type as string | undefined;
+    const validTypes = ['income', 'expense'];
+    const typeFilter = typeParam && validTypes.includes(typeParam) ? typeParam : undefined;
+
     const monthStart = new Date(year, month, 1);
     const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
+    const whereClause: Record<string, unknown> = {
+      userId,
+      transactionDate: { gte: monthStart, lte: monthEnd },
+    };
+    if (typeFilter) {
+      whereClause.type = typeFilter;
+    }
+
     const transactions = await prisma.transaction.findMany({
-      where: {
-        userId,
-        transactionDate: { gte: monthStart, lte: monthEnd },
-      },
+      where: whereClause,
     });
 
     const total = transactions.reduce((sum, t) => sum + Number(t.amount), 0);

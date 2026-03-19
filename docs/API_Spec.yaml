@@ -701,7 +701,7 @@ paths:
   /stats/distribution:
     get:
       tags: [Stats]
-      summary: 取得消費類別分佈
+      summary: 取得類別分佈統計
       operationId: getDistribution
       security:
         - BearerAuth: []
@@ -712,6 +712,12 @@ paths:
           schema:
             type: string
             pattern: '^\d{4}-\d{2}$'
+        - name: type
+          in: query
+          description: 篩選交易類型（income 或 expense），不傳則返回全部
+          schema:
+            type: string
+            enum: [income, expense]
       responses:
         '200':
           description: 成功
