@@ -1,8 +1,14 @@
-import type { Persona } from '../stores/index'
+import type { Persona, AIEngine } from '../stores/index'
 
 interface AIFeedbackCardProps {
   feedbackText: string
   persona: Persona
+  aiEngine?: AIEngine
+}
+
+const engineLabel: Record<AIEngine, string> = {
+  gemini: 'Gemini',
+  openai: 'OpenAI',
 }
 
 const personaConfig: Record<
@@ -14,7 +20,7 @@ const personaConfig: Record<
   guilt_trip: { name: '心疼天使', emoji: '🥺', icon: '❤️' },
 }
 
-function AIFeedbackCard({ feedbackText, persona }: AIFeedbackCardProps) {
+function AIFeedbackCard({ feedbackText, persona, aiEngine }: AIFeedbackCardProps) {
   const config = personaConfig[persona]
 
   return (
@@ -28,6 +34,9 @@ function AIFeedbackCard({ feedbackText, persona }: AIFeedbackCardProps) {
         </div>
         <p className="text-caption text-text-secondary">
           {config.name} {config.emoji} 的即時回饋
+          {aiEngine && (
+            <span className="ml-xs text-small opacity-70">@{engineLabel[aiEngine]}</span>
+          )}
         </p>
       </div>
       <p className="text-body text-primary-dark">
