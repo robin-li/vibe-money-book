@@ -1,4 +1,5 @@
 import type { BudgetSummary } from '../stores/dashboardStore'
+import BudgetBar from './BudgetBar'
 
 interface BudgetCardProps {
   summary: BudgetSummary | null
@@ -27,17 +28,10 @@ function BudgetCard({ summary }: BudgetCardProps) {
   const { monthlyBudget, totalSpent, remaining, usedRatio } = summary
   const remainingRatio = Math.max(0, 1 - usedRatio)
   const remainingPercent = Math.round(remainingRatio * 100)
-  const progressPercent = Math.min(usedRatio * 100, 100)
 
   const isOverBudget = remaining <= 0
   const isLow = remainingRatio < 0.2
   const isMedium = remainingRatio >= 0.2 && remainingRatio < 0.5
-
-  const getProgressColor = () => {
-    if (isLow) return 'bg-danger'
-    if (isMedium) return 'bg-warning'
-    return 'bg-success'
-  }
 
   const getPercentColor = () => {
     if (isLow) return 'text-danger'
@@ -79,18 +73,8 @@ function BudgetCard({ summary }: BudgetCardProps) {
       </div>
 
       {/* Progress bar */}
-      <div className="h-2 rounded-full bg-border overflow-hidden mb-xs">
-        <div
-          className={`h-full rounded-full transition-all duration-[var(--transition-normal)] ${getProgressColor()} ${
-            isLow ? 'animate-budget-pulse' : ''
-          }`}
-          style={{ width: `${progressPercent}%` }}
-          role="progressbar"
-          aria-valuenow={progressPercent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`已使用 ${Math.round(usedRatio * 100)}% 預算`}
-        />
+      <div className="mb-xs">
+        <BudgetBar usedRatio={usedRatio} />
       </div>
 
       <div className="flex justify-between">
