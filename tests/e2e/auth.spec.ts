@@ -4,6 +4,7 @@ import {
   TEST_PASSWORD,
   TEST_NAME,
   loginViaUI,
+  registerUserViaAPI,
 } from '../fixtures/test-helpers';
 
 test.describe('註冊流程', () => {
@@ -97,22 +98,10 @@ test.describe('註冊流程', () => {
 test.describe('登入流程', () => {
   let testEmail: string;
 
-  test.beforeEach(async ({ page }) => {
-    // 建立測試帳號
-    testEmail = uniqueEmail();
-    await page.goto('/register');
-    await page.getByLabel('使用者名稱').fill(TEST_NAME);
-    await page.getByLabel('Email').fill(testEmail);
-    await page.getByLabel('密碼', { exact: false }).first().fill(TEST_PASSWORD);
-    await page.getByLabel('確認密碼').fill(TEST_PASSWORD);
-    await page.getByRole('button', { name: '註冊' }).click();
-    await page.waitForURL('/');
-
-    // 清除登入狀態
-    await page.evaluate(() => {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-    });
+  test.beforeEach(async ({ request }) => {
+    // 透過 API 建立測試帳號（比 UI 更快更穩定）
+    const user = await registerUserViaAPI(request);
+    testEmail = user.email;
   });
 
   test('成功登入後跳轉至首頁', async ({ page }) => {
