@@ -14,48 +14,67 @@ interface BudgetSummaryData {
 }
 
 type TimeFilter = 'week' | 'month' | 'custom'
+type TypeTab = 'expense' | 'income'
 
 function StatsPage() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('month')
+  const [typeTab, setTypeTab] = useState<TypeTab>('expense')
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummaryData | null>(null)
   const [distribution, setDistribution] = useState<DistributionItem[]>([])
+  const [totalAmount, setTotalAmount] = useState(0)
   const [loading, setLoading] = useState(true)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
-      const [budgetRes, distRes] = await Promise.all([
-        api.get('/budget/summary'),
-        api.get('/stats/distribution', { params: { period: timeFilter } }),
-      ])
+      const requests: Promise<unknown>[] = [
+        api.get('/stats/distribution', { params: { period: timeFilter, type: typeTab } }),
+      ]
 
-      const b = budgetRes.data.data
-      setBudgetSummary({
-        month: b.month,
-        monthlyBudget: b.monthly_budget,
-        totalSpent: b.total_spent,
-        remaining: b.remaining,
-        usedRatio: b.used_ratio,
-      })
+      // Only fetch budget summary for expense tab
+      if (typeTab === 'expense') {
+        requests.push(api.get('/budget/summary'))
+      }
 
+      const results = await Promise.all(requests)
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const distRes = results[0] as any
       const rawDist = (distRes.data.data.distribution ?? distRes.data.data.categories ?? []) as Array<{
         category: string
         amount: number
         ratio?: number
         percentage?: number
       }>
+      const total = rawDist.reduce((sum, c) => sum + c.amount, 0)
       const items: DistributionItem[] = rawDist.map((c) => ({
         category: c.category,
         amount: c.amount,
         percentage: c.percentage ?? Math.round((c.ratio ?? 0) * 100),
       }))
       setDistribution(items)
+      setTotalAmount(total)
+
+      if (typeTab === 'expense' && results[1]) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const budgetRes = results[1] as any
+        const b = budgetRes.data.data
+        setBudgetSummary({
+          month: b.month,
+          monthlyBudget: b.monthly_budget,
+          totalSpent: b.total_spent,
+          remaining: b.remaining,
+          usedRatio: b.used_ratio,
+        })
+      } else {
+        setBudgetSummary(null)
+      }
     } catch {
       // Silently fail - show empty state
     } finally {
       setLoading(false)
     }
-  }, [timeFilter])
+  }, [timeFilter, typeTab])
 
   useEffect(() => {
     void fetchData()
@@ -68,6 +87,8 @@ function StatsPage() {
   const ranked = [...distribution].sort((a, b) => b.amount - a.amount)
   const maxAmount = ranked.length > 0 ? ranked[0].amount : 0
 
+  const isExpense = typeTab === 'expense'
+
   return (
     <div className="p-2xl pb-[100px]">
       {/* Header */}
@@ -76,6 +97,32 @@ function StatsPage() {
           📊 統計
         </h1>
       </header>
+
+      {/* Income / Expense Tab */}
+      <div className="flex mb-xl bg-surface rounded-lg shadow-card overflow-hidden" role="tablist">
+        {([
+          { key: 'expense' as const, label: '支出' },
+          { key: 'income' as const, label: '收入' },
+        ]).map(({ key, label }) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={typeTab === key}
+            data-testid={`tab-${key}`}
+            onClick={() => setTypeTab(key)}
+            className={`flex-1 py-sm text-body font-semibold transition-colors ${
+              typeTab === key
+                ? key === 'expense'
+                  ? 'bg-danger text-surface'
+                  : 'bg-success text-surface'
+                : 'bg-surface text-text-secondary'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {/* Time filter */}
       <div className="flex gap-sm mb-xl">
@@ -108,34 +155,37 @@ function StatsPage() {
         </div>
       ) : (
         <>
-          {/* Budget summary card */}
+          {/* Total amount card */}
           <section
             className="bg-surface rounded-lg shadow-card p-lg mb-xl"
-            aria-label="本月總支出"
+            aria-label={isExpense ? '本月總支出' : '本月總收入'}
           >
             <div className="flex justify-between items-baseline mb-sm">
               <p className="text-caption text-text-secondary">
-                本月總支出
+                {isExpense ? '本月總支出' : '本月總收入'}
               </p>
-              {budgetSummary && budgetSummary.monthlyBudget > 0 && (
+              {isExpense && budgetSummary && budgetSummary.monthlyBudget > 0 && (
                 <p className="text-small text-text-secondary">
                   目標：{formatMoney(budgetSummary.monthlyBudget)}
                 </p>
               )}
             </div>
-            <p className="text-headline font-bold text-danger mb-md">
-              {budgetSummary ? formatMoney(budgetSummary.totalSpent) : '$0'}
+            <p className={`text-headline font-bold mb-md ${isExpense ? 'text-danger' : 'text-success'}`}>
+              {isExpense
+                ? formatMoney(budgetSummary?.totalSpent ?? totalAmount)
+                : formatMoney(totalAmount)}
             </p>
-            {budgetSummary && budgetSummary.monthlyBudget > 0 && (
+            {isExpense && budgetSummary && budgetSummary.monthlyBudget > 0 && (
               <BudgetBar usedRatio={budgetSummary.usedRatio} />
             )}
           </section>
 
           {/* Distribution chart */}
-          <section aria-label="消費分佈" className="mb-xl">
+          <section aria-label={isExpense ? '支出分佈' : '收入分佈'} className="mb-xl">
             <DistributionChart
               data={distribution}
-              totalSpent={budgetSummary?.totalSpent ?? 0}
+              totalSpent={isExpense ? (budgetSummary?.totalSpent ?? totalAmount) : totalAmount}
+              emptyMessage={isExpense ? '本月尚無支出記錄' : '本月尚無收入記錄'}
             />
           </section>
 

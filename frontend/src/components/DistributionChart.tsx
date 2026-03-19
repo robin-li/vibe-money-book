@@ -10,15 +10,16 @@ export interface DistributionItem {
 interface DistributionChartProps {
   data: DistributionItem[]
   totalSpent: number
+  emptyMessage?: string
 }
 
-function DistributionChart({ data, totalSpent }: DistributionChartProps) {
+function DistributionChart({ data, totalSpent, emptyMessage = '本月尚無消費記錄' }: DistributionChartProps) {
   if (data.length === 0) {
     return (
       <div className="text-center py-3xl" data-testid="distribution-chart-empty">
         <div className="w-[200px] h-[200px] mx-auto border-2 border-dashed border-text-tertiary rounded-full flex items-center justify-center mb-lg">
           <p className="text-body text-text-tertiary">
-            本月尚無消費記錄
+            {emptyMessage}
           </p>
         </div>
       </div>
