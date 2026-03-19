@@ -1,33 +1,20 @@
 import { test, expect } from '@playwright/test';
 import {
   registerUserViaAPI,
-  injectAuthState,
-  setMonthlyBudgetViaAPI,
-  createTransactionViaAPI,
-  TEST_NAME,
+  TEST_PASSWORD,
+  loginViaUI,
 } from '../fixtures/test-helpers';
 
 test.describe('預算血條顯示', () => {
-  let authToken: string;
   let authEmail: string;
-  let authUserId: string;
 
   test.beforeEach(async ({ page, request }) => {
     const user = await registerUserViaAPI(request);
-    authToken = user.token;
     authEmail = user.email;
-    authUserId = user.userId;
-
-    await page.goto('/login');
-    await injectAuthState(page, authToken, {
-      id: authUserId,
-      name: TEST_NAME,
-      email: authEmail,
-    });
   });
 
   test('未設定預算時顯示預設狀態', async ({ page }) => {
-    // Mock budget summary — 未設定預算
+    // Mock budget summary — 未設定預算（在登入前設定，route 會持續生效）
     await page.route('**/api/v1/budget/summary', (route) => {
       route.fulfill({
         status: 200,
@@ -49,7 +36,7 @@ test.describe('預算血條顯示', () => {
       });
     });
 
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     const budgetSection = page.getByLabel('預算概覽');
     await expect(budgetSection).toBeVisible();
@@ -78,7 +65,7 @@ test.describe('預算血條顯示', () => {
       });
     });
 
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     const budgetSection = page.getByLabel('預算概覽');
     await expect(budgetSection).toBeVisible();
@@ -118,7 +105,7 @@ test.describe('預算血條顯示', () => {
       });
     });
 
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     const budgetSection = page.getByLabel('預算概覽');
     await expect(budgetSection).toBeVisible();
@@ -156,7 +143,7 @@ test.describe('預算血條顯示', () => {
       });
     });
 
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     const budgetSection = page.getByLabel('預算概覽');
     await expect(budgetSection).toBeVisible();
@@ -196,7 +183,7 @@ test.describe('預算血條顯示', () => {
       });
     });
 
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     const budgetSection = page.getByLabel('預算概覽');
     await expect(budgetSection).toBeVisible();
@@ -225,7 +212,7 @@ test.describe('預算血條顯示', () => {
       });
     });
 
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     const budgetSection = page.getByLabel('預算概覽');
     await expect(budgetSection.getByText('$12,345')).toBeVisible();

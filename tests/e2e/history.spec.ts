@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import {
   registerUserViaAPI,
-  injectAuthState,
-  TEST_NAME,
+  TEST_PASSWORD,
+  loginViaUI,
 } from '../fixtures/test-helpers';
 
 /** 產生 mock 交易清單的 API 回應 */
@@ -34,23 +34,24 @@ function mockTransactionListResponse(
   });
 }
 
+/** 登入後導航至歷史紀錄頁面 */
+async function loginAndGoToHistory(
+  page: import('@playwright/test').Page,
+  email: string,
+  password: string
+) {
+  await loginViaUI(page, email, password);
+  // 透過底部 tab 導航至歷史頁面（client-side routing，不會重新載入）
+  await page.getByRole('link', { name: '記錄' }).click();
+  await page.waitForURL('/history', { timeout: 10000 });
+}
+
 test.describe('交易記錄列表', () => {
-  let authToken: string;
   let authEmail: string;
-  let authUserId: string;
 
   test.beforeEach(async ({ page, request }) => {
     const user = await registerUserViaAPI(request);
-    authToken = user.token;
     authEmail = user.email;
-    authUserId = user.userId;
-
-    await page.goto('/login');
-    await injectAuthState(page, authToken, {
-      id: authUserId,
-      name: TEST_NAME,
-      email: authEmail,
-    });
   });
 
   test('顯示交易記錄列表', async ({ page }) => {
@@ -87,7 +88,7 @@ test.describe('交易記錄列表', () => {
       });
     });
 
-    await page.goto('/history');
+    await loginAndGoToHistory(page, authEmail, TEST_PASSWORD);
 
     const txList = page.getByTestId('transaction-list');
     await expect(txList).toBeVisible({ timeout: 10000 });
@@ -107,7 +108,7 @@ test.describe('交易記錄列表', () => {
       });
     });
 
-    await page.goto('/history');
+    await loginAndGoToHistory(page, authEmail, TEST_PASSWORD);
 
     const emptyState = page.getByTestId('empty-state');
     await expect(emptyState).toBeVisible({ timeout: 10000 });
@@ -134,7 +135,7 @@ test.describe('交易記錄列表', () => {
       });
     });
 
-    await page.goto('/history');
+    await loginAndGoToHistory(page, authEmail, TEST_PASSWORD);
 
     // 點擊交易項目展開
     await page.getByText('壽司店').click();
@@ -185,7 +186,7 @@ test.describe('交易記錄列表', () => {
       }
     });
 
-    await page.goto('/history');
+    await loginAndGoToHistory(page, authEmail, TEST_PASSWORD);
 
     // 展開交易
     await page.getByText('咖啡廳').click();
@@ -224,7 +225,7 @@ test.describe('交易記錄列表', () => {
       });
     });
 
-    await page.goto('/history');
+    await loginAndGoToHistory(page, authEmail, TEST_PASSWORD);
 
     // 展開 → 刪除 → 取消
     await page.getByText('超市').click();
@@ -242,10 +243,8 @@ test.describe('交易記錄列表', () => {
 
   test('類別篩選功能', async ({ page }) => {
     const today = new Date().toISOString().split('T')[0];
-    let requestCount = 0;
 
     await page.route('**/api/v1/transactions*', (route, request) => {
-      requestCount++;
       const url = new URL(request.url());
       const category = url.searchParams.get('category');
 
@@ -310,7 +309,7 @@ test.describe('交易記錄列表', () => {
       });
     });
 
-    await page.goto('/history');
+    await loginAndGoToHistory(page, authEmail, TEST_PASSWORD);
 
     // 等待初始列表載入
     await expect(page.getByText('拉麵店')).toBeVisible({ timeout: 10000 });
@@ -345,7 +344,7 @@ test.describe('交易記錄列表', () => {
       });
     });
 
-    await page.goto('/history');
+    await loginAndGoToHistory(page, authEmail, TEST_PASSWORD);
 
     // 設定篩選條件
     await page.getByTestId('category-filter').selectOption('food');
@@ -382,7 +381,7 @@ test.describe('交易記錄列表', () => {
       });
     });
 
-    await page.goto('/history');
+    await loginAndGoToHistory(page, authEmail, TEST_PASSWORD);
 
     // 設定日期篩選
     const startDate = page.getByTestId('start-date-filter');

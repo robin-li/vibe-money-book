@@ -1,43 +1,30 @@
 import { test, expect } from '@playwright/test';
 import {
-  uniqueEmail,
   TEST_PASSWORD,
-  TEST_NAME,
   registerUserViaAPI,
-  injectAuthState,
+  loginViaUI,
   mockAIParseResponse,
 } from '../fixtures/test-helpers';
 
 test.describe('文字記帳流程', () => {
-  let authToken: string;
   let authEmail: string;
-  let authUserId: string;
 
   test.beforeEach(async ({ page, request }) => {
     // 透過 API 註冊使用者
     const user = await registerUserViaAPI(request);
-    authToken = user.token;
     authEmail = user.email;
-    authUserId = user.userId;
-
-    // 在瀏覽器注入認證狀態
-    await page.goto('/login');
-    await injectAuthState(page, authToken, {
-      id: authUserId,
-      name: TEST_NAME,
-      email: authEmail,
-    });
   });
 
   test('輸入文字 → AI 解析 → 顯示解析結果卡片', async ({ page }) => {
-    // Mock AI parse API
+    // Mock AI parse API（在登入前設定，route 會持續生效）
     await mockAIParseResponse(page, {
       amount: 280,
       category: 'food',
       merchant: '拉麵店',
     });
 
-    await page.goto('/');
+    // 透過 UI 登入，登入後自動導航至首頁
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     // 找到輸入框並輸入消費描述
     const input = page.getByLabel('消費描述輸入');
@@ -98,7 +85,7 @@ test.describe('文字記帳流程', () => {
       }
     });
 
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     // 輸入消費
     await page.getByLabel('消費描述輸入').fill('搭 Uber 150');
@@ -152,7 +139,7 @@ test.describe('文字記帳流程', () => {
       }
     });
 
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     await page.getByLabel('消費描述輸入').fill('便利商店買東西 100');
     await page.getByLabel('送出').click();
@@ -186,7 +173,7 @@ test.describe('文字記帳流程', () => {
       merchant: '飲料店',
     });
 
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     await page.getByLabel('消費描述輸入').fill('買飲料 50');
     await page.getByLabel('送出').click();
@@ -216,7 +203,7 @@ test.describe('文字記帳流程', () => {
       });
     });
 
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     await page.getByLabel('消費描述輸入').fill('something');
     await page.getByLabel('送出').click();
@@ -226,7 +213,7 @@ test.describe('文字記帳流程', () => {
   });
 
   test('送出按鈕在輸入為空時應 disabled', async ({ page }) => {
-    await page.goto('/');
+    await loginViaUI(page, authEmail, TEST_PASSWORD);
 
     const sendButton = page.getByLabel('送出');
     await expect(sendButton).toBeDisabled();
