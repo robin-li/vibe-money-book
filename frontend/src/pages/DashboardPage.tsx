@@ -9,17 +9,6 @@ import RecentTransactions from '../components/RecentTransactions'
 import ParsedResultCard from '../components/ParsedResultCard'
 import NewCategoryDialog from '../components/NewCategoryDialog'
 
-const DEFAULT_CATEGORIES = [
-  'food',
-  'transport',
-  'entertainment',
-  'shopping',
-  'daily',
-  'medical',
-  'education',
-  'other',
-]
-
 function DashboardPage() {
   const navigate = useNavigate()
   const persona = useSettingsStore((s) => s.persona)
@@ -32,11 +21,13 @@ function DashboardPage() {
     aiFeedback,
     budgetSummary,
     recentTransactions,
+    categories,
     errorMessage,
     lastFeedbackText,
     parseInput,
     confirmTransaction,
     createCategory,
+    fetchCategories,
     fetchBudgetSummary,
     fetchRecentTransactions,
     resetParsedResult,
@@ -44,9 +35,10 @@ function DashboardPage() {
 
   useEffect(() => {
     fetchProfile()
+    fetchCategories()
     fetchBudgetSummary()
     fetchRecentTransactions()
-  }, [fetchProfile, fetchBudgetSummary, fetchRecentTransactions])
+  }, [fetchProfile, fetchCategories, fetchBudgetSummary, fetchRecentTransactions])
 
   const handleSubmit = useCallback(
     (text: string) => {
@@ -198,7 +190,7 @@ function DashboardPage() {
             result={parsedResult}
             onConfirm={handleConfirmTransaction}
             onCancel={resetParsedResult}
-            categories={DEFAULT_CATEGORIES}
+            categories={categories}
           />
         )}
 
@@ -207,7 +199,7 @@ function DashboardPage() {
           <NewCategoryDialog
             suggestedCategory={parsedResult.suggestedCategory}
             persona={persona}
-            existingCategories={DEFAULT_CATEGORIES}
+            existingCategories={categories}
             onConfirm={handleNewCategoryConfirm}
             onSelectExisting={handleSelectExistingCategory}
           />
