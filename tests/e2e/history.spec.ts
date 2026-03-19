@@ -228,7 +228,7 @@ test.describe('交易記錄列表', () => {
     await loginAndGoToHistory(page, authEmail, TEST_PASSWORD);
 
     // 展開 → 刪除 → 取消
-    await page.getByText('超市').click();
+    await page.getByText('超市').first().click();
     await page.getByTestId('delete-btn').click();
 
     const confirmDialog = page.getByTestId('delete-confirm-dialog');
@@ -238,7 +238,7 @@ test.describe('交易記錄列表', () => {
 
     // 確認對話框應消失，交易仍在
     await expect(confirmDialog).not.toBeVisible();
-    await expect(page.getByText('超市')).toBeVisible();
+    await expect(page.getByText('超市').first()).toBeVisible();
   });
 
   test('類別篩選功能', async ({ page }) => {

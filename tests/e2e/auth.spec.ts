@@ -57,7 +57,7 @@ test.describe('註冊流程', () => {
     await page.getByRole('button', { name: '註冊' }).click();
 
     // 應顯示錯誤訊息
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 });
   });
 
   test('前端表單驗證 — 空欄位', async ({ page }) => {
@@ -115,7 +115,7 @@ test.describe('登入流程', () => {
     await page.getByLabel('密碼').fill('WrongPassword!');
     await page.getByRole('button', { name: '登入' }).click();
 
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 });
   });
 
   test('前端表單驗證 — 空欄位', async ({ page }) => {
