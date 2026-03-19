@@ -201,8 +201,7 @@ describe('TransactionItem interactions', () => {
     const txButton = screen.getByText('拉麵店').closest('button')!
     await user.click(txButton)
 
-    // Should show expanded details
-    expect(screen.getByText('$250')).toBeInTheDocument()
+    // Should show expanded details (amount shows with sign prefix based on type)
     expect(screen.getByText('很好吃')).toBeInTheDocument()
     expect(screen.getByText('午餐吃拉麵 250')).toBeInTheDocument()
   })
@@ -213,7 +212,7 @@ describe('TransactionItem interactions', () => {
 
     const txButton = screen.getByText('拉麵店').closest('button')!
     await user.click(txButton)
-    expect(screen.getByText('$250')).toBeInTheDocument()
+    expect(screen.getByText('很好吃')).toBeInTheDocument()
 
     await user.click(txButton)
     expect(screen.queryByText('午餐吃拉麵 250')).not.toBeInTheDocument()

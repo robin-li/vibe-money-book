@@ -390,7 +390,6 @@ describe('Budget Routes', () => {
           note: null,
           transactionDate: new Date(),
           createdAt: new Date(),
-          updatedAt: new Date(),
         },
       ]);
 
@@ -432,6 +431,77 @@ describe('Budget Routes', () => {
       expect(foodCat.budget_limit).toBe(8000);
       expect(foodCat.spent).toBe(5000);
       expect(foodCat.remaining).toBe(3000);
+    });
+
+    it('should exclude income transactions from budget calculation', async () => {
+      mockedPrisma.user.findUnique.mockResolvedValue({
+        id: 'test-user-id',
+        name: 'Test',
+        email: 'test@test.com',
+        passwordHash: 'hash',
+        persona: 'gentle',
+        aiEngine: 'gemini',
+        monthlyBudget: new Prisma.Decimal(30000),
+        currency: 'TWD',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      mockedPrisma.transaction.findMany.mockResolvedValue([
+        {
+          id: 't1',
+          userId: 'test-user-id',
+          type: 'expense',
+          amount: new Prisma.Decimal(5000),
+          category: 'food',
+          merchant: null,
+          rawText: '午餐',
+          note: null,
+          transactionDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          id: 't2',
+          userId: 'test-user-id',
+          type: 'income',
+          amount: new Prisma.Decimal(20000),
+          category: 'other',
+          merchant: null,
+          rawText: '薪水',
+          note: null,
+          transactionDate: new Date(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      mockedPrisma.categoryBudget.findMany.mockResolvedValue([
+        {
+          id: 'cb1',
+          userId: 'test-user-id',
+          category: 'food',
+          budgetLimit: new Prisma.Decimal(8000),
+          isCustom: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      ]);
+
+      const res = await request(app).get('/api/v1/budget/summary');
+
+      expect(res.status).toBe(200);
+      const data = res.body.data;
+      // Only the expense (5000) should count, not the income (20000)
+      expect(data.total_spent).toBe(5000);
+      expect(data.remaining).toBe(25000);
+      expect(data.transaction_count).toBe(2); // All transactions counted
+      // Category breakdown should only include expense spending
+      const foodCat = data.categories.find((c: { category: string }) => c.category === 'food');
+      expect(foodCat.spent).toBe(5000);
+      // Income category 'other' should not appear in category breakdown (no expense spending)
+      const otherCat = data.categories.find((c: { category: string }) => c.category === 'other');
+      expect(otherCat).toBeUndefined();
     });
 
     it('should return 404 for non-existent user', async () => {
