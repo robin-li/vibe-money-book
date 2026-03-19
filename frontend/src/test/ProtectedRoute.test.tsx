@@ -29,6 +29,7 @@ describe('ProtectedRoute', () => {
       token: null,
       loading: false,
       error: null,
+      isInitialized: true,
     })
   })
 
@@ -77,5 +78,17 @@ describe('ProtectedRoute', () => {
 
     renderWithRouter('/dashboard')
     expect(screen.getByText('Login Page')).toBeInTheDocument()
+  })
+
+  it('renders nothing when isInitialized is false (session restoring)', () => {
+    useAuthStore.setState({
+      token: null,
+      user: null,
+      isInitialized: false,
+    })
+
+    renderWithRouter('/dashboard')
+    expect(screen.queryByText('Login Page')).not.toBeInTheDocument()
+    expect(screen.queryByText('Dashboard Content')).not.toBeInTheDocument()
   })
 })

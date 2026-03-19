@@ -17,6 +17,8 @@ interface AuthState {
   loading: boolean
   /** 錯誤訊息 */
   error: string | null
+  /** Session 是否已初始化（從 localStorage 恢復完成） */
+  isInitialized: boolean
 
   /** 登入 */
   login: (email: string, password: string) => Promise<void>
@@ -30,11 +32,30 @@ interface AuthState {
   clearError: () => void
 }
 
+/** 同步從 localStorage 恢復 session，用於 store 初始化 */
+function restoreFromLocalStorage(): { user: User | null; token: string | null } {
+  const token = localStorage.getItem('auth_token')
+  const userJson = localStorage.getItem('auth_user')
+  if (token && userJson) {
+    try {
+      const user = JSON.parse(userJson) as User
+      return { user, token }
+    } catch {
+      localStorage.removeItem('auth_token')
+      localStorage.removeItem('auth_user')
+    }
+  }
+  return { user: null, token: null }
+}
+
+const initialSession = restoreFromLocalStorage()
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
+  user: initialSession.user,
+  token: initialSession.token,
   loading: false,
   error: null,
+  isInitialized: true,
 
   login: async (email: string, password: string) => {
     set({ loading: true, error: null })
@@ -80,17 +101,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   restoreSession: () => {
-    const token = localStorage.getItem('auth_token')
-    const userJson = localStorage.getItem('auth_user')
-    if (token && userJson) {
-      try {
-        const user = JSON.parse(userJson) as User
-        set({ user, token })
-      } catch {
-        localStorage.removeItem('auth_token')
-        localStorage.removeItem('auth_user')
-      }
-    }
+    const restored = restoreFromLocalStorage()
+    set({ user: restored.user, token: restored.token, isInitialized: true })
   },
 
   clearError: () => {
