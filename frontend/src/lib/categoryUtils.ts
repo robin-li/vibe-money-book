@@ -8,6 +8,12 @@ export const CATEGORY_COLORS: Record<string, string> = {
   medical: '#FD79A8',
   education: '#6C5CE7',
   other: '#B2BEC3',
+  // 收入類別
+  salary: '#22C55E',
+  investment: '#10B981',
+  pension: '#059669',
+  insurance: '#047857',
+  other_income: '#6EE7B7',
 }
 
 /** Fallback colors for custom categories */
@@ -23,6 +29,25 @@ export const CATEGORY_NAMES: Record<string, string> = {
   medical: '醫療',
   education: '教育',
   other: '其他',
+  // 收入類別
+  salary: '薪資收入',
+  investment: '投資收益',
+  pension: '退休金',
+  insurance: '保險理賠',
+  other_income: '其他收入',
+}
+
+/** 收入類別集合 */
+export const INCOME_CATEGORIES = new Set(['salary', 'investment', 'pension', 'insurance', 'other_income'])
+
+/** 根據類別判斷是否為收入類別 */
+export function isIncomeCategory(category: string): boolean {
+  return INCOME_CATEGORIES.has(category)
+}
+
+/** 根據類別類型回傳對應的 CSS 顏色 class (#67) */
+export function getCategoryTypeColorClass(categoryType: 'income' | 'expense' | string): string {
+  return categoryType === 'income' ? 'text-success' : 'text-danger'
 }
 
 export function getCategoryColor(category: string, index: number): string {

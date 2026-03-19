@@ -12,13 +12,19 @@ const MAX_CATEGORIES = 20;
 router.post('/categories', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
-    const { category, budget_limit } = req.body;
+    const { category, budget_limit, type } = req.body;
 
     if (!category || typeof category !== 'string' || !category.trim()) {
       throw new AppError('請提供類別名稱', 400);
     }
 
     const trimmed = category.trim();
+
+    // Validate type
+    const categoryType = type || 'expense';
+    if (categoryType !== 'income' && categoryType !== 'expense') {
+      throw new AppError('type 必須為 income 或 expense', 400);
+    }
 
     // Check category count limit
     const count = await prisma.categoryBudget.count({ where: { userId } });
@@ -44,15 +50,16 @@ router.post('/categories', authMiddleware, async (req: AuthRequest, res: Respons
       data: {
         userId,
         category: trimmed,
+        type: categoryType,
         isCustom: true,
         budgetLimit,
       },
     });
 
-    const response: ApiResponse<{ id: string; category: string; budget_limit: number }> = {
+    const response: ApiResponse<{ id: string; category: string; type: string; budget_limit: number }> = {
       code: 201,
       message: '類別新增成功',
-      data: { id: created.id, category: created.category, budget_limit: Number(created.budgetLimit) },
+      data: { id: created.id, category: created.category, type: created.type, budget_limit: Number(created.budgetLimit) },
       timestamp: new Date().toISOString(),
     };
 
@@ -66,8 +73,15 @@ router.post('/categories', authMiddleware, async (req: AuthRequest, res: Respons
 router.get('/categories', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const userId = req.userId!;
+    const typeFilter = req.query.type as string | undefined;
+
+    const where: { userId: string; type?: string } = { userId };
+    if (typeFilter && (typeFilter === 'income' || typeFilter === 'expense')) {
+      where.type = typeFilter;
+    }
+
     const categories = await prisma.categoryBudget.findMany({
-      where: { userId },
+      where,
       orderBy: { createdAt: 'asc' },
     });
 

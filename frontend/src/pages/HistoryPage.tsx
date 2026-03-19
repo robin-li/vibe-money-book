@@ -8,6 +8,7 @@ import { getCategoryName } from '../lib/categoryUtils'
 const CATEGORY_ICONS: Record<string, string> = {
   food: '🍽️', transport: '🚌', entertainment: '🎬', shopping: '🛍️',
   daily: '🧴', medical: '🏥', education: '📚', other: '📦',
+  salary: '💰', investment: '📈', pension: '🏦', insurance: '🛡️', other_income: '💵',
 }
 
 function formatGroupDate(dateStr: string): string {

@@ -2,7 +2,10 @@ import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore.ts'
 import { useSettingsStore } from '../stores/settingsStore.ts'
+import { useDashboardStore } from '../stores/dashboardStore.ts'
+import type { CategoryInfo } from '../stores/dashboardStore.ts'
 import type { Persona, AIEngine, KeyValidationStatus } from '../stores/settingsStore.ts'
+import { getCategoryName, getCategoryTypeColorClass } from '../lib/categoryUtils.ts'
 
 /** 人設選項定義 */
 const PERSONA_OPTIONS: { value: Persona; label: string; emoji: string }[] = [
@@ -93,6 +96,35 @@ function SettingsPage() {
     saveApiKeys(apiKeys)
     await validateApiKey(currentApiKey)
   }, [currentApiKey, apiKeys, saveApiKeys, validateApiKey])
+
+  // Category management state (#64)
+  const categoryInfoList = useDashboardStore((s) => s.categoryInfoList)
+  const fetchCategories = useDashboardStore((s) => s.fetchCategories)
+  const createCategoryAction = useDashboardStore((s) => s.createCategory)
+
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryType, setNewCategoryType] = useState<'income' | 'expense'>('expense')
+  const [categoryAdding, setCategoryAdding] = useState(false)
+
+  useEffect(() => {
+    fetchCategories()
+  }, [fetchCategories])
+
+  const expenseCategories = categoryInfoList.filter((c: CategoryInfo) => c.type === 'expense')
+  const incomeCategories = categoryInfoList.filter((c: CategoryInfo) => c.type === 'income')
+
+  const handleAddCategory = useCallback(async () => {
+    if (!newCategoryName.trim()) return
+    setCategoryAdding(true)
+    try {
+      await createCategoryAction(newCategoryName.trim(), newCategoryType)
+      setNewCategoryName('')
+    } catch {
+      // Error handled by store
+    } finally {
+      setCategoryAdding(false)
+    }
+  }, [newCategoryName, newCategoryType, createCategoryAction])
 
   const handleLogout = useCallback(() => {
     logout()
@@ -302,6 +334,79 @@ function SettingsPage() {
               {keyStatusText(keyValidationStatus)}
             </p>
           )}
+        </div>
+      </section>
+
+      {/* 類別管理 (#64) */}
+      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label="類別管理">
+        <h2 className="text-caption text-text-secondary mb-md">
+          類別管理
+        </h2>
+
+        {/* 支出類別 */}
+        <div className="mb-lg">
+          <h3 className="text-body font-semibold text-danger mb-sm">支出類別</h3>
+          <div className="flex flex-wrap gap-sm">
+            {expenseCategories.map((c: CategoryInfo) => (
+              <span
+                key={c.category}
+                className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('expense')} bg-[#FFF0F0]`}
+              >
+                {getCategoryName(c.category)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* 收入類別 */}
+        <div className="mb-lg">
+          <h3 className="text-body font-semibold text-success mb-sm">收入類別</h3>
+          <div className="flex flex-wrap gap-sm">
+            {incomeCategories.map((c: CategoryInfo) => (
+              <span
+                key={c.category}
+                className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('income')} bg-[#F0FFF0]`}
+              >
+                {getCategoryName(c.category)}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* 新增自訂類別 */}
+        <div className="border-t border-border pt-md">
+          <p className="text-caption text-text-secondary mb-sm">新增自訂類別</p>
+          <div className="flex gap-sm items-center">
+            <select
+              value={newCategoryType}
+              onChange={(e) => setNewCategoryType(e.target.value as 'income' | 'expense')}
+              className="h-9 rounded-md border border-border px-sm text-caption"
+              aria-label="新類別類型"
+            >
+              <option value="expense">支出</option>
+              <option value="income">收入</option>
+            </select>
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              placeholder="類別名稱"
+              className="flex-1 h-9 rounded-md border border-border px-sm text-body"
+              aria-label="新類別名稱"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleAddCategory()
+              }}
+            />
+            <button
+              type="button"
+              onClick={handleAddCategory}
+              disabled={categoryAdding || !newCategoryName.trim()}
+              className="h-9 px-lg rounded-md bg-primary text-white text-caption font-semibold disabled:opacity-50"
+              aria-label="新增類別"
+            >
+              {categoryAdding ? '新增中...' : '新增'}
+            </button>
+          </div>
         </div>
       </section>
 

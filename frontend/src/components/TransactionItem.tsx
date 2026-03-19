@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import type { Transaction } from '../stores/index'
+import { getCategoryName, getCategoryTypeColorClass } from '../lib/categoryUtils'
 
 interface TransactionItemProps {
   transaction: Transaction
@@ -18,17 +19,11 @@ const categoryIcons: Record<string, string> = {
   medical: '🏥',
   education: '📚',
   other: '📦',
-}
-
-const categoryNames: Record<string, string> = {
-  food: '飲食',
-  transport: '交通',
-  entertainment: '娛樂',
-  shopping: '購物',
-  daily: '日用品',
-  medical: '醫療',
-  education: '教育',
-  other: '其他',
+  salary: '💰',
+  investment: '📈',
+  pension: '🏦',
+  insurance: '🛡️',
+  other_income: '💵',
 }
 
 function formatTime(dateStr: string): string {
@@ -80,7 +75,7 @@ function TransactionItem({
         className="w-full flex items-center gap-md py-md hover:bg-bg transition-colors"
         aria-expanded={isExpanded}
       >
-        <div className="w-10 h-10 rounded-md bg-danger-light flex items-center justify-center text-lg shrink-0">
+        <div className={`w-10 h-10 rounded-md ${tx.type === 'income' ? 'bg-success-light' : 'bg-danger-light'} flex items-center justify-center text-lg shrink-0`}>
           {categoryIcons[tx.category] ?? '📦'}
         </div>
         <div className="flex-1 min-w-0 text-left">
@@ -88,8 +83,8 @@ function TransactionItem({
             {tx.merchant || tx.category}
           </p>
           <div className="flex items-center gap-xs">
-            <span className="text-small text-text-secondary bg-[#F0F0F0] rounded-sm px-2 py-0.5">
-              {categoryNames[tx.category] ?? tx.category}
+            <span className={`text-small ${getCategoryTypeColorClass(tx.type ?? 'expense')} bg-[#F0F0F0] rounded-sm px-2 py-0.5`}>
+              {getCategoryName(tx.category)}
             </span>
             <span className="text-small text-text-secondary">
               · {formatTime(tx.createdAt)}
@@ -140,12 +135,12 @@ function TransactionItem({
               <div className="space-y-sm mb-lg">
                 <div className="flex items-center gap-md">
                   <span className="text-caption text-text-secondary w-[50px] shrink-0">金額</span>
-                  <span className="text-body text-danger font-semibold">${tx.amount.toLocaleString()}</span>
+                  <span className={`text-body font-semibold ${tx.type === 'income' ? 'text-success' : 'text-danger'}`}>${tx.amount.toLocaleString()}</span>
                 </div>
                 <div className="flex items-center gap-md">
                   <span className="text-caption text-text-secondary w-[50px] shrink-0">類別</span>
-                  <span className="text-body text-text-primary">
-                    {categoryIcons[tx.category] ?? '📦'} {categoryNames[tx.category] ?? tx.category}
+                  <span className={`text-body ${getCategoryTypeColorClass(tx.type ?? 'expense')}`}>
+                    {categoryIcons[tx.category] ?? '📦'} {getCategoryName(tx.category)}
                   </span>
                 </div>
                 <div className="flex items-center gap-md">

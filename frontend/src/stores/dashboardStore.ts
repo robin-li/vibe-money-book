@@ -62,6 +62,11 @@ export type DashboardStatus =
   | 'saving'
   | 'error'
 
+export interface CategoryInfo {
+  category: string
+  type: 'income' | 'expense'
+}
+
 interface DashboardState {
   status: DashboardStatus
   parsedResult: ParsedResult | null
@@ -70,6 +75,7 @@ interface DashboardState {
   budgetSummary: BudgetSummary | null
   recentTransactions: Transaction[]
   categories: string[]
+  categoryInfoList: CategoryInfo[]
   errorMessage: string
   lastFeedbackText: string
   lastPersona: string
@@ -87,7 +93,7 @@ interface DashboardState {
     note?: string | null
     feedback?: AIFeedbackContent
   }) => Promise<void>
-  createCategory: (category: string) => Promise<void>
+  createCategory: (category: string, type?: 'income' | 'expense') => Promise<void>
   updateTransaction: (id: string, data: { amount: number; category: string; merchant: string; date: string; note?: string }) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
   fetchBudgetSummary: () => Promise<void>
@@ -104,6 +110,16 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   budgetSummary: null,
   recentTransactions: [],
   categories: ['food', 'transport', 'entertainment', 'shopping', 'daily', 'medical', 'education', 'other'],
+  categoryInfoList: [
+    { category: 'food', type: 'expense' },
+    { category: 'transport', type: 'expense' },
+    { category: 'entertainment', type: 'expense' },
+    { category: 'shopping', type: 'expense' },
+    { category: 'daily', type: 'expense' },
+    { category: 'medical', type: 'expense' },
+    { category: 'education', type: 'expense' },
+    { category: 'other', type: 'expense' },
+  ],
   errorMessage: '',
   lastFeedbackText: '',
   lastPersona: useSettingsStore.getState().persona || 'gentle',
@@ -111,8 +127,13 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   fetchCategories: async () => {
     try {
       const res = await api.get('/budget/categories')
-      const cats = (res.data.data as Array<{ category: string }>).map((c) => c.category)
-      if (cats.length > 0) set({ categories: cats })
+      const rawCats = res.data.data as Array<{ category: string; type?: string }>
+      const cats = rawCats.map((c) => c.category)
+      const infoList: CategoryInfo[] = rawCats.map((c) => ({
+        category: c.category,
+        type: (c.type as 'income' | 'expense') || 'expense',
+      }))
+      if (cats.length > 0) set({ categories: cats, categoryInfoList: infoList })
     } catch {
       // Keep default categories
     }
@@ -215,9 +236,9 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     }
   },
 
-  createCategory: async (category: string) => {
+  createCategory: async (category: string, type?: 'income' | 'expense') => {
     try {
-      await api.post('/budget/categories', { category })
+      await api.post('/budget/categories', { category, type: type || 'expense' })
       await get().fetchCategories()
     } catch (err: unknown) {
       const message =

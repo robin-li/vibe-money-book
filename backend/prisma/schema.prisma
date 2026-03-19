@@ -33,6 +33,7 @@ model CategoryBudget {
   id          String   @id @default(uuid())
   userId      String   @map("user_id")
   category    String
+  type        String   @default("expense") // income, expense
   budgetLimit Decimal  @default(0) @map("budget_limit")
   isCustom    Boolean  @default(false) @map("is_custom")
   createdAt   DateTime @default(now()) @map("created_at")
