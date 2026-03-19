@@ -1,7 +1,10 @@
 export type AIEngine = 'gemini' | 'openai';
 export type Persona = 'sarcastic' | 'gentle' | 'guilt_trip';
 
+export type TransactionType = 'income' | 'expense';
+
 export interface ParsedTransaction {
+  type: TransactionType;
   amount: number | null;
   category: string | null;
   merchant: string;

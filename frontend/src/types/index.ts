@@ -26,6 +26,7 @@ export interface CategoryBudget {
 export interface Transaction {
   id: string
   userId: string
+  type?: 'income' | 'expense'
   amount: number
   category: string
   merchant: string

@@ -17,6 +17,7 @@ export interface UserSettings {
 /** 交易記錄 */
 export interface Transaction {
   id: string
+  type?: 'income' | 'expense'
   amount: number
   category: string
   merchant: string

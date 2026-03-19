@@ -48,6 +48,7 @@ model CategoryBudget {
 model Transaction {
   id              String   @id @default(uuid())
   userId          String   @map("user_id")
+  type            String   @default("expense") // income, expense
   amount          Decimal
   category        String
   merchant        String?

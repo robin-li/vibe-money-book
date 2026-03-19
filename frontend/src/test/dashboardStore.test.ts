@@ -28,6 +28,7 @@ describe('dashboardStore', () => {
       useDashboardStore.setState({
         status: 'parsed',
         parsedResult: {
+          type: 'expense' as const,
           amount: 100,
           category: 'food',
           merchant: 'test',
@@ -60,6 +61,7 @@ describe('dashboardStore', () => {
       useDashboardStore.setState({
         status: 'parsed',
         parsedResult: {
+          type: 'expense',
           amount: 180,
           category: 'food',
           merchant: '拉麵店',
@@ -86,6 +88,7 @@ describe('dashboardStore', () => {
       useDashboardStore.setState({
         status: 'parsed',
         parsedResult: {
+          type: 'expense',
           amount: 1200,
           category: null,
           merchant: '獸醫',

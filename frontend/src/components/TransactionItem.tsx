@@ -96,8 +96,8 @@ function TransactionItem({
             </span>
           </div>
         </div>
-        <p className="text-title font-semibold text-danger shrink-0">
-          -${tx.amount.toLocaleString()}
+        <p className={`text-title font-semibold shrink-0 ${tx.type === 'income' ? 'text-success' : 'text-danger'}`}>
+          {tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString()}
         </p>
         <span className={`text-text-tertiary text-sm transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
           ▼

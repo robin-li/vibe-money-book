@@ -5,6 +5,7 @@ import { CreateTransactionInput, ListTransactionsInput } from '../validators/tra
 export async function createTransaction(userId: string, input: CreateTransactionInput) {
   const transactionData: {
     userId: string;
+    type: string;
     amount: number;
     category: string;
     merchant: string | undefined;
@@ -21,6 +22,7 @@ export async function createTransaction(userId: string, input: CreateTransaction
     };
   } = {
     userId,
+    type: input.type ?? 'expense',
     amount: input.amount,
     category: input.category,
     merchant: input.merchant || undefined,
@@ -104,13 +106,14 @@ export async function getTransaction(userId: string, id: string) {
 export async function updateTransaction(
   userId: string,
   id: string,
-  input: { amount?: number; category?: string; merchant?: string; transaction_date?: string; note?: string }
+  input: { type?: string; amount?: number; category?: string; merchant?: string; transaction_date?: string; note?: string }
 ) {
   const transaction = await prisma.transaction.findUnique({ where: { id } });
   if (!transaction) throw new AppError('交易記錄不存在', 404);
   if (transaction.userId !== userId) throw new AppError('交易記錄不存在', 404);
 
   const data: Record<string, unknown> = {};
+  if (input.type !== undefined) data.type = input.type;
   if (input.amount !== undefined) data.amount = input.amount;
   if (input.category !== undefined) data.category = input.category;
   if (input.merchant !== undefined) data.merchant = input.merchant;
@@ -146,6 +149,7 @@ export async function deleteTransaction(userId: string, id: string) {
 
 function formatTransaction(t: {
   id: string;
+  type: string;
   amount: unknown;
   category: string;
   merchant: string | null;
@@ -165,6 +169,7 @@ function formatTransaction(t: {
   return {
     transaction: {
       id: t.id,
+      type: t.type,
       amount: Number(t.amount),
       category: t.category,
       merchant: t.merchant,
@@ -188,6 +193,7 @@ function formatTransaction(t: {
 
 function formatTransactionListItem(t: {
   id: string;
+  type: string;
   amount: unknown;
   category: string;
   merchant: string | null;
@@ -197,6 +203,7 @@ function formatTransactionListItem(t: {
 }) {
   return {
     id: t.id,
+    type: t.type,
     amount: Number(t.amount),
     category: t.category,
     merchant: t.merchant,
@@ -208,6 +215,7 @@ function formatTransactionListItem(t: {
 
 function formatTransactionDetail(t: {
   id: string;
+  type: string;
   amount: unknown;
   category: string;
   merchant: string | null;
@@ -223,6 +231,7 @@ function formatTransactionDetail(t: {
 }) {
   return {
     id: t.id,
+    type: t.type,
     amount: Number(t.amount),
     category: t.category,
     merchant: t.merchant,
