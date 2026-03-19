@@ -168,6 +168,7 @@ export async function mockAIParseResponse(
     date?: string;
     confidence?: number;
     note?: string;
+    type?: 'income' | 'expense';
   },
   feedback?: { text: string; emotion_tag: string }
 ): Promise<void> {
@@ -190,6 +191,7 @@ export async function mockAIParseResponse(
             is_new_category: false,
             suggested_category: null,
             note: parsed.note ?? null,
+            type: parsed.type ?? 'expense',
           },
           feedback: feedback ?? {
             text: '又花錢啦！不過記帳是好習慣～',

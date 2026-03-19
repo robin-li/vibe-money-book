@@ -38,10 +38,10 @@ test.describe('文字記帳流程', () => {
     const resultCard = page.getByRole('region', { name: 'AI 解析結果' });
     await expect(resultCard).toBeVisible({ timeout: 10000 });
 
-    // 驗證解析結果內容
-    await expect(resultCard.getByText('280')).toBeVisible();
-    await expect(resultCard.getByText('飲食')).toBeVisible();
-    await expect(resultCard.getByText('拉麵店')).toBeVisible();
+    // 驗證解析結果內容（預設編輯模式，金額在 input 中）
+    await expect(resultCard.getByLabel('金額')).toHaveValue('280');
+    await expect(resultCard.getByLabel('商家')).toHaveValue('拉麵店');
+    await expect(resultCard.getByLabel('類別')).toHaveValue('food');
   });
 
   test('解析結果確認後記帳成功', async ({ page }) => {
@@ -95,14 +95,14 @@ test.describe('文字記帳流程', () => {
     const resultCard = page.getByRole('region', { name: 'AI 解析結果' });
     await expect(resultCard).toBeVisible({ timeout: 10000 });
 
-    // 點擊確認記帳
-    await page.getByRole('button', { name: '確認記帳' }).click();
+    // 點擊確認新增
+    await page.getByRole('button', { name: '確認新增' }).click();
 
     // 解析結果卡片應消失
     await expect(resultCard).not.toBeVisible({ timeout: 5000 });
   });
 
-  test('解析結果可修改後再確認', async ({ page }) => {
+  test('解析結果可修改後再確認（預設編輯模式）', async ({ page }) => {
     await mockAIParseResponse(page, {
       amount: 100,
       category: 'food',
@@ -147,10 +147,7 @@ test.describe('文字記帳流程', () => {
     const resultCard = page.getByRole('region', { name: 'AI 解析結果' });
     await expect(resultCard).toBeVisible({ timeout: 10000 });
 
-    // 點擊「修改」按鈕進入編輯模式
-    await page.getByRole('button', { name: '修改' }).click();
-
-    // 修改金額
+    // 預設已是編輯模式，直接修改金額
     const amountInput = resultCard.getByLabel('金額');
     await amountInput.clear();
     await amountInput.fill('120');
@@ -159,8 +156,8 @@ test.describe('文字記帳流程', () => {
     const categorySelect = resultCard.getByLabel('類別');
     await categorySelect.selectOption('daily');
 
-    // 點擊確認
-    await page.getByRole('button', { name: '確認記帳' }).click();
+    // 點擊確認新增
+    await page.getByRole('button', { name: '確認新增' }).click();
 
     // 結果卡片應消失
     await expect(resultCard).not.toBeVisible({ timeout: 5000 });
@@ -181,8 +178,7 @@ test.describe('文字記帳流程', () => {
     const resultCard = page.getByRole('region', { name: 'AI 解析結果' });
     await expect(resultCard).toBeVisible({ timeout: 10000 });
 
-    // 先按「修改」進入編輯模式，再按「取消」
-    await page.getByRole('button', { name: '修改' }).click();
+    // 預設已是編輯模式，直接按「取消」
     await page.getByRole('button', { name: '取消' }).click();
 
     // 結果卡片應消失
