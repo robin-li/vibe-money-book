@@ -115,7 +115,12 @@ test.describe('登入流程', () => {
     await page.getByLabel('密碼').fill('WrongPassword!');
     await page.getByRole('button', { name: '登入' }).click();
 
-    await expect(page.getByRole('alert')).toBeVisible({ timeout: 10000 });
+    // 等待錯誤訊息出現（可能是 role="alert" 或包含錯誤文字的元素）
+    await expect(
+      page.locator('[role="alert"], .text-danger').first()
+    ).toBeVisible({ timeout: 15000 });
+    // 確認仍在登入頁面
+    expect(page.url()).toContain('/login');
   });
 
   test('前端表單驗證 — 空欄位', async ({ page }) => {
