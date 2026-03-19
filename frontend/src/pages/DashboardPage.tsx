@@ -22,6 +22,7 @@ function DashboardPage() {
     budgetSummary,
     recentTransactions,
     categories,
+    categoryInfoList,
     errorMessage,
     lastFeedbackText,
     parseInput,
@@ -194,6 +195,7 @@ function DashboardPage() {
             onConfirm={handleConfirmTransaction}
             onCancel={resetParsedResult}
             categories={categories}
+            categoryInfoList={categoryInfoList}
           />
         )}
 

@@ -537,6 +537,13 @@ paths:
       operationId: getCategoryBudgets
       security:
         - BearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: 篩選類別類型（income 或 expense）
+          schema:
+            type: string
+            enum: [income, expense]
       responses:
         '200':
           description: 成功
@@ -575,6 +582,11 @@ paths:
                   minLength: 2
                   maxLength: 50
                   example: 寵物
+                type:
+                  type: string
+                  enum: [income, expense]
+                  default: expense
+                  description: 類別類型（收入或支出）
                 budget_limit:
                   type: number
                   format: decimal
@@ -961,6 +973,11 @@ components:
       properties:
         category:
           type: string
+        type:
+          type: string
+          enum: [income, expense]
+          default: expense
+          description: 類別類型（收入或支出）
         budget_limit:
           type: number
           format: decimal

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import type { ParsedResult, TransactionType } from '../stores/dashboardStore'
+import type { ParsedResult, TransactionType, CategoryInfo } from '../stores/dashboardStore'
+import { getCategoryName, getCategoryTypeColorClass } from '../lib/categoryUtils'
 
 interface ParsedResultCardProps {
   result: ParsedResult
@@ -12,17 +13,7 @@ interface ParsedResultCardProps {
   }) => void
   onCancel: () => void
   categories: string[]
-}
-
-const categoryNames: Record<string, string> = {
-  food: '飲食',
-  transport: '交通',
-  entertainment: '娛樂',
-  shopping: '購物',
-  daily: '日用品',
-  medical: '醫療',
-  education: '教育',
-  other: '其他',
+  categoryInfoList?: CategoryInfo[]
 }
 
 const typeLabels: Record<TransactionType, string> = {
@@ -35,6 +26,7 @@ function ParsedResultCard({
   onConfirm,
   onCancel,
   categories,
+  categoryInfoList = [],
 }: ParsedResultCardProps) {
   // Issue #59: default to edit mode
   const [type, setType] = useState<TransactionType>(result.type ?? 'expense')
@@ -42,6 +34,20 @@ function ParsedResultCard({
   const [category, setCategory] = useState(result.category ?? 'other')
   const [merchant, setMerchant] = useState(result.merchant ?? '')
   const [date, setDate] = useState(result.date ?? new Date().toISOString().split('T')[0])
+
+  // Filter categories by the selected transaction type
+  const filteredCategories = categoryInfoList.length > 0
+    ? categoryInfoList.filter((c) => c.type === type).map((c) => c.category)
+    : categories
+
+  const handleTypeChange = (newType: TransactionType) => {
+    setType(newType)
+    // Reset category to first matching category of the new type
+    const matchingCats = categoryInfoList.filter((c) => c.type === newType)
+    if (matchingCats.length > 0 && !matchingCats.some((c) => c.category === category)) {
+      setCategory(matchingCats[0].category)
+    }
+  }
 
   const handleConfirm = () => {
     const parsedAmount = parseFloat(amount)
@@ -76,7 +82,7 @@ function ParsedResultCard({
           <div className="flex gap-sm" role="radiogroup" aria-label="交易類型">
             <button
               type="button"
-              onClick={() => setType('expense')}
+              onClick={() => handleTypeChange('expense')}
               className={`px-md py-xs rounded-md text-caption font-semibold transition-colors ${
                 type === 'expense'
                   ? 'bg-danger text-surface'
@@ -90,7 +96,7 @@ function ParsedResultCard({
             </button>
             <button
               type="button"
-              onClick={() => setType('income')}
+              onClick={() => handleTypeChange('income')}
               className={`px-md py-xs rounded-md text-caption font-semibold transition-colors ${
                 type === 'income'
                   ? 'bg-success text-surface'
@@ -133,12 +139,12 @@ function ParsedResultCard({
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="flex-1 h-9 rounded-md border border-border px-sm text-body"
+            className={`flex-1 h-9 rounded-md border border-border px-sm text-body ${getCategoryTypeColorClass(type)}`}
             aria-label="類別"
           >
-            {categories.map((cat) => (
+            {filteredCategories.map((cat) => (
               <option key={cat} value={cat}>
-                {categoryNames[cat] ?? cat}
+                {getCategoryName(cat)}
               </option>
             ))}
           </select>

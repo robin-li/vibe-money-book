@@ -49,13 +49,14 @@ describe('Budget Routes', () => {
   // POST /budget/categories
   // ==========================================
   describe('POST /api/v1/budget/categories', () => {
-    it('should create a new category', async () => {
+    it('should create a new category with default type expense', async () => {
       mockedPrisma.categoryBudget.count.mockResolvedValue(5);
       mockedPrisma.categoryBudget.findUnique.mockResolvedValue(null);
       mockedPrisma.categoryBudget.create.mockResolvedValue({
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'food',
+        type: 'expense',
         budgetLimit: new Prisma.Decimal(0),
         isCustom: true,
         createdAt: new Date(),
@@ -68,6 +69,39 @@ describe('Budget Routes', () => {
 
       expect(res.status).toBe(201);
       expect(res.body.data.category).toBe('food');
+      expect(res.body.data.type).toBe('expense');
+    });
+
+    it('should create an income category with type income', async () => {
+      mockedPrisma.categoryBudget.count.mockResolvedValue(5);
+      mockedPrisma.categoryBudget.findUnique.mockResolvedValue(null);
+      mockedPrisma.categoryBudget.create.mockResolvedValue({
+        id: 'cat-income-1',
+        userId: 'test-user-id',
+        category: 'salary',
+        type: 'income',
+        budgetLimit: new Prisma.Decimal(0),
+        isCustom: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const res = await request(app)
+        .post('/api/v1/budget/categories')
+        .send({ category: 'salary', type: 'income' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.category).toBe('salary');
+      expect(res.body.data.type).toBe('income');
+    });
+
+    it('should reject invalid type value', async () => {
+      const res = await request(app)
+        .post('/api/v1/budget/categories')
+        .send({ category: 'test', type: 'invalid' });
+
+      expect(res.status).toBe(400);
+      expect(res.body.message).toContain('type');
     });
 
     it('should create a category with budget_limit', async () => {
@@ -77,6 +111,7 @@ describe('Budget Routes', () => {
         id: 'cat-2',
         userId: 'test-user-id',
         category: 'transport',
+        type: 'expense',
         budgetLimit: new Prisma.Decimal(5000),
         isCustom: true,
         createdAt: new Date(),
@@ -97,6 +132,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'food',
+        type: 'expense',
         budgetLimit: new Prisma.Decimal(0),
         isCustom: true,
         createdAt: new Date(),
@@ -132,6 +168,49 @@ describe('Budget Routes', () => {
   });
 
   // ==========================================
+  // GET /budget/categories with type filter
+  // ==========================================
+  describe('GET /api/v1/budget/categories', () => {
+    it('should return all categories when no type filter', async () => {
+      mockedPrisma.categoryBudget.findMany.mockResolvedValue([
+        { id: 'cb1', userId: 'test-user-id', category: 'food', type: 'expense', budgetLimit: new Prisma.Decimal(8000), isCustom: false, createdAt: new Date(), updatedAt: new Date() },
+        { id: 'cb2', userId: 'test-user-id', category: 'salary', type: 'income', budgetLimit: new Prisma.Decimal(0), isCustom: false, createdAt: new Date(), updatedAt: new Date() },
+      ]);
+
+      const res = await request(app).get('/api/v1/budget/categories');
+
+      expect(res.status).toBe(200);
+      expect(res.body.data).toHaveLength(2);
+    });
+
+    it('should filter by type=expense', async () => {
+      mockedPrisma.categoryBudget.findMany.mockResolvedValue([
+        { id: 'cb1', userId: 'test-user-id', category: 'food', type: 'expense', budgetLimit: new Prisma.Decimal(8000), isCustom: false, createdAt: new Date(), updatedAt: new Date() },
+      ]);
+
+      const res = await request(app).get('/api/v1/budget/categories?type=expense');
+
+      expect(res.status).toBe(200);
+      expect(mockedPrisma.categoryBudget.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: 'test-user-id', type: 'expense' } })
+      );
+    });
+
+    it('should filter by type=income', async () => {
+      mockedPrisma.categoryBudget.findMany.mockResolvedValue([
+        { id: 'cb2', userId: 'test-user-id', category: 'salary', type: 'income', budgetLimit: new Prisma.Decimal(0), isCustom: false, createdAt: new Date(), updatedAt: new Date() },
+      ]);
+
+      const res = await request(app).get('/api/v1/budget/categories?type=income');
+
+      expect(res.status).toBe(200);
+      expect(mockedPrisma.categoryBudget.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: 'test-user-id', type: 'income' } })
+      );
+    });
+  });
+
+  // ==========================================
   // PUT /budget/categories
   // ==========================================
   describe('PUT /api/v1/budget/categories', () => {
@@ -140,6 +219,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'food',
+        type: 'expense',
         budgetLimit: new Prisma.Decimal(0),
         isCustom: true,
         createdAt: new Date(),
@@ -149,6 +229,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'food',
+        type: 'expense',
         budgetLimit: new Prisma.Decimal(8000),
         isCustom: true,
         createdAt: new Date(),
@@ -206,6 +287,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'snacks',
+        type: 'expense',
         budgetLimit: new Prisma.Decimal(0),
         isCustom: true,
         createdAt: new Date(),
@@ -216,6 +298,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'snacks',
+        type: 'expense',
         budgetLimit: new Prisma.Decimal(0),
         isCustom: true,
         createdAt: new Date(),
@@ -240,6 +323,7 @@ describe('Budget Routes', () => {
         id: 'cat-sys',
         userId: 'test-user-id',
         category: 'food',
+        type: 'expense',
         budgetLimit: new Prisma.Decimal(0),
         isCustom: false,
         createdAt: new Date(),
@@ -285,6 +369,7 @@ describe('Budget Routes', () => {
         {
           id: 't1',
           userId: 'test-user-id',
+          type: 'expense',
           amount: new Prisma.Decimal(5000),
           category: 'food',
           merchant: null,
@@ -297,6 +382,7 @@ describe('Budget Routes', () => {
         {
           id: 't2',
           userId: 'test-user-id',
+          type: 'expense',
           amount: new Prisma.Decimal(3000),
           category: 'transport',
           merchant: null,
@@ -313,6 +399,7 @@ describe('Budget Routes', () => {
           id: 'cb1',
           userId: 'test-user-id',
           category: 'food',
+          type: 'expense',
           budgetLimit: new Prisma.Decimal(8000),
           isCustom: false,
           createdAt: new Date(),
@@ -322,6 +409,7 @@ describe('Budget Routes', () => {
           id: 'cb2',
           userId: 'test-user-id',
           category: 'transport',
+          type: 'expense',
           budgetLimit: new Prisma.Decimal(5000),
           isCustom: false,
           createdAt: new Date(),

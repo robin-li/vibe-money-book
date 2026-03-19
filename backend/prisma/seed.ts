@@ -3,14 +3,21 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const DEFAULT_CATEGORIES = [
-  { category: 'food', budgetLimit: 8000 },
-  { category: 'transport', budgetLimit: 3000 },
-  { category: 'entertainment', budgetLimit: 3000 },
-  { category: 'shopping', budgetLimit: 3000 },
-  { category: 'daily', budgetLimit: 2000 },
-  { category: 'medical', budgetLimit: 2000 },
-  { category: 'education', budgetLimit: 2000 },
-  { category: 'other', budgetLimit: 0 },
+  // 支出類別
+  { category: 'food', type: 'expense', budgetLimit: 8000 },
+  { category: 'transport', type: 'expense', budgetLimit: 3000 },
+  { category: 'entertainment', type: 'expense', budgetLimit: 3000 },
+  { category: 'shopping', type: 'expense', budgetLimit: 3000 },
+  { category: 'daily', type: 'expense', budgetLimit: 2000 },
+  { category: 'medical', type: 'expense', budgetLimit: 2000 },
+  { category: 'education', type: 'expense', budgetLimit: 2000 },
+  { category: 'other', type: 'expense', budgetLimit: 0 },
+  // 收入類別
+  { category: 'salary', type: 'income', budgetLimit: 0 },
+  { category: 'investment', type: 'income', budgetLimit: 0 },
+  { category: 'pension', type: 'income', budgetLimit: 0 },
+  { category: 'insurance', type: 'income', budgetLimit: 0 },
+  { category: 'other_income', type: 'income', budgetLimit: 0 },
 ];
 
 async function main() {
@@ -47,6 +54,7 @@ async function main() {
       create: {
         userId: testUser.id,
         category: cat.category,
+        type: cat.type,
         budgetLimit: cat.budgetLimit,
         isCustom: false,
       },
