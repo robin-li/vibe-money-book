@@ -34,7 +34,7 @@ export const llmRateLimiter = rateLimit({
 // Auth rate limiter: 10 req/min/IP
 export const authRateLimiter = rateLimit({
   windowMs: 60 * 1000,
-  max: 10,
+  max: parseInt(process.env.RATE_LIMIT_AUTH_PER_MIN || '10', 10),
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,

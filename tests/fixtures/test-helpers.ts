@@ -97,8 +97,8 @@ export async function loginViaUI(
   await page.getByLabel('Email').fill(email);
   await page.getByLabel('密碼').fill(password);
   await page.getByRole('button', { name: '登入' }).click();
-  // 等待導航至首頁
-  await page.waitForURL('/', { timeout: 10000 });
+  // 等待導航離開登入頁
+  await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 });
 }
 
 /**

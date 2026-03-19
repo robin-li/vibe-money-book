@@ -13,7 +13,7 @@ test.describe('註冊流程', () => {
     await page.goto('/register');
 
     // 確認頁面標題與表單存在
-    await expect(page.getByText('Vibe Money Book')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Vibe Money Book' })).toBeVisible();
 
     // 填寫註冊表單
     await page.getByLabel('使用者名稱').fill(TEST_NAME);
@@ -26,7 +26,7 @@ test.describe('註冊流程', () => {
 
     // 應跳轉至首頁 (Dashboard)
     await page.waitForURL('/', { timeout: 10000 });
-    await expect(page.getByText('Vibe Money Book')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Vibe Money Book' })).toBeVisible();
   });
 
   test('重複 email 顯示錯誤', async ({ page, request }) => {
@@ -117,7 +117,7 @@ test.describe('登入流程', () => {
 
   test('成功登入後跳轉至首頁', async ({ page }) => {
     await loginViaUI(page, testEmail, TEST_PASSWORD);
-    await expect(page.getByText('Vibe Money Book')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Vibe Money Book' })).toBeVisible();
   });
 
   test('錯誤密碼顯示錯誤訊息', async ({ page }) => {
