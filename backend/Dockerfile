@@ -38,4 +38,4 @@ COPY --from=build /app/dist ./dist
 EXPOSE 3000
 
 # Run migrations then start server
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node dist/server.js"]

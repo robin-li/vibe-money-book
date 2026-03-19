@@ -69,9 +69,19 @@ jobs:
       - name: Wait for services to be ready
         run: |
           echo "Waiting for backend..."
-          timeout 60 bash -c 'until curl -sf http://localhost:3000/health > /dev/null 2>&1; do sleep 2; done' || echo "Backend health check timed out"
+          timeout 90 bash -c 'until curl -sf http://localhost:3000/health > /dev/null 2>&1; do sleep 2; done' || {
+            echo "Backend health check timed out. Container logs:"
+            docker compose logs backend
+            exit 1
+          }
+          echo "Backend is ready!"
           echo "Waiting for frontend..."
-          timeout 60 bash -c 'until curl -sf http://localhost:80 > /dev/null 2>&1; do sleep 2; done' || echo "Frontend health check timed out"
+          timeout 60 bash -c 'until curl -sf http://localhost:80 > /dev/null 2>&1; do sleep 2; done' || {
+            echo "Frontend health check timed out. Container logs:"
+            docker compose logs frontend
+            exit 1
+          }
+          echo "Frontend is ready!"
 
       - uses: actions/setup-node@v4
         with:
