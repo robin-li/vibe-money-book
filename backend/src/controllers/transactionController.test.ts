@@ -11,6 +11,7 @@ const now = new Date();
 const mockTransactions: Record<string, {
   id: string;
   userId: string;
+  type: string;
   amount: number;
   category: string;
   merchant: string | null;
@@ -55,6 +56,7 @@ vi.mock('../config/database', () => ({
         const txn = {
           id,
           userId: data.userId as string,
+          type: (data.type as string) || 'expense',
           amount: data.amount as number,
           category: data.category as string,
           merchant: (data.merchant as string) || null,
@@ -339,6 +341,7 @@ describe('GET /api/v1/transactions/:id', () => {
     mockTransactions[otherId] = {
       id: otherId,
       userId: OTHER_USER_ID,
+      type: 'expense',
       amount: 999,
       category: 'food',
       merchant: '別人的店',
@@ -386,6 +389,7 @@ describe('DELETE /api/v1/transactions/:id', () => {
     mockTransactions[otherId] = {
       id: otherId,
       userId: OTHER_USER_ID,
+      type: 'expense',
       amount: 500,
       category: 'food',
       merchant: '別人的店',

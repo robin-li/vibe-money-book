@@ -17,7 +17,10 @@ function getActiveApiKey(): string {
   return localStorage.getItem('llm_api_key') ?? ''
 }
 
+export type TransactionType = 'income' | 'expense'
+
 export interface ParsedResult {
+  type: TransactionType
   amount: number | null
   category: string | null
   merchant: string
@@ -75,6 +78,7 @@ interface DashboardState {
   fetchCategories: () => Promise<void>
   parseInput: (rawText: string) => Promise<void>
   confirmTransaction: (data: {
+    type: TransactionType
     amount: number
     category: string
     merchant: string
@@ -127,6 +131,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       set({
         status: 'parsed',
         parsedResult: {
+          type: parsed.type ?? 'expense',
           amount: parsed.amount,
           category: parsed.category,
           merchant: parsed.merchant,
@@ -163,6 +168,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     set({ status: 'saving', errorMessage: '' })
     try {
       const res = await api.post('/transactions', {
+        type: data.type,
         amount: data.amount,
         category: data.category,
         merchant: data.merchant,
@@ -180,6 +186,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       const tx = res.data.data.transaction
       const newTransaction: Transaction = {
         id: tx.id,
+        type: tx.type ?? 'expense',
         amount: tx.amount,
         category: tx.category,
         merchant: tx.merchant,
@@ -249,6 +256,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         (t: Record<string, unknown>) =>
           ({
             id: t.id as string,
+            type: (t.type as 'income' | 'expense') ?? 'expense',
             amount: t.amount as number,
             category: t.category as string,
             merchant: t.merchant as string,

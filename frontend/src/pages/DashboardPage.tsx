@@ -49,6 +49,7 @@ function DashboardPage() {
 
   const handleConfirmTransaction = useCallback(
     async (data: {
+      type: 'income' | 'expense'
       amount: number
       category: string
       merchant: string
@@ -71,6 +72,7 @@ function DashboardPage() {
         await createCategory(categoryName)
         if (parsedResult) {
           await confirmTransaction({
+            type: parsedResult.type ?? 'expense',
             amount: parsedResult.amount ?? 0,
             category: categoryName,
             merchant: parsedResult.merchant,
@@ -98,6 +100,7 @@ function DashboardPage() {
     async (category: string) => {
       if (parsedResult) {
         await confirmTransaction({
+          type: parsedResult.type ?? 'expense',
           amount: parsedResult.amount ?? 0,
           category,
           merchant: parsedResult.merchant,

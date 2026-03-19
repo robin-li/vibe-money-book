@@ -120,6 +120,7 @@ describe('RecentTransactions', () => {
 
 describe('ParsedResultCard', () => {
   const defaultResult = {
+    type: 'expense' as const,
     amount: 180,
     category: 'food',
     merchant: '拉麵店',
@@ -131,7 +132,7 @@ describe('ParsedResultCard', () => {
   }
   const categories = ['food', 'transport', 'entertainment', 'other']
 
-  it('renders parsed result fields', () => {
+  it('renders in default edit mode with editable fields', () => {
     render(
       <ParsedResultCard
         result={defaultResult}
@@ -140,13 +141,18 @@ describe('ParsedResultCard', () => {
         categories={categories}
       />
     )
-    expect(screen.getByText('✨ AI 幫你整理好了')).toBeInTheDocument()
-    expect(screen.getByText('$180')).toBeInTheDocument()
-    expect(screen.getByText('飲食')).toBeInTheDocument()
-    expect(screen.getByText('拉麵店')).toBeInTheDocument()
+    expect(screen.getByText('AI 幫你整理好了')).toBeInTheDocument()
+    // Should be in edit mode by default (Issue #59)
+    expect(screen.getByLabelText('金額')).toBeInTheDocument()
+    expect(screen.getByLabelText('類別')).toBeInTheDocument()
+    expect(screen.getByLabelText('商家')).toBeInTheDocument()
+    expect(screen.getByLabelText('日期')).toBeInTheDocument()
+    // Should have type selector (Issue #58)
+    expect(screen.getByLabelText('消費')).toBeInTheDocument()
+    expect(screen.getByLabelText('收入')).toBeInTheDocument()
   })
 
-  it('calls onConfirm when confirm button clicked', async () => {
+  it('calls onConfirm with type field when confirm button clicked', async () => {
     const onConfirm = vi.fn()
     const user = userEvent.setup()
     render(
@@ -157,8 +163,9 @@ describe('ParsedResultCard', () => {
         categories={categories}
       />
     )
-    await user.click(screen.getByText('✓ 確認記帳'))
+    await user.click(screen.getByText('確認新增'))
     expect(onConfirm).toHaveBeenCalledWith({
+      type: 'expense',
       amount: 180,
       category: 'food',
       merchant: '拉麵店',
@@ -166,21 +173,62 @@ describe('ParsedResultCard', () => {
     })
   })
 
-  it('enters edit mode when modify button clicked', async () => {
+  it('calls onCancel when cancel button clicked (Issue #59)', async () => {
+    const onCancel = vi.fn()
     const user = userEvent.setup()
     render(
       <ParsedResultCard
         result={defaultResult}
         onConfirm={vi.fn()}
+        onCancel={onCancel}
+        categories={categories}
+      />
+    )
+    await user.click(screen.getByText('取消'))
+    expect(onCancel).toHaveBeenCalled()
+  })
+
+  it('shows income type correctly (Issue #58)', () => {
+    const incomeResult = {
+      ...defaultResult,
+      type: 'income' as const,
+      amount: 50000,
+      merchant: '公司',
+    }
+    render(
+      <ParsedResultCard
+        result={incomeResult}
+        onConfirm={vi.fn()}
         onCancel={vi.fn()}
         categories={categories}
       />
     )
-    await user.click(screen.getByText('修改'))
-    expect(screen.getByLabelText('金額')).toBeInTheDocument()
-    expect(screen.getByLabelText('類別')).toBeInTheDocument()
-    expect(screen.getByLabelText('商家')).toBeInTheDocument()
-    expect(screen.getByText('取消')).toBeInTheDocument()
+    // Income button should be selected
+    const incomeBtn = screen.getByLabelText('收入')
+    expect(incomeBtn.getAttribute('aria-checked')).toBe('true')
+  })
+
+  it('allows switching between income and expense types', async () => {
+    const user = userEvent.setup()
+    const onConfirm = vi.fn()
+    render(
+      <ParsedResultCard
+        result={defaultResult}
+        onConfirm={onConfirm}
+        onCancel={vi.fn()}
+        categories={categories}
+      />
+    )
+    // Default is expense
+    expect(screen.getByLabelText('消費').getAttribute('aria-checked')).toBe('true')
+    // Switch to income
+    await user.click(screen.getByLabelText('收入'))
+    expect(screen.getByLabelText('收入').getAttribute('aria-checked')).toBe('true')
+    // Confirm with income type
+    await user.click(screen.getByText('確認新增'))
+    expect(onConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({ type: 'income' })
+    )
   })
 })
 

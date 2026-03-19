@@ -29,7 +29,7 @@ const MOCK_USER = {
 };
 
 const MOCK_TRANSACTIONS = [
-  { id: 't-1', userId: MOCK_USER_ID, amount: 500, category: 'food', merchant: '便當店', rawText: '午餐便當500', note: null, transactionDate: new Date(), createdAt: new Date(), updatedAt: new Date() },
+  { id: 't-1', userId: MOCK_USER_ID, type: 'expense', amount: 500, category: 'food', merchant: '便當店', rawText: '午餐便當500', note: null, transactionDate: new Date(), createdAt: new Date(), updatedAt: new Date() },
 ];
 
 // ─── Mock JWT ──────────────────────────────────────────────────
@@ -98,6 +98,7 @@ beforeEach(() => {
 
   // Default mock responses
   mockExtractData.mockResolvedValue({
+    type: 'expense',
     amount: 180,
     category: 'food',
     merchant: '拉麵店',
@@ -126,6 +127,7 @@ describe('POST /api/v1/ai/parse', () => {
     expect(res.body.code).toBe(200);
     expect(res.body.message).toBe('解析成功');
     expect(res.body.data.parsed).toEqual({
+      type: 'expense',
       amount: 180,
       category: 'food',
       merchant: '拉麵店',
@@ -144,6 +146,7 @@ describe('POST /api/v1/ai/parse', () => {
   // --- 案例 2: 無金額 ---
   it('應處理無法辨識金額的情境（amount 為 null）', async () => {
     mockExtractData.mockResolvedValue({
+      type: 'expense',
       amount: null,
       category: 'food',
       merchant: '餐廳',
@@ -162,6 +165,7 @@ describe('POST /api/v1/ai/parse', () => {
   // --- 案例 3: 新類別偵測 ---
   it('應偵測新類別並回傳 suggested_category', async () => {
     mockExtractData.mockResolvedValue({
+      type: 'expense',
       amount: 1200,
       category: null,
       merchant: '寵物店',
@@ -181,6 +185,7 @@ describe('POST /api/v1/ai/parse', () => {
   // --- 案例 4: 模糊類別 ---
   it('應處理模糊類別並降低 confidence', async () => {
     mockExtractData.mockResolvedValue({
+      type: 'expense',
       amount: 350,
       category: 'entertainment',
       merchant: '書店',
@@ -198,6 +203,7 @@ describe('POST /api/v1/ai/parse', () => {
   // --- 案例 5: 多筆消費（只處理第一筆）---
   it('應僅處理第一筆消費', async () => {
     mockExtractData.mockResolvedValue({
+      type: 'expense',
       amount: 100,
       category: 'food',
       merchant: '早餐店',
@@ -223,6 +229,25 @@ describe('POST /api/v1/ai/parse', () => {
     expect(ctx.remaining).toBe(29500);
     expect(ctx.category_spent).toBe(500); // food category
     expect(ctx.category_limit).toBe(8000);
+  });
+
+  // --- 案例 6b: 收入類型解析 ---
+  it('應正確解析收入類型（薪水入帳）', async () => {
+    mockExtractData.mockResolvedValue({
+      type: 'income',
+      amount: 50000,
+      category: 'other',
+      merchant: '公司',
+      date: '2026-03-18',
+      confidence: 0.95,
+      is_new_category: false,
+      suggested_category: null,
+    });
+
+    const res = await postParse('薪水入帳 50000 元');
+    expect(res.status).toBe(200);
+    expect(res.body.data.parsed.type).toBe('income');
+    expect(res.body.data.parsed.amount).toBe(50000);
   });
 
   // --- 案例 7: 缺少 X-LLM-API-Key ---

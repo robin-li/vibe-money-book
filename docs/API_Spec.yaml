@@ -329,6 +329,11 @@ paths:
               type: object
               required: [amount, category, raw_text, transaction_date]
               properties:
+                type:
+                  type: string
+                  enum: [income, expense]
+                  default: expense
+                  description: 交易類型（收入或消費）
                 amount:
                   type: number
                   format: decimal
@@ -758,6 +763,11 @@ components:
     ParsedTransaction:
       type: object
       properties:
+        type:
+          type: string
+          enum: [income, expense]
+          default: expense
+          description: 交易類型（收入或消費）
         amount:
           type: number
           format: decimal
@@ -814,6 +824,10 @@ components:
         id:
           type: string
           format: uuid
+        type:
+          type: string
+          enum: [income, expense]
+          default: expense
         amount:
           type: number
           format: decimal
@@ -841,6 +855,10 @@ components:
         id:
           type: string
           format: uuid
+        type:
+          type: string
+          enum: [income, expense]
+          default: expense
         amount:
           type: number
           format: decimal
@@ -861,6 +879,10 @@ components:
         id:
           type: string
           format: uuid
+        type:
+          type: string
+          enum: [income, expense]
+          default: expense
         amount:
           type: number
           format: decimal

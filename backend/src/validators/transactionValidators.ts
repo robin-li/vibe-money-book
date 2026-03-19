@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
 export const createTransactionSchema = z.object({
+  type: z
+    .enum(['income', 'expense'], { message: '交易類型必須為 income 或 expense' })
+    .default('expense'),
   amount: z
     .number({ error: '金額為必填' })
     .positive('金額必須為正數'),
