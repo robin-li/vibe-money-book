@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
+import { Request, Response, NextFunction } from 'express';
+import { Prisma } from '@prisma/client';
 import app from '../app';
 
 // Mock prisma
@@ -27,8 +29,8 @@ vi.mock('../config/database', () => {
 
 // Mock auth middleware
 vi.mock('../middlewares/auth', () => ({
-  authMiddleware: (req: any, _res: any, next: any) => {
-    req.userId = 'test-user-id';
+  authMiddleware: (req: Request, _res: Response, next: NextFunction) => {
+    (req as Request & { userId: string }).userId = 'test-user-id';
     next();
   },
   AuthRequest: {},
@@ -52,7 +54,7 @@ describe('Stats Routes', () => {
         {
           id: 't1',
           userId: 'test-user-id',
-          amount: 5000 as any,
+          amount: new Prisma.Decimal(5000),
           category: 'food',
           merchant: null,
           rawText: '午餐',
@@ -64,7 +66,7 @@ describe('Stats Routes', () => {
         {
           id: 't2',
           userId: 'test-user-id',
-          amount: 3000 as any,
+          amount: new Prisma.Decimal(3000),
           category: 'transport',
           merchant: null,
           rawText: '計程車',
@@ -76,7 +78,7 @@ describe('Stats Routes', () => {
         {
           id: 't3',
           userId: 'test-user-id',
-          amount: 2000 as any,
+          amount: new Prisma.Decimal(2000),
           category: 'food',
           merchant: null,
           rawText: '晚餐',
@@ -104,7 +106,7 @@ describe('Stats Routes', () => {
       expect(data.distribution[1].ratio).toBe(0.3);
 
       // Ratios should sum to ~1
-      const totalRatio = data.distribution.reduce((sum: number, d: any) => sum + d.ratio, 0);
+      const totalRatio = data.distribution.reduce((sum: number, d: { ratio: number }) => sum + d.ratio, 0);
       expect(totalRatio).toBeCloseTo(1.0, 1);
     });
 
@@ -124,7 +126,7 @@ describe('Stats Routes', () => {
         {
           id: 't1',
           userId: 'test-user-id',
-          amount: 1000 as any,
+          amount: new Prisma.Decimal(1000),
           category: 'food',
           merchant: null,
           rawText: 'test',

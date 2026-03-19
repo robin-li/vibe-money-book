@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
+import { Request, Response, NextFunction } from 'express';
+import { Prisma } from '@prisma/client';
 import app from '../app';
 
 // Mock prisma
@@ -27,8 +29,8 @@ vi.mock('../config/database', () => {
 
 // Mock auth middleware
 vi.mock('../middlewares/auth', () => ({
-  authMiddleware: (req: any, _res: any, next: any) => {
-    req.userId = 'test-user-id';
+  authMiddleware: (req: Request, _res: Response, next: NextFunction) => {
+    (req as Request & { userId: string }).userId = 'test-user-id';
     next();
   },
   AuthRequest: {},
@@ -54,7 +56,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'food',
-        budgetLimit: 0 as any,
+        budgetLimit: new Prisma.Decimal(0),
         isCustom: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -75,7 +77,7 @@ describe('Budget Routes', () => {
         id: 'cat-2',
         userId: 'test-user-id',
         category: 'transport',
-        budgetLimit: 5000 as any,
+        budgetLimit: new Prisma.Decimal(5000),
         isCustom: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -95,7 +97,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'food',
-        budgetLimit: 0 as any,
+        budgetLimit: new Prisma.Decimal(0),
         isCustom: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -138,7 +140,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'food',
-        budgetLimit: 0 as any,
+        budgetLimit: new Prisma.Decimal(0),
         isCustom: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -147,7 +149,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'food',
-        budgetLimit: 8000 as any,
+        budgetLimit: new Prisma.Decimal(8000),
         isCustom: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -204,7 +206,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'snacks',
-        budgetLimit: 0 as any,
+        budgetLimit: new Prisma.Decimal(0),
         isCustom: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -214,7 +216,7 @@ describe('Budget Routes', () => {
         id: 'cat-1',
         userId: 'test-user-id',
         category: 'snacks',
-        budgetLimit: 0 as any,
+        budgetLimit: new Prisma.Decimal(0),
         isCustom: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -238,7 +240,7 @@ describe('Budget Routes', () => {
         id: 'cat-sys',
         userId: 'test-user-id',
         category: 'food',
-        budgetLimit: 0 as any,
+        budgetLimit: new Prisma.Decimal(0),
         isCustom: false,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -273,7 +275,7 @@ describe('Budget Routes', () => {
         passwordHash: 'hash',
         persona: 'gentle',
         aiEngine: 'gemini',
-        monthlyBudget: 30000 as any,
+        monthlyBudget: new Prisma.Decimal(30000),
         currency: 'TWD',
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -283,7 +285,7 @@ describe('Budget Routes', () => {
         {
           id: 't1',
           userId: 'test-user-id',
-          amount: 5000 as any,
+          amount: new Prisma.Decimal(5000),
           category: 'food',
           merchant: null,
           rawText: '午餐',
@@ -295,7 +297,7 @@ describe('Budget Routes', () => {
         {
           id: 't2',
           userId: 'test-user-id',
-          amount: 3000 as any,
+          amount: new Prisma.Decimal(3000),
           category: 'transport',
           merchant: null,
           rawText: '計程車',
@@ -311,7 +313,7 @@ describe('Budget Routes', () => {
           id: 'cb1',
           userId: 'test-user-id',
           category: 'food',
-          budgetLimit: 8000 as any,
+          budgetLimit: new Prisma.Decimal(8000),
           isCustom: false,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -320,7 +322,7 @@ describe('Budget Routes', () => {
           id: 'cb2',
           userId: 'test-user-id',
           category: 'transport',
-          budgetLimit: 5000 as any,
+          budgetLimit: new Prisma.Decimal(5000),
           isCustom: false,
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -338,7 +340,7 @@ describe('Budget Routes', () => {
       expect(data.transaction_count).toBe(2);
       expect(data.categories).toHaveLength(2);
 
-      const foodCat = data.categories.find((c: any) => c.category === 'food');
+      const foodCat = data.categories.find((c: { category: string }) => c.category === 'food');
       expect(foodCat.budget_limit).toBe(8000);
       expect(foodCat.spent).toBe(5000);
       expect(foodCat.remaining).toBe(3000);
