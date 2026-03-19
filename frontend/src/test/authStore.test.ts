@@ -24,6 +24,7 @@ describe('Auth Store', () => {
       token: null,
       loading: false,
       error: null,
+      isInitialized: true,
     })
     // Clear localStorage
     localStorage.clear()
@@ -31,12 +32,13 @@ describe('Auth Store', () => {
   })
 
   describe('initial state', () => {
-    it('starts with null user and token', () => {
+    it('starts with null user and token when localStorage is empty', () => {
       const state = useAuthStore.getState()
       expect(state.user).toBeNull()
       expect(state.token).toBeNull()
       expect(state.loading).toBe(false)
       expect(state.error).toBeNull()
+      expect(state.isInitialized).toBe(true)
     })
   })
 
@@ -215,6 +217,14 @@ describe('Auth Store', () => {
       expect(useAuthStore.getState().user).toBeNull()
       expect(localStorage.getItem('auth_token')).toBeNull()
       expect(localStorage.getItem('auth_user')).toBeNull()
+    })
+
+    it('sets isInitialized to true after restoreSession', () => {
+      useAuthStore.setState({ isInitialized: false })
+
+      useAuthStore.getState().restoreSession()
+
+      expect(useAuthStore.getState().isInitialized).toBe(true)
     })
   })
 
