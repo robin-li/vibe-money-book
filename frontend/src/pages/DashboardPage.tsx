@@ -206,7 +206,7 @@ function DashboardPage() {
         )}
 
         {/* Recent Transactions */}
-        <RecentTransactions transactions={recentTransactions} />
+        <RecentTransactions transactions={recentTransactions} categories={categories} />
 
         {/* Footer */}
         <div className="text-center py-sm mt-xl">

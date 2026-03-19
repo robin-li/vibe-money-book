@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import api from '../lib/api.ts'
-import type { User } from '../types/index.ts'
 
 export type Persona = 'sarcastic' | 'gentle' | 'guilt_trip'
 export type AIEngine = 'gemini' | 'openai'
@@ -51,14 +50,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   fetchProfile: async () => {
     set({ loading: true, error: null })
     try {
-      const res = await api.get<{ data: { user: User } }>('/users/profile')
-      const user = res.data.data.user
+      const res = await api.get('/users/profile')
+      const d = res.data.data
       set({
-        persona: user.persona,
-        aiEngine: user.aiEngine,
-        monthlyBudget: user.monthlyBudget,
-        userName: user.name,
-        userEmail: user.email,
+        persona: d.persona ?? 'gentle',
+        aiEngine: d.ai_engine ?? d.aiEngine ?? 'gemini',
+        monthlyBudget: Number(d.monthly_budget ?? d.monthlyBudget ?? 0),
+        userName: d.name ?? '',
+        userEmail: d.email ?? '',
         loading: false,
       })
     } catch (err: unknown) {
