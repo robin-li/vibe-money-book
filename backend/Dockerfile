@@ -25,14 +25,17 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# Copy prisma schema and generated client from build stage
+# Copy prisma schema, generated client, and CLI from build stage
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=build /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=build /app/node_modules/prisma ./node_modules/prisma
+COPY --from=build /app/node_modules/@prisma/engines ./node_modules/@prisma/engines
 
 # Copy compiled output from build stage
 COPY --from=build /app/dist ./dist
 
 EXPOSE 3000
 
-CMD ["node", "dist/server.js"]
+# Run migrations then start server
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
