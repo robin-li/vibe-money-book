@@ -48,6 +48,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## 開發輔助技能
+
+| 指令 | 說明 |
+|------|------|
+| `/local-tunnel` | 發佈本地前後端服務至公網，供遠端裝置測試（ngrok / Cloudflare Tunnel） |
+
+---
+
 ## Vibe-SDLC 技能
 
 本專案使用 Vibe-SDLC 流程管理開發：
