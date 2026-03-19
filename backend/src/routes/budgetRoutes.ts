@@ -224,7 +224,9 @@ router.get('/summary', authMiddleware, async (req: AuthRequest, res: Response, n
     });
 
     const monthlyBudget = Number(user.monthlyBudget);
-    const totalSpent = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+    // Only count expense transactions toward budget spent
+    const expenseTransactions = transactions.filter(t => t.type === 'expense');
+    const totalSpent = expenseTransactions.reduce((sum, t) => sum + Number(t.amount), 0);
     const remaining = monthlyBudget - totalSpent;
     const usedRatio = monthlyBudget > 0 ? Math.round((totalSpent / monthlyBudget) * 100) / 100 : 0;
 
@@ -234,7 +236,7 @@ router.get('/summary', authMiddleware, async (req: AuthRequest, res: Response, n
     });
 
     const categorySpentMap: Record<string, number> = {};
-    for (const t of transactions) {
+    for (const t of expenseTransactions) {
       categorySpentMap[t.category] = (categorySpentMap[t.category] || 0) + Number(t.amount);
     }
 

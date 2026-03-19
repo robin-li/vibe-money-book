@@ -156,7 +156,7 @@ function RecentTransactions({ transactions, categories = defaultCategories }: Re
                           確定要刪除這筆帳目嗎？
                         </p>
                         <p className="text-caption text-text-secondary mb-lg">
-                          {tx.merchant} -${tx.amount.toLocaleString()}
+                          {tx.merchant} {tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString()}
                         </p>
                         <div className="flex gap-sm">
                           <button
@@ -259,7 +259,7 @@ function RecentTransactions({ transactions, categories = defaultCategories }: Re
                         <div className="space-y-sm mb-lg">
                           <div className="flex items-center gap-md">
                             <span className="text-caption text-text-secondary w-[50px] shrink-0">金額</span>
-                            <span className={`text-body font-semibold ${tx.type === 'income' ? 'text-success' : 'text-danger'}`}>${tx.amount.toLocaleString()}</span>
+                            <span className={`text-body font-semibold ${tx.type === 'income' ? 'text-success' : 'text-danger'}`}>{tx.type === 'income' ? '+' : '-'}${tx.amount.toLocaleString()}</span>
                           </div>
                           <div className="flex items-center gap-md">
                             <span className="text-caption text-text-secondary w-[50px] shrink-0">類別</span>
