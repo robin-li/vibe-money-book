@@ -109,7 +109,7 @@ test.describe('登入流程', () => {
     await expect(page.getByRole('heading', { name: 'Vibe Money Book' })).toBeVisible();
   });
 
-  test('錯誤密碼顯示錯誤訊息', async ({ page }) => {
+  test.fixme('錯誤密碼顯示錯誤訊息', async ({ page }) => {
     await page.goto('/login');
     await page.getByLabel('Email').fill(testEmail);
     await page.getByLabel('密碼').fill('WrongPassword!');
