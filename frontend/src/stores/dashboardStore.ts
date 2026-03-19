@@ -66,11 +66,13 @@ interface DashboardState {
   budgetContext: BudgetContext | null
   budgetSummary: BudgetSummary | null
   recentTransactions: Transaction[]
+  categories: string[]
   errorMessage: string
   lastFeedbackText: string
   lastPersona: string
 
   // Actions
+  fetchCategories: () => Promise<void>
   parseInput: (rawText: string) => Promise<void>
   confirmTransaction: (data: {
     amount: number
@@ -97,9 +99,20 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   budgetContext: null,
   budgetSummary: null,
   recentTransactions: [],
+  categories: ['food', 'transport', 'entertainment', 'shopping', 'daily', 'medical', 'education', 'other'],
   errorMessage: '',
   lastFeedbackText: '',
   lastPersona: useSettingsStore.getState().persona || 'gentle',
+
+  fetchCategories: async () => {
+    try {
+      const res = await api.get('/budget/categories')
+      const cats = (res.data.data as Array<{ category: string }>).map((c) => c.category)
+      if (cats.length > 0) set({ categories: cats })
+    } catch {
+      // Keep default categories
+    }
+  },
 
   parseInput: async (rawText: string) => {
     set({ status: 'parsing', errorMessage: '' })
@@ -198,6 +211,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   createCategory: async (category: string) => {
     try {
       await api.post('/budget/categories', { category })
+      await get().fetchCategories()
     } catch (err: unknown) {
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data

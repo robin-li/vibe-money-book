@@ -38,16 +38,16 @@ function StatsPage() {
         usedRatio: b.used_ratio,
       })
 
-      const items: DistributionItem[] = (
-        distRes.data.data.categories as Array<{
-          category: string
-          amount: number
-          percentage: number
-        }>
-      ).map((c) => ({
+      const rawDist = (distRes.data.data.distribution ?? distRes.data.data.categories ?? []) as Array<{
+        category: string
+        amount: number
+        ratio?: number
+        percentage?: number
+      }>
+      const items: DistributionItem[] = rawDist.map((c) => ({
         category: c.category,
         amount: c.amount,
-        percentage: c.percentage,
+        percentage: c.percentage ?? Math.round((c.ratio ?? 0) * 100),
       }))
       setDistribution(items)
     } catch {

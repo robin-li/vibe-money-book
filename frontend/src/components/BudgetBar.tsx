@@ -27,14 +27,14 @@ function BudgetBar({ usedRatio }: BudgetBarProps) {
 
   return (
     <div
-      className={`h-2 rounded-full bg-border overflow-hidden ${getStatusClass()}`}
+      className={`relative h-2 rounded-full bg-border ${getStatusClass()}`}
       data-testid="budget-bar"
     >
       <div
         className={`h-full rounded-full transition-all duration-[var(--transition-normal)] ${getBarColor()} ${
           remainingRatio < 0.2 ? 'animate-budget-pulse' : ''
         }`}
-        style={{ width: `${progressPercent}%` }}
+        style={{ width: `${Math.min(progressPercent, 100)}%` }}
         role="progressbar"
         aria-valuenow={progressPercent}
         aria-valuemin={0}

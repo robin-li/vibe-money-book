@@ -1,19 +1,14 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useHistoryStore } from '../stores/historyStore'
+import { useDashboardStore } from '../stores/dashboardStore'
 import TransactionItem from '../components/TransactionItem'
 import type { Transaction } from '../stores/index'
+import { getCategoryName } from '../lib/categoryUtils'
 
-const categoryOptions: { value: string; label: string }[] = [
-  { value: '', label: '全部類別' },
-  { value: 'food', label: '🍽️ 飲食' },
-  { value: 'transport', label: '🚌 交通' },
-  { value: 'entertainment', label: '🎬 娛樂' },
-  { value: 'shopping', label: '🛍️ 購物' },
-  { value: 'daily', label: '🧴 日用品' },
-  { value: 'medical', label: '🏥 醫療' },
-  { value: 'education', label: '📚 教育' },
-  { value: 'other', label: '📦 其他' },
-]
+const CATEGORY_ICONS: Record<string, string> = {
+  food: '🍽️', transport: '🚌', entertainment: '🎬', shopping: '🛍️',
+  daily: '🧴', medical: '🏥', education: '📚', other: '📦',
+}
 
 function formatGroupDate(dateStr: string): string {
   const today = new Date()
@@ -58,11 +53,24 @@ function HistoryPage() {
     deleteTransaction,
   } = useHistoryStore()
 
+  const storeCategories = useDashboardStore((s) => s.categories)
+  const fetchCategories = useDashboardStore((s) => s.fetchCategories)
+
+  const categoryOptions = useMemo(() => {
+    const opts = [{ value: '', label: '全部類別' }]
+    for (const cat of storeCategories) {
+      const icon = CATEGORY_ICONS[cat] ?? '📦'
+      opts.push({ value: cat, label: `${icon} ${getCategoryName(cat)}` })
+    }
+    return opts
+  }, [storeCategories])
+
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
+    fetchCategories()
     fetchTransactions(true)
-  }, [fetchTransactions])
+  }, [fetchCategories, fetchTransactions])
 
   const handleCategoryChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
