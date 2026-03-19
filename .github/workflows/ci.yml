@@ -78,23 +78,21 @@ jobs:
           node-version: 20
 
       - name: Install Playwright
-        working-directory: frontend
         run: |
           npm ci
           npx playwright install --with-deps chromium
 
       - name: Run Playwright E2E tests
-        working-directory: frontend
         run: npx playwright test
         env:
-          BASE_URL: http://localhost:80
+          E2E_BASE_URL: http://localhost:80
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: frontend/playwright-report/
+          path: playwright-report/
           retention-days: 30
 
       - name: Stop services
