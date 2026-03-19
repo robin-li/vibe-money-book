@@ -52,3 +52,51 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [ci-backend, ci-frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env for docker-compose
+        run: cp .env.example .env
+
+      - name: Start services with docker-compose
+        run: docker compose up -d --build
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for backend..."
+          timeout 60 bash -c 'until curl -sf http://localhost:3000/api/health > /dev/null 2>&1; do sleep 2; done' || echo "Backend health check timed out"
+          echo "Waiting for frontend..."
+          timeout 60 bash -c 'until curl -sf http://localhost:80 > /dev/null 2>&1; do sleep 2; done' || echo "Frontend health check timed out"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run Playwright E2E tests
+        working-directory: frontend
+        run: npx playwright test
+        env:
+          BASE_URL: http://localhost:80
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 30
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v
