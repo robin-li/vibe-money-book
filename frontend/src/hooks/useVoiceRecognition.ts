@@ -17,6 +17,7 @@ interface UseVoiceRecognitionReturn {
   errorMessage: string
   startRecording: () => void
   stopRecording: () => void
+  toggleRecording: () => void
 }
 
 // Feature Detection: check SpeechRecognition support
@@ -42,6 +43,8 @@ export function useVoiceRecognition(
 
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const callbacksRef = useRef({ onResult, onInterimResult, onError })
+  // Track accumulated final transcript to avoid duplication (#69)
+  const finalTranscriptRef = useRef('')
 
   // Keep callbacks ref updated
   useEffect(() => {
@@ -58,6 +61,9 @@ export function useVoiceRecognition(
       recognitionRef.current = null
     }
 
+    // Reset accumulated final transcript
+    finalTranscriptRef.current = ''
+
     const recognition = new SpeechRecognitionClass()
     recognition.lang = lang
     recognition.interimResults = true
@@ -72,20 +78,27 @@ export function useVoiceRecognition(
     }
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = ''
-      let interim = ''
+      // Fix #69: Properly accumulate final results without duplication.
+      // Each result in event.results transitions from interim to final exactly once.
+      // We rebuild the full text from all results on every event to avoid
+      // double-counting previously finalized segments.
+      let finalText = ''
+      let interimText = ''
 
       for (let i = 0; i < event.results.length; i++) {
         const result = event.results[i]
         if (result.isFinal) {
-          finalTranscript += result[0].transcript
+          finalText += result[0].transcript
         } else {
-          interim += result[0].transcript
+          interimText += result[0].transcript
         }
       }
 
-      // In continuous mode, show combined final + interim as live feedback
-      const liveText = finalTranscript + interim
+      // Store the accumulated final transcript for delivery on stop
+      finalTranscriptRef.current = finalText
+
+      // Show combined final + interim as live feedback
+      const liveText = finalText + interimText
       if (liveText) {
         setInterimTranscript(liveText)
         setStatus('recognizing')
@@ -93,15 +106,9 @@ export function useVoiceRecognition(
       }
     }
 
-    // When stop() is called, onend fires — deliver accumulated result
-    recognition.onspeechend = () => {
-      // Collect all final results
-      const recognition_ = recognitionRef.current
-      if (!recognition_) return
-      // The final result will be delivered via onresult before onend
-    }
-
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      // Ignore 'no-speech' errors during continuous recording — they are harmless
+      if (event.error === 'no-speech') return
       const message = getErrorMessage(event.error)
       setErrorMessage(message)
       setStatus('error')
@@ -120,16 +127,29 @@ export function useVoiceRecognition(
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
       recognitionRef.current.stop()
-      // Deliver whatever we have as final result
+      // Deliver the accumulated final transcript (or interim if no finals yet)
+      const finalText = finalTranscriptRef.current
       setInterimTranscript((current) => {
-        if (current) {
-          setTranscript(current)
-          callbacksRef.current.onResult?.(current)
+        // Prefer accumulated final results; fall back to whatever interim we have
+        const deliverText = finalText || current
+        if (deliverText) {
+          setTranscript(deliverText)
+          callbacksRef.current.onResult?.(deliverText)
         }
         return ''
       })
+      finalTranscriptRef.current = ''
     }
   }, [])
+
+  // Toggle recording: start if idle, stop if active (#70)
+  const toggleRecording = useCallback(() => {
+    if (recognitionRef.current) {
+      stopRecording()
+    } else {
+      startRecording()
+    }
+  }, [startRecording, stopRecording])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -149,6 +169,7 @@ export function useVoiceRecognition(
     errorMessage,
     startRecording,
     stopRecording,
+    toggleRecording,
   }
 }
 

@@ -163,12 +163,30 @@ describe('useVoiceRecognition', () => {
     })
 
     act(() => {
-      mockRecognition.onerror?.({ error: 'no-speech' })
+      mockRecognition.onerror?.({ error: 'not-allowed' })
     })
 
     expect(result.current.status).toBe('error')
-    expect(result.current.errorMessage).toBe('未偵測到語音，請再試一次')
+    expect(result.current.errorMessage).toBe('麥克風權限被拒絕，請在瀏覽器設定中允許麥克風存取')
     expect(onError).toHaveBeenCalled()
+  })
+
+  it('ignores no-speech errors during continuous recording', () => {
+    const onError = vi.fn()
+    const { result } = renderHook(() => useVoiceRecognition({ onError }))
+
+    act(() => {
+      result.current.startRecording()
+      mockRecognition.onstart?.()
+    })
+
+    act(() => {
+      mockRecognition.onerror?.({ error: 'no-speech' })
+    })
+
+    // Should remain in recording state, not error
+    expect(result.current.status).toBe('recording')
+    expect(onError).not.toHaveBeenCalled()
   })
 
   it('returns to idle after recognition ends normally', () => {
@@ -240,5 +258,91 @@ describe('useVoiceRecognition', () => {
     })
 
     expect(result.current.status).toBe('idle')
+  })
+
+  it('toggleRecording starts when idle and stops when active', () => {
+    const onResult = vi.fn()
+    const { result } = renderHook(() => useVoiceRecognition({ onResult }))
+
+    // Toggle on — should start
+    act(() => {
+      result.current.toggleRecording()
+    })
+    expect(mockRecognition.start).toHaveBeenCalledOnce()
+
+    // Simulate onstart
+    act(() => {
+      mockRecognition.onstart?.()
+    })
+    expect(result.current.status).toBe('recording')
+
+    // Simulate some interim result
+    act(() => {
+      mockRecognition.onresult?.({
+        results: [{ 0: { transcript: '測試' }, isFinal: false, length: 1 }],
+        resultIndex: 0,
+      } as unknown)
+    })
+
+    // Toggle off — should stop
+    act(() => {
+      result.current.toggleRecording()
+    })
+    expect(mockRecognition.stop).toHaveBeenCalledOnce()
+  })
+
+  it('does not duplicate final results across multiple onresult events (#69)', () => {
+    const onInterimResult = vi.fn()
+    const onResult = vi.fn()
+    const { result } = renderHook(() =>
+      useVoiceRecognition({ onInterimResult, onResult })
+    )
+
+    act(() => {
+      result.current.startRecording()
+      mockRecognition.onstart?.()
+    })
+
+    // First event: interim "週一的時候"
+    act(() => {
+      mockRecognition.onresult?.({
+        results: [
+          { 0: { transcript: '週一的時候' }, isFinal: false, length: 1 },
+        ],
+        resultIndex: 0,
+      } as unknown)
+    })
+    expect(onInterimResult).toHaveBeenLastCalledWith('週一的時候')
+
+    // Second event: first segment finalized, new interim appears
+    act(() => {
+      mockRecognition.onresult?.({
+        results: [
+          { 0: { transcript: '週一的時候' }, isFinal: true, length: 1 },
+          { 0: { transcript: 'Michael還我錢' }, isFinal: false, length: 1 },
+        ],
+        resultIndex: 0,
+      } as unknown)
+    })
+    // Should NOT be "週一的時候週一的時候Michael還我錢"
+    expect(onInterimResult).toHaveBeenLastCalledWith('週一的時候Michael還我錢')
+
+    // Third event: both finalized
+    act(() => {
+      mockRecognition.onresult?.({
+        results: [
+          { 0: { transcript: '週一的時候' }, isFinal: true, length: 1 },
+          { 0: { transcript: 'Michael還我錢10000塊' }, isFinal: true, length: 1 },
+        ],
+        resultIndex: 0,
+      } as unknown)
+    })
+    expect(onInterimResult).toHaveBeenLastCalledWith('週一的時候Michael還我錢10000塊')
+
+    // Stop recording — deliver final
+    act(() => {
+      result.current.stopRecording()
+    })
+    expect(onResult).toHaveBeenCalledWith('週一的時候Michael還我錢10000塊')
   })
 })

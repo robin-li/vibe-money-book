@@ -29,7 +29,7 @@ function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
     errorTimerRef.current = setTimeout(() => setShowError(false), 3000)
   }, [])
 
-  const { status, errorMessage, startRecording, stopRecording } =
+  const { status, errorMessage, toggleRecording } =
     useVoiceRecognition({
       lang: 'zh-TW',
       onResult: handleVoiceResult,
@@ -65,14 +65,10 @@ function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
     [handleSubmit]
   )
 
-  const handleMicPointerDown = useCallback(() => {
+  const handleMicToggle = useCallback(() => {
     if (disabled) return
-    startRecording()
-  }, [startRecording, disabled])
-
-  const handleMicPointerUp = useCallback(() => {
-    stopRecording()
-  }, [stopRecording])
+    toggleRecording()
+  }, [toggleRecording, disabled])
 
   const getPlaceholder = () => {
     if (isRecording) return '正在聆聽...'
@@ -119,39 +115,54 @@ function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
         {isSupported && (
           <button
             type="button"
-            onPointerDown={handleMicPointerDown}
-            onPointerUp={handleMicPointerUp}
-            onPointerLeave={handleMicPointerUp}
+            onClick={handleMicToggle}
             disabled={disabled}
-            className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors duration-[var(--transition-fast)] select-none touch-none ${
-              isActive ? 'text-primary' : 'text-text-secondary'
+            className={`relative w-9 h-9 flex items-center justify-center rounded-full transition-colors duration-[var(--transition-fast)] select-none ${
+              isActive
+                ? 'bg-danger text-surface'
+                : 'text-text-secondary'
             } disabled:opacity-40`}
-            aria-label="語音輸入"
+            aria-label={isActive ? '停止語音輸入' : '開始語音輸入'}
             aria-pressed={isActive}
           >
-            {/* Pulse rings animation */}
-            {isRecording && (
+            {/* Pulse rings animation when recording */}
+            {isActive && (
               <>
                 <span className="voice-pulse-ring voice-pulse-ring-1" />
                 <span className="voice-pulse-ring voice-pulse-ring-2" />
               </>
             )}
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="relative z-10"
-              aria-hidden="true"
-            >
-              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-              <line x1="12" x2="12" y1="19" y2="22" />
-            </svg>
+            {isActive ? (
+              /* Stop icon (square) when recording */
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="relative z-10"
+                aria-hidden="true"
+              >
+                <rect x="4" y="4" width="16" height="16" rx="2" />
+              </svg>
+            ) : (
+              /* Mic icon when idle */
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="relative z-10"
+                aria-hidden="true"
+              >
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" x2="12" y1="19" y2="22" />
+              </svg>
+            )}
           </button>
         )}
 

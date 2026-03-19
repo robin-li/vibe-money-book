@@ -28,7 +28,7 @@ describe('VoiceInput', () => {
     }
 
     render(<VoiceInput onSubmit={mockOnSubmit} />)
-    expect(screen.getByLabelText('語音輸入')).toBeInTheDocument()
+    expect(screen.getByLabelText('開始語音輸入')).toBeInTheDocument()
   })
 
   it('hides mic button when SpeechRecognition is not supported', () => {
@@ -36,7 +36,8 @@ describe('VoiceInput', () => {
     delete (window as unknown as Record<string, unknown>).webkitSpeechRecognition
 
     render(<VoiceInput onSubmit={mockOnSubmit} />)
-    expect(screen.queryByLabelText('語音輸入')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('開始語音輸入')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('停止語音輸入')).not.toBeInTheDocument()
   })
 
   it('calls onSubmit when send button is clicked with text', async () => {
