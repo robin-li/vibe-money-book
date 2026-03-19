@@ -45,9 +45,24 @@ function SettingsPage() {
   )
   const [budgetEditing, setBudgetEditing] = useState(false)
 
-  // Local state for API key
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('llm_api_key') ?? '')
+  // Local state for API key — per engine
+  const [apiKeys, setApiKeys] = useState<Record<string, string>>(() => {
+    try {
+      const stored = localStorage.getItem('llm_api_keys')
+      if (stored) return JSON.parse(stored)
+    } catch { /* ignore */ }
+    // Migrate legacy single key
+    const legacy = localStorage.getItem('llm_api_key')
+    if (legacy) {
+      const migrated = { gemini: legacy, openai: '' }
+      localStorage.setItem('llm_api_keys', JSON.stringify(migrated))
+      localStorage.removeItem('llm_api_key')
+      return migrated
+    }
+    return { gemini: '', openai: '' }
+  })
   const [showApiKey, setShowApiKey] = useState(false)
+  const currentApiKey = apiKeys[aiEngine] ?? ''
 
   // Load profile on mount and sync budget input
   useEffect(() => {
@@ -70,14 +85,14 @@ function SettingsPage() {
     setBudgetEditing(false)
   }, [budgetInput, updateBudget, monthlyBudget])
 
-  const handleApiKeySave = useCallback(() => {
-    localStorage.setItem('llm_api_key', apiKey)
-  }, [apiKey])
+  const saveApiKeys = useCallback((keys: Record<string, string>) => {
+    localStorage.setItem('llm_api_keys', JSON.stringify(keys))
+  }, [])
 
   const handleValidateKey = useCallback(async () => {
-    handleApiKeySave()
-    await validateApiKey(apiKey)
-  }, [apiKey, handleApiKeySave, validateApiKey])
+    saveApiKeys(apiKeys)
+    await validateApiKey(currentApiKey)
+  }, [currentApiKey, apiKeys, saveApiKeys, validateApiKey])
 
   const handleLogout = useCallback(() => {
     logout()
@@ -227,7 +242,7 @@ function SettingsPage() {
             return (
               <button
                 key={opt.value}
-                onClick={() => updateAIEngine(opt.value)}
+                onClick={() => { updateAIEngine(opt.value); useSettingsStore.setState({ keyValidationStatus: 'idle' }) }}
                 disabled={saving}
                 className={`flex-1 h-20 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all ${
                   selected
@@ -245,24 +260,24 @@ function SettingsPage() {
           })}
         </div>
 
-        {/* API Key 輸入 */}
+        {/* API Key 輸入 — 依引擎分開 */}
         <div className="mt-md">
           <label className="text-caption text-text-secondary mb-sm block">
-            API Key
+            {ENGINE_OPTIONS.find((e) => e.value === aiEngine)?.label} API Key
           </label>
           <div className="flex items-center gap-sm">
             <div className="relative flex-1">
               <input
                 type={showApiKey ? 'text' : 'password'}
-                value={apiKey}
+                value={currentApiKey}
                 onChange={(e) => {
-                  setApiKey(e.target.value)
-                  // Auto-save to localStorage on change
-                  localStorage.setItem('llm_api_key', e.target.value)
+                  const updated = { ...apiKeys, [aiEngine]: e.target.value }
+                  setApiKeys(updated)
+                  saveApiKeys(updated)
                 }}
-                placeholder="輸入 API Key"
+                placeholder={`輸入 ${ENGINE_OPTIONS.find((e) => e.value === aiEngine)?.label} API Key`}
                 className="w-full h-12 rounded-md border border-border bg-bg px-lg pr-12 text-body text-text-primary focus:outline-none focus:border-primary"
-                aria-label="API Key 輸入"
+                aria-label={`${aiEngine} API Key 輸入`}
               />
               <button
                 type="button"
@@ -275,7 +290,7 @@ function SettingsPage() {
             </div>
             <button
               onClick={handleValidateKey}
-              disabled={!apiKey || keyValidationStatus === 'validating'}
+              disabled={!currentApiKey || keyValidationStatus === 'validating'}
               className="h-12 px-lg rounded-md bg-primary text-white text-caption font-semibold disabled:opacity-50 transition-all hover:bg-primary-dark"
               aria-label="驗證 API Key"
             >

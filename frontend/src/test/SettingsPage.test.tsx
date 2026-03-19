@@ -156,27 +156,26 @@ describe('SettingsPage', () => {
     it('stores API key only in localStorage, not on server', async () => {
       renderSettings()
 
-      const input = screen.getByLabelText('API Key 輸入')
+      const input = screen.getByLabelText('gemini API Key 輸入')
       await userEvent.type(input, 'test-api-key-123')
 
-      expect(localStorage.getItem('llm_api_key')).toBe('test-api-key-123')
+      const stored = JSON.parse(localStorage.getItem('llm_api_keys') ?? '{}')
+      expect(stored.gemini).toBe('test-api-key-123')
     })
 
     it('loads existing API key from localStorage', () => {
-      localStorage.setItem('llm_api_key', 'existing-key')
-      // Re-render picks up the initial state
+      localStorage.setItem('llm_api_keys', JSON.stringify({ gemini: 'existing-key', openai: '' }))
       useSettingsStore.setState({ loading: false })
       renderSettings()
 
-      const input = screen.getByLabelText('API Key 輸入') as HTMLInputElement
-      // Input type is password by default
+      const input = screen.getByLabelText('gemini API Key 輸入') as HTMLInputElement
       expect(input.type).toBe('password')
     })
 
     it('toggles visibility of API key', async () => {
       renderSettings()
 
-      const input = screen.getByLabelText('API Key 輸入') as HTMLInputElement
+      const input = screen.getByLabelText('gemini API Key 輸入') as HTMLInputElement
       expect(input.type).toBe('password')
 
       await userEvent.click(screen.getByLabelText('顯示 API Key'))
@@ -191,7 +190,7 @@ describe('SettingsPage', () => {
       useSettingsStore.setState({ validateApiKey })
       renderSettings()
 
-      const input = screen.getByLabelText('API Key 輸入')
+      const input = screen.getByLabelText('gemini API Key 輸入')
       await userEvent.type(input, 'my-key')
 
       await userEvent.click(screen.getByLabelText('驗證 API Key'))
@@ -264,8 +263,9 @@ describe('settingsStore', () => {
     // The store should not have an apiKey field
     expect('apiKey' in store).toBe(false)
 
-    // Setting in localStorage should work
-    localStorage.setItem('llm_api_key', 'secret-key')
-    expect(localStorage.getItem('llm_api_key')).toBe('secret-key')
+    // Setting in localStorage should work (per-engine format)
+    const keys = { gemini: 'secret-key', openai: 'other-key' }
+    localStorage.setItem('llm_api_keys', JSON.stringify(keys))
+    expect(JSON.parse(localStorage.getItem('llm_api_keys')!).gemini).toBe('secret-key')
   })
 })

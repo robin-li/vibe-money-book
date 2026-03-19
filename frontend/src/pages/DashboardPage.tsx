@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAppStore } from '../stores/index'
+import { useSettingsStore } from '../stores/settingsStore'
 import { useDashboardStore } from '../stores/dashboardStore'
 import VoiceInput from '../components/VoiceInput'
 import BudgetCard from '../components/BudgetCard'
@@ -22,7 +22,9 @@ const DEFAULT_CATEGORIES = [
 
 function DashboardPage() {
   const navigate = useNavigate()
-  const settings = useAppStore((s) => s.settings)
+  const persona = useSettingsStore((s) => s.persona)
+  const aiEngine = useSettingsStore((s) => s.aiEngine)
+  const fetchProfile = useSettingsStore((s) => s.fetchProfile)
 
   const {
     status,
@@ -41,9 +43,10 @@ function DashboardPage() {
   } = useDashboardStore()
 
   useEffect(() => {
+    fetchProfile()
     fetchBudgetSummary()
     fetchRecentTransactions()
-  }, [fetchBudgetSummary, fetchRecentTransactions])
+  }, [fetchProfile, fetchBudgetSummary, fetchRecentTransactions])
 
   const handleSubmit = useCallback(
     (text: string) => {
@@ -164,7 +167,8 @@ function DashboardPage() {
           feedbackText={
             isParsing ? 'AI 正在分析...' : feedbackText
           }
-          persona={settings.persona}
+          persona={persona}
+          aiEngine={aiEngine}
         />
 
         {/* Error toast */}
@@ -202,7 +206,7 @@ function DashboardPage() {
         {showNewCategoryDialog && parsedResult.suggestedCategory && (
           <NewCategoryDialog
             suggestedCategory={parsedResult.suggestedCategory}
-            persona={settings.persona}
+            persona={persona}
             existingCategories={DEFAULT_CATEGORIES}
             onConfirm={handleNewCategoryConfirm}
             onSelectExisting={handleSelectExistingCategory}

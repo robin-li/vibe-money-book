@@ -1,6 +1,21 @@
 import { create } from 'zustand'
 import api from '../lib/api'
 import type { Transaction } from '../stores/index'
+import { useSettingsStore } from './settingsStore'
+
+/** 讀取當前引擎對應的 API Key */
+function getActiveApiKey(): string {
+  const engine = useSettingsStore.getState().aiEngine
+  try {
+    const stored = localStorage.getItem('llm_api_keys')
+    if (stored) {
+      const keys = JSON.parse(stored)
+      return keys[engine] ?? ''
+    }
+  } catch { /* ignore */ }
+  // Fallback to legacy key
+  return localStorage.getItem('llm_api_key') ?? ''
+}
 
 export interface ParsedResult {
   amount: number | null
@@ -84,12 +99,12 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   recentTransactions: [],
   errorMessage: '',
   lastFeedbackText: '',
-  lastPersona: 'gentle',
+  lastPersona: useSettingsStore.getState().persona || 'gentle',
 
   parseInput: async (rawText: string) => {
     set({ status: 'parsing', errorMessage: '' })
     try {
-      const llmApiKey = localStorage.getItem('llm_api_key') ?? ''
+      const llmApiKey = getActiveApiKey()
       const res = await api.post(
         '/ai/parse',
         { raw_text: rawText },
