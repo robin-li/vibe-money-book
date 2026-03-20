@@ -265,14 +265,14 @@ function TransactionItem({
                     data-testid="edit-date"
                   />
                 </div>
-                <div className="flex items-center gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0">備註</span>
-                  <input
-                    type="text"
+                <div className="flex items-start gap-md">
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0 mt-xs">備註</span>
+                  <textarea
                     value={editForm.note}
                     onChange={(e) => setEditForm((f) => ({ ...f, note: e.target.value }))}
-                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none"
+                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none resize-none"
                     placeholder="備註"
+                    rows={2}
                     data-testid="edit-note"
                   />
                 </div>
