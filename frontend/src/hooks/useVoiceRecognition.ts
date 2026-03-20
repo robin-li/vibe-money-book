@@ -1,5 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 
+// #99: 偵測 Android 平台，用於語音辨識重複 workaround
+const isAndroid =
+  typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent)
+
 export type VoiceStatus = 'idle' | 'recording' | 'recognizing' | 'error'
 
 interface UseVoiceRecognitionOptions {
@@ -52,6 +56,10 @@ export function useVoiceRecognition(
   const latestInterimRef = useRef('')
   const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const stopRecordingRef = useRef<() => void>(() => {})
+  // #99: 追蹤錄音狀態，供 Android onend 自動重啟判斷
+  const isRecordingRef = useRef(false)
+  // #99: Android 累積 transcript（跨 recognition session）
+  const accumulatedTranscriptRef = useRef('')
 
   // Keep callbacks ref updated
   useEffect(() => {
@@ -71,11 +79,16 @@ export function useVoiceRecognition(
     // Reset latest transcript cache
     latestFinalRef.current = ''
     latestInterimRef.current = ''
+    // #99: 重置 Android 累積 transcript
+    accumulatedTranscriptRef.current = ''
+    isRecordingRef.current = true
 
     const recognition = new SpeechRecognitionClass()
     recognition.lang = lang
     recognition.interimResults = true
-    recognition.continuous = true
+    // #99: Android Chrome continuous:true 會導致重複詞句（Chromium 已知 Bug）
+    // 改用 continuous:false，停頓後自動重啟
+    recognition.continuous = !isAndroid
     recognition.maxAlternatives = 1
 
     recognition.onstart = () => {
@@ -110,13 +123,18 @@ export function useVoiceRecognition(
         }
       }
 
+      // #99: Android 模式下，加上先前 session 累積的 transcript
+      const fullFinalTranscript = isAndroid
+        ? accumulatedTranscriptRef.current + finalTranscript
+        : finalTranscript
+
       // Cache computed values for synchronous read in stopRecording.
       // These refs are OVERWRITTEN (not appended) on every call.
-      latestFinalRef.current = finalTranscript
+      latestFinalRef.current = fullFinalTranscript
       latestInterimRef.current = interimTranscript
 
       // Display combined text as live feedback
-      const displayText = finalTranscript + interimTranscript
+      const displayText = fullFinalTranscript + interimTranscript
       if (displayText) {
         setInterimTranscript(displayText)
         setStatus('recognizing')
@@ -142,6 +160,27 @@ export function useVoiceRecognition(
     }
 
     recognition.onend = () => {
+      // #99: Android continuous:false — 停頓觸發 onend，若仍在錄音狀態則自動重啟
+      if (isAndroid && isRecordingRef.current) {
+        // 保存當前 session 的 final transcript 至累積區
+        accumulatedTranscriptRef.current = latestFinalRef.current
+        // 重啟前重置 silence timer（#94）
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+        if (silenceTimeout > 0) {
+          silenceTimerRef.current = setTimeout(() => {
+            stopRecordingRef.current()
+          }, silenceTimeout)
+        }
+        try {
+          recognition.start()
+        } catch {
+          // 若重啟失敗（如瀏覽器拒絕），回退至 idle
+          isRecordingRef.current = false
+          setStatus('idle')
+          recognitionRef.current = null
+        }
+        return
+      }
       setStatus((prev) => (prev === 'error' ? 'error' : 'idle'))
       recognitionRef.current = null
     }
@@ -151,6 +190,8 @@ export function useVoiceRecognition(
   }, [lang, silenceTimeout])
 
   const stopRecording = useCallback(() => {
+    // #99: 標記停止錄音，防止 Android onend 自動重啟
+    isRecordingRef.current = false
     // #94: Clear silence timer
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current)
@@ -169,6 +210,8 @@ export function useVoiceRecognition(
       setInterimTranscript('')
       latestFinalRef.current = ''
       latestInterimRef.current = ''
+      // #99: 清除 Android 累積 transcript
+      accumulatedTranscriptRef.current = ''
     }
   }, [])
 
@@ -189,6 +232,7 @@ export function useVoiceRecognition(
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      isRecordingRef.current = false
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
       if (recognitionRef.current) {
         recognitionRef.current.abort()
