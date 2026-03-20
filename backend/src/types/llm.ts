@@ -40,6 +40,8 @@ export interface DataExtractorInput {
   categories: string[];
   categoriesWithType?: CategoryWithType[];
   currentDate: string;
+  currentDayOfWeek: string;
+  aiInstructions?: string | null;
 }
 
 export interface RecentTransaction {
