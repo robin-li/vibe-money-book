@@ -39,7 +39,7 @@ export async function aiParse(
 
     const response: ApiResponse<typeof result> = {
       code: 200,
-      message: '解析成功',
+      message: result.intent === 'chat' ? '對話回覆成功' : '解析成功',
       data: result,
       timestamp: new Date().toISOString(),
     };

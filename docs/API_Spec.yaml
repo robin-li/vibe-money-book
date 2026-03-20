@@ -249,8 +249,12 @@ paths:
   /ai/parse:
     post:
       tags: [AI]
-      summary: 解析自然語言輸入
-      description: 接收使用者的自然語言文字，呼叫 LLM 資料萃取引擎與人設回饋引擎，回傳結構化結果。不會自動建立交易記錄。後端根據使用者的 ai_engine 偏好選擇對應的 LLM 引擎（PRD-F-013）。
+      summary: 解析自然語言輸入（含意圖判斷）
+      description: |
+        接收使用者的自然語言文字，先判斷輸入意圖（記帳 / 對話），再依意圖分流處理：
+        - **transaction**：呼叫 LLM 資料萃取引擎與人設回饋引擎，回傳結構化結果
+        - **chat**：由 AI 教練依人設風格直接回覆，不產生帳目卡片
+        後端根據使用者的 ai_engine 偏好選擇對應的 LLM 引擎（PRD-F-013）。
       operationId: aiParse
       security:
         - BearerAuth: []
@@ -276,27 +280,53 @@ paths:
                   example: 午餐吃拉麵 180 元
       responses:
         '200':
-          description: 解析成功
+          description: 解析成功（回應格式依 intent 不同）
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                    example: 200
-                  data:
+                oneOf:
+                  - title: TransactionResult
                     type: object
                     properties:
-                      parsed:
-                        $ref: '#/components/schemas/ParsedTransaction'
-                      feedback:
-                        $ref: '#/components/schemas/AIFeedbackContent'
-                      budget_context:
-                        $ref: '#/components/schemas/BudgetContext'
-                  timestamp:
-                    type: string
-                    format: date-time
+                      code:
+                        type: integer
+                        example: 200
+                      data:
+                        type: object
+                        required: [intent, parsed, feedback, budget_context]
+                        properties:
+                          intent:
+                            type: string
+                            enum: [transaction]
+                          parsed:
+                            $ref: '#/components/schemas/ParsedTransaction'
+                          feedback:
+                            $ref: '#/components/schemas/AIFeedbackContent'
+                          budget_context:
+                            $ref: '#/components/schemas/BudgetContext'
+                      timestamp:
+                        type: string
+                        format: date-time
+                  - title: ChatResult
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 200
+                      data:
+                        type: object
+                        required: [intent, reply, feedback]
+                        properties:
+                          intent:
+                            type: string
+                            enum: [chat]
+                          reply:
+                            $ref: '#/components/schemas/AIFeedbackContent'
+                          feedback:
+                            type: "null"
+                      timestamp:
+                        type: string
+                        format: date-time
         '400':
           $ref: '#/components/responses/BadRequest'
         '403':

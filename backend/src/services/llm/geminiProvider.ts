@@ -85,6 +85,10 @@ export class GeminiProvider implements LLMProvider {
     return this.parseJSON<AIFeedbackContent>(text);
   }
 
+  async generateText(systemPrompt: string, userPrompt: string, apiKey: string): Promise<string> {
+    return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024, 'application/json');
+  }
+
   private parseJSON<T>(text: string): T {
     let cleaned = text.trim();
 
