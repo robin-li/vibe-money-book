@@ -54,6 +54,7 @@ export async function parseTransaction(
   // 0. Intent detection
   const intent = await detectIntent(rawText, apiKey, provider);
 
+
   // 1. If chat intent → generate chat reply and return
   if (intent === 'chat') {
     const financialContext = await getFinancialContext(userId, user.monthlyBudget);
@@ -78,18 +79,16 @@ export async function parseTransaction(
     type: (cb.type || 'expense') as 'income' | 'expense',
   }));
   const now = new Date();
-  const dateTimeOptions: Intl.DateTimeFormatOptions = {
-    timeZone: 'Asia/Taipei',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    weekday: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  };
-  const currentDateTime = now.toLocaleString('zh-TW', dateTimeOptions) + ' (GMT+8)';
+  const taipeiDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+  const year = taipeiDate.getFullYear();
+  const month = taipeiDate.getMonth() + 1;
+  const day = taipeiDate.getDate();
+  const dayNames = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  const weekday = dayNames[taipeiDate.getDay()];
+  const hh = String(taipeiDate.getHours()).padStart(2, '0');
+  const mm = String(taipeiDate.getMinutes()).padStart(2, '0');
+  const ss = String(taipeiDate.getSeconds()).padStart(2, '0');
+  const currentDateTime = `${year}年${month}月${day}日 ${weekday} ${hh}:${mm}:${ss} (GMT+8)`;
 
   // 2a. Data extraction
   const extractorPrompt = buildDataExtractorPrompt({
@@ -100,7 +99,9 @@ export async function parseTransaction(
     aiInstructions: user.aiInstructions,
   });
 
+
   const parsed = await provider.extractData(extractorPrompt, apiKey);
+
 
   // 2b. Get budget context
   const monthlyBudget = Number(user.monthlyBudget);
@@ -200,7 +201,8 @@ async function getFinancialContext(userId: string, userMonthlyBudget: unknown): 
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  // Query current month transactions and recent 10 transactions in parallel
+  // Query current month transactions (for budget calc) and recent 1 month transactions (for context)
+  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
   const [monthTransactions, recentTransactions] = await Promise.all([
     prisma.transaction.findMany({
       where: {
@@ -212,15 +214,18 @@ async function getFinancialContext(userId: string, userMonthlyBudget: unknown): 
       },
     }),
     prisma.transaction.findMany({
-      where: { userId },
+      where: {
+        userId,
+        transactionDate: { gte: oneMonthAgo },
+      },
       orderBy: { transactionDate: 'desc' },
-      take: 10,
       select: {
         transactionDate: true,
         category: true,
         type: true,
         amount: true,
         merchant: true,
+        note: true,
       },
     }),
   ]);
@@ -252,6 +257,7 @@ async function getFinancialContext(userId: string, userMonthlyBudget: unknown): 
       type: t.type as 'income' | 'expense',
       amount: Number(t.amount),
       merchant: t.merchant,
+      note: t.note || undefined,
     })),
   };
 }
@@ -270,6 +276,7 @@ async function generateChatReply(
     ? `\n\n【重要】使用者自訂指示（你必須優先遵從以下指示來調整回覆風格與內容）：\n${aiInstructions}`
     : '';
   const combinedPrompt = `${systemPrompt}${aiInstructionsBlock}\n---SYSTEM---\n${userPrompt}`;
+
 
   return provider.generateFeedback(combinedPrompt, apiKey);
 }

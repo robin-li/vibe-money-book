@@ -243,7 +243,13 @@ describe('NewCategoryDialog', () => {
     suggestedCategory: '寵物',
     note: null,
     persona: 'gentle' as const,
-    existingCategories: ['food', 'transport', 'other'],
+    transactionType: 'expense' as const,
+    categoryInfoList: [
+      { category: 'food', type: 'expense' as const },
+      { category: 'transport', type: 'expense' as const },
+      { category: 'other', type: 'expense' as const },
+      { category: 'salary', type: 'income' as const },
+    ],
     onConfirm: vi.fn(),
     onSelectExisting: vi.fn(),
     onCancel: vi.fn(),
@@ -276,6 +282,6 @@ describe('NewCategoryDialog', () => {
     const user = userEvent.setup()
     render(<NewCategoryDialog {...defaultProps} />)
     await user.click(screen.getByText('選現有'))
-    expect(screen.getByText('選擇類別')).toBeInTheDocument()
+    expect(screen.getByText('選擇支出類別')).toBeInTheDocument()
   })
 })

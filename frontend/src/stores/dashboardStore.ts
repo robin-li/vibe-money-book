@@ -176,17 +176,32 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
       // Transaction intent: existing flow
       const { parsed, feedback, budget_context: bc } = data
+
+      // If LLM suggests a "new" category that already exists, use it directly
+      let isNewCategory = parsed.is_new_category ?? false
+      let category = parsed.category
+      const suggested = parsed.suggested_category
+      if (isNewCategory && suggested) {
+        const existing = get().categoryInfoList.find(
+          (c) => c.category === suggested || c.category.toLowerCase() === suggested.toLowerCase()
+        )
+        if (existing) {
+          category = existing.category
+          isNewCategory = false
+        }
+      }
+
       set({
         status: 'parsed',
         parsedResult: {
           type: parsed.type ?? 'expense',
           amount: parsed.amount,
-          category: parsed.category,
+          category,
           merchant: parsed.merchant,
           date: parsed.date,
           confidence: parsed.confidence,
-          isNewCategory: parsed.is_new_category ?? false,
-          suggestedCategory: parsed.suggested_category ?? null,
+          isNewCategory,
+          suggestedCategory: isNewCategory ? suggested : null,
           note: parsed.note ?? null,
         },
         aiFeedback: feedback
@@ -268,6 +283,12 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       await api.post('/budget/categories', { category, type: type || 'expense' })
       await get().fetchCategories()
     } catch (err: unknown) {
+      const status = (err as { response?: { status?: number } })?.response?.status
+      // 409 = category already exists, treat as success
+      if (status === 409) {
+        await get().fetchCategories()
+        return
+      }
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? '新增類別失敗'

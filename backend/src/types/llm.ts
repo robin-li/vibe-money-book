@@ -11,6 +11,7 @@ export interface ParsedTransaction {
   merchant: string;
   date: string;
   confidence: number;
+  catalogtype_confidence: number;
   is_new_category: boolean;
   suggested_category: string | null;
   note: string | null;
@@ -49,6 +50,7 @@ export interface RecentTransaction {
   type: 'income' | 'expense';
   amount: number;
   merchant: string | null;
+  note?: string;
 }
 
 export interface FinancialContext {
