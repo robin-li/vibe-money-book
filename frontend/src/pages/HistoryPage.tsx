@@ -139,25 +139,33 @@ function HistoryPage() {
       {/* Filter section */}
       <div className="space-y-sm mb-xl" data-testid="filter-section">
         <div className="flex gap-sm items-center flex-wrap">
-          <input
-            type="date"
-            value={filters.startDate}
-            onChange={handleStartDateChange}
-            placeholder="開始日期"
-            className="px-lg py-sm bg-bg rounded-xl text-caption text-text-secondary border-0 outline-none"
-            aria-label="開始日期"
-            data-testid="start-date-filter"
-          />
+          <div className="relative">
+            <input
+              type="date"
+              value={filters.startDate}
+              onChange={handleStartDateChange}
+              className={`px-lg py-sm bg-bg rounded-xl text-caption border-0 outline-none ${filters.startDate ? 'text-text-secondary' : 'text-transparent'}`}
+              aria-label="開始日期"
+              data-testid="start-date-filter"
+            />
+            {!filters.startDate && (
+              <span className="absolute inset-0 flex items-center px-lg text-caption text-text-tertiary pointer-events-none">開始日期</span>
+            )}
+          </div>
           <span className="text-text-tertiary text-caption">至</span>
-          <input
-            type="date"
-            value={filters.endDate}
-            onChange={handleEndDateChange}
-            placeholder="結束日期"
-            className="px-lg py-sm bg-bg rounded-xl text-caption text-text-secondary border-0 outline-none"
-            aria-label="結束日期"
-            data-testid="end-date-filter"
-          />
+          <div className="relative">
+            <input
+              type="date"
+              value={filters.endDate}
+              onChange={handleEndDateChange}
+              className={`px-lg py-sm bg-bg rounded-xl text-caption border-0 outline-none ${filters.endDate ? 'text-text-secondary' : 'text-transparent'}`}
+              aria-label="結束日期"
+              data-testid="end-date-filter"
+            />
+            {!filters.endDate && (
+              <span className="absolute inset-0 flex items-center px-lg text-caption text-text-tertiary pointer-events-none">結束日期</span>
+            )}
+          </div>
 
           <select
             value={filters.category}
