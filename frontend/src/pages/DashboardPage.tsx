@@ -73,32 +73,27 @@ function DashboardPage() {
   const handleNewCategoryConfirm = useCallback(
     async (categoryName: string) => {
       try {
-        await createCategory(categoryName)
+        const categoryType = parsedResult?.type ?? 'expense'
+        await createCategory(categoryName, categoryType)
+        // After creating the category, update parsedResult to use the new category
+        // and stay on the edit card (don't auto-confirm)
         if (parsedResult) {
-          await confirmTransaction({
-            type: parsedResult.type ?? 'expense',
-            amount: parsedResult.amount ?? 0,
-            category: categoryName,
-            merchant: parsedResult.merchant,
-            date: parsedResult.date,
-            rawText: lastRawText || parsedResult.merchant,
-            note: parsedResult.note,
-            feedback: aiFeedback ?? undefined,
+          useDashboardStore.setState({
+            parsedResult: {
+              ...parsedResult,
+              category: categoryName,
+              isNewCategory: false,
+              suggestedCategory: null,
+            },
           })
-          fetchBudgetSummary()
         }
+        // Refresh category list
+        fetchCategories()
       } catch {
         // Error handled by store
       }
     },
-    [
-      createCategory,
-      confirmTransaction,
-      parsedResult,
-      lastRawText,
-      aiFeedback,
-      fetchBudgetSummary,
-    ]
+    [createCategory, parsedResult, fetchCategories]
   )
 
   const handleSelectExistingCategory = useCallback(
@@ -212,7 +207,8 @@ function DashboardPage() {
           <NewCategoryDialog
             suggestedCategory={parsedResult.suggestedCategory}
             persona={persona}
-            existingCategories={categories}
+            transactionType={parsedResult.type ?? 'expense'}
+            categoryInfoList={categoryInfoList}
             onConfirm={handleNewCategoryConfirm}
             onSelectExisting={handleSelectExistingCategory}
           />

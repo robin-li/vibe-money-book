@@ -1,10 +1,17 @@
 import { useState } from 'react'
 import type { Persona } from '../stores/index'
+import { getCategoryName } from '../lib/categoryUtils'
+
+interface CategoryInfo {
+  category: string
+  type: 'income' | 'expense'
+}
 
 interface NewCategoryDialogProps {
   suggestedCategory: string
   persona: Persona
-  existingCategories: string[]
+  transactionType: 'income' | 'expense'
+  categoryInfoList: CategoryInfo[]
   onConfirm: (categoryName: string) => void
   onSelectExisting: (category: string) => void
 }
@@ -15,16 +22,6 @@ const personaConfig: Record<Persona, { emoji: string }> = {
   guilt_trip: { emoji: '🥺' },
 }
 
-const categoryNames: Record<string, string> = {
-  entertainment: '娛樂',
-  food: '飲食',
-  daily: '日用品',
-  education: '教育',
-  medical: '醫療',
-  transport: '交通',
-  other: '其它',
-}
-
 const categoryIcons: Record<string, string> = {
   entertainment: '🎬',
   food: '🍽️',
@@ -33,6 +30,13 @@ const categoryIcons: Record<string, string> = {
   medical: '🏥',
   transport: '🚌',
   other: '📦',
+  adjustment_expense: '📋',
+  adjustment_income: '📋',
+  salary: '💰',
+  investment: '📈',
+  pension: '🏦',
+  insurance: '🛡️',
+  other_income: '📦',
 }
 
 type DialogMode = 'main' | 'rename' | 'select'
@@ -40,13 +44,17 @@ type DialogMode = 'main' | 'rename' | 'select'
 function NewCategoryDialog({
   suggestedCategory,
   persona,
-  existingCategories,
+  transactionType,
+  categoryInfoList,
   onConfirm,
   onSelectExisting,
 }: NewCategoryDialogProps) {
   const [mode, setMode] = useState<DialogMode>('main')
   const [customName, setCustomName] = useState(suggestedCategory)
   const config = personaConfig[persona]
+
+  // Filter categories by transaction type
+  const filteredCategories = categoryInfoList.filter((c) => c.type === transactionType)
 
   const isNameValid = customName.trim().length >= 2 && customName.trim().length <= 50
 
@@ -106,18 +114,18 @@ function NewCategoryDialog({
           aria-label="選擇類別"
         >
           <h3 className="text-title font-semibold text-text-primary mb-md">
-            選擇類別
+            選擇{transactionType === 'income' ? '收入' : '支出'}類別
           </h3>
           <div className="flex flex-wrap gap-sm mb-lg">
-            {existingCategories.map((cat) => (
+            {filteredCategories.map((c) => (
               <button
-                key={cat}
+                key={c.category}
                 type="button"
-                onClick={() => onSelectExisting(cat)}
+                onClick={() => onSelectExisting(c.category)}
                 className="px-lg py-sm rounded-sm bg-bg text-body text-text-primary hover:bg-border transition-colors"
               >
-                {categoryIcons[cat] ?? '📦'}{' '}
-                {categoryNames[cat] ?? cat}
+                {categoryIcons[c.category] ?? '📦'}{' '}
+                {getCategoryName(c.category)}
               </button>
             ))}
           </div>

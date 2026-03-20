@@ -43,11 +43,12 @@ function buildFinancialContextBlock(ctx: FinancialContext): string {
 - 預算剩餘：${ctx.remaining.toLocaleString('zh-TW')} 元`;
 
   if (ctx.recent_transactions.length > 0) {
-    block += '\n\n## 近期帳目';
+    block += '\n\n## 近一個月帳目';
     ctx.recent_transactions.forEach((t, i) => {
       const sign = t.type === 'income' ? '+' : '-';
       const merchant = t.merchant || '';
-      block += `\n${i + 1}. ${t.date} ${t.category} ${sign}${t.amount.toLocaleString('zh-TW')} ${merchant}`;
+      const note = t.note ? ` (${t.note})` : '';
+      block += `\n${i + 1}. ${t.date} ${t.category} ${sign}${t.amount.toLocaleString('zh-TW')} ${merchant}${note}`;
     });
   }
 
