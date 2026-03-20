@@ -71,21 +71,25 @@ export async function parseTransaction(
     category: cb.category,
     type: (cb.type || 'expense') as 'income' | 'expense',
   }));
-  const currentDate = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const currentDate = now.toISOString().split('T')[0];
+  const dayNames = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  const currentDayOfWeek = dayNames[now.getDay()];
 
-  // 2a. Data extraction (不注入 AI 指示，data extractor 只做結構化提取)
+  // 2a. Data extraction
   const extractorPrompt = buildDataExtractorPrompt({
     rawText,
     categories,
     categoriesWithType,
     currentDate,
+    currentDayOfWeek,
+    aiInstructions: user.aiInstructions,
   });
 
   const parsed = await provider.extractData(extractorPrompt, apiKey);
 
   // 2b. Get budget context
   const monthlyBudget = Number(user.monthlyBudget);
-  const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
