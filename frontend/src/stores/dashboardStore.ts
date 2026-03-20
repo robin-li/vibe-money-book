@@ -102,7 +102,7 @@ interface DashboardState {
   }) => Promise<void>
   createCategory: (category: string, type?: 'income' | 'expense') => Promise<void>
   deleteCategory: (category: string) => Promise<void>
-  updateTransaction: (id: string, data: { amount: number; category: string; merchant: string; date: string; note?: string }) => Promise<void>
+  updateTransaction: (id: string, data: { type?: 'income' | 'expense'; amount: number; category: string; merchant: string; date: string; note?: string }) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
   fetchBudgetSummary: () => Promise<void>
   fetchRecentTransactions: () => Promise<void>
@@ -338,6 +338,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   updateTransaction: async (id: string, data) => {
     try {
       await api.put(`/transactions/${id}`, {
+        ...(data.type ? { type: data.type } : {}),
         amount: data.amount,
         category: data.category,
         merchant: data.merchant,
@@ -347,7 +348,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       set((state) => ({
         recentTransactions: state.recentTransactions.map((tx) =>
           tx.id === id
-            ? { ...tx, amount: data.amount, category: data.category, merchant: data.merchant, transactionDate: data.date, note: data.note }
+            ? { ...tx, ...(data.type ? { type: data.type } : {}), amount: data.amount, category: data.category, merchant: data.merchant, transactionDate: data.date, note: data.note }
             : tx
         ),
       }))

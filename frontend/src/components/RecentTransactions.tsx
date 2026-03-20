@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { Transaction } from '../stores/index'
 import { useDashboardStore } from '../stores/dashboardStore'
-import { getCategoryName, getCategoryTypeColorClass } from '../lib/categoryUtils'
+import { getCategoryName, getCategoryTypeColorClass, CATEGORY_NAMES, INCOME_CATEGORIES } from '../lib/categoryUtils'
 
 interface RecentTransactionsProps {
   transactions: Transaction[]
@@ -38,13 +38,15 @@ function formatDate(dateStr: string): string {
   return dateStr.split('T')[0]
 }
 
-const defaultCategories = ['entertainment', 'food', 'daily', 'education', 'medical', 'transport', 'other']
+const EXPENSE_CATEGORIES = Object.keys(CATEGORY_NAMES).filter((c) => !INCOME_CATEGORIES.has(c))
+const INCOME_CATEGORY_LIST = Object.keys(CATEGORY_NAMES).filter((c) => INCOME_CATEGORIES.has(c))
 
-function RecentTransactions({ transactions, categories = defaultCategories }: RecentTransactionsProps) {
+
+function RecentTransactions({ transactions }: RecentTransactionsProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
-  const [editForm, setEditForm] = useState({ amount: '', category: '', merchant: '', date: '', note: '' })
+  const [editForm, setEditForm] = useState({ type: 'expense' as 'income' | 'expense', amount: '', category: '', merchant: '', date: '', note: '' })
 
   const updateTransaction = useDashboardStore((s) => s.updateTransaction)
   const deleteTransaction = useDashboardStore((s) => s.deleteTransaction)
@@ -59,6 +61,7 @@ function RecentTransactions({ transactions, categories = defaultCategories }: Re
   const handleStartEdit = useCallback((tx: Transaction) => {
     setEditingId(tx.id)
     setEditForm({
+      type: (tx.type ?? 'expense') as 'income' | 'expense',
       amount: tx.amount.toString(),
       category: tx.category,
       merchant: tx.merchant || '',
@@ -67,11 +70,24 @@ function RecentTransactions({ transactions, categories = defaultCategories }: Re
     })
   }, [])
 
+  const handleEditTypeChange = useCallback((newType: 'income' | 'expense') => {
+    setEditForm((prev) => {
+      const categoryList = newType === 'income' ? INCOME_CATEGORY_LIST : EXPENSE_CATEGORIES
+      const categoryStillValid = categoryList.includes(prev.category)
+      return {
+        ...prev,
+        type: newType,
+        category: categoryStillValid ? prev.category : categoryList[0],
+      }
+    })
+  }, [])
+
   const handleSaveEdit = useCallback(async (id: string) => {
     const parsedAmount = parseFloat(editForm.amount)
     if (isNaN(parsedAmount) || parsedAmount <= 0) return
     try {
       await updateTransaction(id, {
+        type: editForm.type,
         amount: parsedAmount,
         category: editForm.category,
         merchant: editForm.merchant,
@@ -175,15 +191,34 @@ function RecentTransactions({ transactions, categories = defaultCategories }: Re
                         </div>
                       </div>
                     ) : isEditing ? (
-                      /* Edit mode */
+                      /* Edit mode - 與 TransactionItem 一致 */
                       <div className="space-y-sm">
+                        <div className="flex items-center gap-md">
+                          <span className="text-caption text-text-secondary w-[50px] shrink-0">類型</span>
+                          <div className="flex gap-sm">
+                            <button
+                              type="button"
+                              onClick={() => handleEditTypeChange('expense')}
+                              className={`px-lg py-xs rounded-sm text-small font-semibold ${editForm.type === 'expense' ? 'bg-danger text-surface' : 'border border-border text-text-secondary'}`}
+                            >
+                              支出
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleEditTypeChange('income')}
+                              className={`px-lg py-xs rounded-sm text-small font-semibold ${editForm.type === 'income' ? 'bg-success text-surface' : 'border border-border text-text-secondary'}`}
+                            >
+                              收入
+                            </button>
+                          </div>
+                        </div>
                         <div className="flex items-center gap-md">
                           <span className="text-caption text-text-secondary w-[50px] shrink-0">金額</span>
                           <input
                             type="number"
                             value={editForm.amount}
                             onChange={(e) => setEditForm((f) => ({ ...f, amount: e.target.value }))}
-                            className="flex-1 h-9 rounded-md border border-border px-sm text-body text-danger font-semibold"
+                            className={`flex-1 h-9 rounded-md border border-border px-sm text-body font-semibold ${editForm.type === 'income' ? 'text-success' : 'text-danger'}`}
                             min="0.01"
                             step="1"
                           />
@@ -193,19 +228,13 @@ function RecentTransactions({ transactions, categories = defaultCategories }: Re
                           <select
                             value={editForm.category}
                             onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
-                            className={`flex-1 h-9 rounded-md border border-border px-sm text-body ${getCategoryTypeColorClass(tx.type ?? 'expense')}`}
+                            className={`flex-1 h-9 rounded-md border border-border px-sm text-body ${getCategoryTypeColorClass(editForm.type)}`}
                           >
-                            {categories.map((cat) => (
+                            {(editForm.type === 'income' ? INCOME_CATEGORY_LIST : EXPENSE_CATEGORIES).map((cat) => (
                               <option key={cat} value={cat}>
                                 {categoryIcons[cat] ?? '📦'} {getCategoryName(cat)}
                               </option>
                             ))}
-                            {/* 若目前類別不在列表中，也顯示 */}
-                            {!categories.includes(editForm.category) && (
-                              <option value={editForm.category}>
-                                📦 {editForm.category}
-                              </option>
-                            )}
                           </select>
                         </div>
                         <div className="flex items-center gap-md">
@@ -226,13 +255,14 @@ function RecentTransactions({ transactions, categories = defaultCategories }: Re
                             className="flex-1 h-9 rounded-md border border-border px-sm text-body"
                           />
                         </div>
-                        <div className="flex items-center gap-md">
-                          <span className="text-caption text-text-secondary w-[50px] shrink-0">備註</span>
-                          <input
-                            type="text"
+                        <div className="flex items-start gap-md">
+                          <span className="text-caption text-text-secondary w-[50px] shrink-0 mt-xs">備註</span>
+                          <textarea
                             value={editForm.note}
                             onChange={(e) => setEditForm((f) => ({ ...f, note: e.target.value }))}
-                            className="flex-1 h-9 rounded-md border border-border px-sm text-body"
+                            className="flex-1 rounded-md border border-border px-sm py-xs text-body resize-none"
+                            placeholder="備註"
+                            rows={2}
                           />
                         </div>
                         <div className="flex gap-sm mt-md">

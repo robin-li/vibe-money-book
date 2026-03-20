@@ -10,6 +10,7 @@ interface ParsedResultCardProps {
     category: string
     merchant: string
     date: string
+    note?: string
   }) => void
   onCancel: () => void
   categories: string[]
@@ -29,6 +30,7 @@ function ParsedResultCard({
   const [category, setCategory] = useState(result.category ?? 'other')
   const [merchant, setMerchant] = useState(result.merchant ?? '')
   const [date, setDate] = useState(result.date ?? new Date().toISOString().split('T')[0])
+  const [note, setNote] = useState(result.note ?? '')
 
   // Filter categories by the selected transaction type
   const filteredCategories = categoryInfoList.length > 0
@@ -53,6 +55,7 @@ function ParsedResultCard({
       category,
       merchant,
       date,
+      note: note || undefined,
     })
   }
 
@@ -166,16 +169,19 @@ function ParsedResultCard({
           />
         </div>
 
-        {result.note && (
-          <div className="flex items-start gap-md">
-            <span className="text-caption text-text-secondary w-[60px] shrink-0">
-              備註
-            </span>
-            <span className="text-caption text-text-secondary">
-              {result.note}
-            </span>
-          </div>
-        )}
+        <div className="flex items-start gap-md">
+          <span className="text-caption text-text-secondary w-[60px] shrink-0 mt-xs">
+            備註
+          </span>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            className="flex-1 rounded-md border border-border px-sm py-xs text-body resize-none"
+            placeholder="備註"
+            rows={2}
+            aria-label="備註"
+          />
+        </div>
       </div>
 
       {/* Issue #59: buttons are "Cancel" + "Confirm" (no "Edit" button) */}
