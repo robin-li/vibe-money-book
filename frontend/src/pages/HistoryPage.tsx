@@ -139,20 +139,6 @@ function HistoryPage() {
       {/* Filter section */}
       <div className="space-y-sm mb-xl" data-testid="filter-section">
         <div className="flex gap-sm items-center flex-wrap">
-          <select
-            value={filters.category}
-            onChange={handleCategoryChange}
-            className="px-lg py-sm bg-bg rounded-xl text-caption text-text-secondary border-0 outline-none cursor-pointer"
-            aria-label="類別篩選"
-            data-testid="category-filter"
-          >
-            {categoryOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-
           <input
             type="date"
             value={filters.startDate}
@@ -170,6 +156,20 @@ function HistoryPage() {
             aria-label="結束日期"
             data-testid="end-date-filter"
           />
+
+          <select
+            value={filters.category}
+            onChange={handleCategoryChange}
+            className="px-lg py-sm bg-bg rounded-xl text-caption text-text-secondary border-0 outline-none cursor-pointer"
+            aria-label="類別篩選"
+            data-testid="category-filter"
+          >
+            {categoryOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
 
           {hasActiveFilters && (
             <button
