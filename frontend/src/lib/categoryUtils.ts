@@ -6,6 +6,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   education: '#6C5CE7',
   medical: '#FD79A8',
   transport: '#4ECDC4',
+  pets: '#F8B400',
   other: '#B2BEC3',
   adjustment_expense: '#95A5A6',
   // 收入類別
@@ -28,6 +29,7 @@ export const CATEGORY_NAMES: Record<string, string> = {
   education: '教育',
   medical: '醫療',
   transport: '交通',
+  pets: '寵物用品',
   other: '其它',
   adjustment_expense: '帳務調整',
   // 收入類別

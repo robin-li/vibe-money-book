@@ -103,6 +103,7 @@ export async function parseTransaction(
   const parsed = await provider.extractData(extractorPrompt, apiKey);
 
 
+
   // 2b. Get budget context
   const monthlyBudget = Number(user.monthlyBudget);
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);

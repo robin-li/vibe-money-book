@@ -7,7 +7,7 @@ import { getCategoryName } from '../lib/categoryUtils'
 
 const CATEGORY_ICONS: Record<string, string> = {
   food: '🍽️', transport: '🚌', entertainment: '🎬',
-  daily: '🧴', medical: '🏥', education: '📚', other: '📦',
+  daily: '🧴', medical: '🏥', education: '📚', pets: '🐾', other: '📦',
   salary: '💰', investment: '📈', pension: '🏦', insurance: '🛡️', other_income: '💵',
 }
 

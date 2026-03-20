@@ -10,6 +10,7 @@ const DEFAULT_CATEGORIES = [
   { category: 'education', type: 'expense', budgetLimit: 2000 },
   { category: 'medical', type: 'expense', budgetLimit: 2000 },
   { category: 'transport', type: 'expense', budgetLimit: 3000 },
+  { category: 'pets', type: 'expense', budgetLimit: 0 },
   { category: 'other', type: 'expense', budgetLimit: 0 },
   { category: 'adjustment_expense', type: 'expense', budgetLimit: 0 },
   // 收入類別

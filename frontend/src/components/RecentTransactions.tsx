@@ -15,6 +15,7 @@ const categoryIcons: Record<string, string> = {
   daily: '🧴',
   medical: '🏥',
   education: '📚',
+  pets: '🐾',
   other: '📦',
   salary: '💰',
   investment: '📈',
@@ -148,7 +149,7 @@ function RecentTransactions({ transactions }: RecentTransactionsProps) {
                   </div>
                   <div className="flex-1 min-w-0 text-left">
                     <p className="text-body font-semibold text-text-primary truncate">
-                      {tx.merchant || tx.category}
+                      {tx.merchant || getCategoryName(tx.category)}
                     </p>
                     <div className="flex items-center gap-xs">
                       <span className={`text-small ${getCategoryTypeColorClass(tx.type ?? 'expense')} bg-[#F0F0F0] rounded-sm px-2 py-0.5`}>

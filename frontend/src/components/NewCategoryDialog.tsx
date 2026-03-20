@@ -29,6 +29,7 @@ const categoryIcons: Record<string, string> = {
   education: '📚',
   medical: '🏥',
   transport: '🚌',
+  pets: '🐾',
   other: '📦',
   adjustment_expense: '📋',
   adjustment_income: '📋',

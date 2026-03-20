@@ -5,7 +5,7 @@ export function buildDataExtractorPrompt(input: DataExtractorInput): string {
   // Category name mapping for display in prompt
   const categoryNames: Record<string, string> = {
     entertainment: '娛樂', food: '飲食', daily: '日用品', education: '教育',
-    medical: '醫療', transport: '交通', other: '其它', adjustment_expense: '帳務調整',
+    medical: '醫療', transport: '交通', pets: '寵物用品', other: '其它', adjustment_expense: '帳務調整',
     salary: '薪資收入', investment: '投資收益', pension: '退休金', insurance: '保險理賠',
     other_income: '其它', adjustment_income: '帳務調整',
   };
@@ -60,7 +60,7 @@ ${categorySection}
    - 例如：「休閒娛樂」≈「entertainment(娛樂)」→ 直接用 entertainment
    - 例如：「飲料」≈「food(飲食)」→ 直接用 food
    - 例如：「出行」≈「transport(交通)」→ 直接用 transport
-7. 若未提及商家，根據消費內容推測合理的商家名稱
+7. 若未提及商家，根據消費內容推測合理的商家名稱。若不適用商家概念（如帳務調整、轉帳、調帳等），merchant 填入空字串 ""
 8. 日期推算規則：
    - 現在是 ${input.currentDateTime}
    - 若未提及日期，使用今天的日期
