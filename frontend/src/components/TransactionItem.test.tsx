@@ -24,7 +24,9 @@ describe('TransactionItem', () => {
         isExpanded={false}
         onToggle={() => {}}
         onDelete={vi.fn()}
+        onUpdate={vi.fn()}
         isDeleting={false}
+        isUpdating={false}
       />
     )
     const amountEl = screen.getByText(/-\$500/)
@@ -39,7 +41,9 @@ describe('TransactionItem', () => {
         isExpanded={false}
         onToggle={() => {}}
         onDelete={vi.fn()}
+        onUpdate={vi.fn()}
         isDeleting={false}
+        isUpdating={false}
       />
     )
     const amountEl = screen.getByText(/\+\$500/)
@@ -54,7 +58,9 @@ describe('TransactionItem', () => {
         isExpanded={true}
         onToggle={() => {}}
         onDelete={vi.fn()}
+        onUpdate={vi.fn()}
         isDeleting={false}
+        isUpdating={false}
       />
     )
     // There are two: summary row and detail. Check that the detail one has the correct color.
@@ -73,7 +79,9 @@ describe('TransactionItem', () => {
         isExpanded={true}
         onToggle={() => {}}
         onDelete={vi.fn()}
+        onUpdate={vi.fn()}
         isDeleting={false}
+        isUpdating={false}
       />
     )
     const allAmounts = screen.getAllByText(/\+\$500/)

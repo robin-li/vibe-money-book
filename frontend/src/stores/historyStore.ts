@@ -8,6 +8,15 @@ export interface HistoryFilters {
   endDate: string
 }
 
+export interface UpdateTransactionInput {
+  type?: 'income' | 'expense'
+  amount?: number
+  category?: string
+  merchant?: string
+  transaction_date?: string
+  note?: string
+}
+
 interface HistoryState {
   transactions: Transaction[]
   filters: HistoryFilters
@@ -15,6 +24,7 @@ interface HistoryState {
   hasMore: boolean
   isLoading: boolean
   isDeleting: string | null
+  isUpdating: string | null
   errorMessage: string
 
   // Actions
@@ -23,6 +33,7 @@ interface HistoryState {
   setFilters: (filters: Partial<HistoryFilters>) => void
   resetFilters: () => void
   deleteTransaction: (id: string) => Promise<void>
+  updateTransaction: (id: string, input: UpdateTransactionInput) => Promise<void>
 }
 
 const PAGE_SIZE = 20
@@ -40,6 +51,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
   hasMore: true,
   isLoading: false,
   isDeleting: null,
+  isUpdating: null,
   errorMessage: '',
 
   fetchTransactions: async (reset = true) => {
@@ -63,6 +75,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
       const items: Transaction[] = res.data.data.items.map(
         (t: Record<string, unknown>) => ({
           id: t.id as string,
+          type: (t.type as 'income' | 'expense') ?? 'expense',
           amount: t.amount as number,
           category: t.category as string,
           merchant: t.merchant as string,
@@ -120,6 +133,35 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? '刪除失敗，請稍後重試'
       set({ isDeleting: null, errorMessage: message })
+      throw err
+    }
+  },
+
+  updateTransaction: async (id: string, input: UpdateTransactionInput) => {
+    set({ isUpdating: id, errorMessage: '' })
+    try {
+      const res = await api.put(`/transactions/${id}`, input)
+      const t = res.data.data.transaction as Record<string, unknown>
+      const updated: Transaction = {
+        id: t.id as string,
+        type: (t.type as 'income' | 'expense') ?? 'expense',
+        amount: t.amount as number,
+        category: t.category as string,
+        merchant: (t.merchant as string) ?? '',
+        rawText: (t.raw_text as string) ?? '',
+        note: (t.note as string) ?? undefined,
+        transactionDate: t.transaction_date as string,
+        createdAt: t.created_at as string,
+      }
+      set((s) => ({
+        transactions: s.transactions.map((tx) => (tx.id === id ? updated : tx)),
+        isUpdating: null,
+      }))
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? '更新失敗，請稍後重試'
+      set({ isUpdating: null, errorMessage: message })
       throw err
     }
   },
