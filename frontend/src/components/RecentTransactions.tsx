@@ -12,7 +12,6 @@ const categoryIcons: Record<string, string> = {
   food: '🍽️',
   transport: '🚌',
   entertainment: '🎬',
-  shopping: '🛍️',
   daily: '🧴',
   medical: '🏥',
   education: '📚',
@@ -39,7 +38,7 @@ function formatDate(dateStr: string): string {
   return dateStr.split('T')[0]
 }
 
-const defaultCategories = ['food', 'transport', 'entertainment', 'shopping', 'daily', 'medical', 'education', 'other']
+const defaultCategories = ['entertainment', 'food', 'daily', 'education', 'medical', 'transport', 'other']
 
 function RecentTransactions({ transactions, categories = defaultCategories }: RecentTransactionsProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)

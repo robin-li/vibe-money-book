@@ -16,24 +16,22 @@ const personaConfig: Record<Persona, { emoji: string }> = {
 }
 
 const categoryNames: Record<string, string> = {
-  food: '飲食',
-  transport: '交通',
   entertainment: '娛樂',
-  shopping: '購物',
+  food: '飲食',
   daily: '日用品',
-  medical: '醫療',
   education: '教育',
-  other: '其他',
+  medical: '醫療',
+  transport: '交通',
+  other: '其它',
 }
 
 const categoryIcons: Record<string, string> = {
-  food: '🍽️',
-  transport: '🚌',
   entertainment: '🎬',
-  shopping: '🛍️',
+  food: '🍽️',
   daily: '🧴',
-  medical: '🏥',
   education: '📚',
+  medical: '🏥',
+  transport: '🚌',
   other: '📦',
 }
 

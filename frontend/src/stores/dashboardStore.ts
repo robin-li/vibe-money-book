@@ -67,6 +67,7 @@ export type DashboardStatus =
 export interface CategoryInfo {
   category: string
   type: 'income' | 'expense'
+  isCustom?: boolean
 }
 
 interface DashboardState {
@@ -97,6 +98,7 @@ interface DashboardState {
     feedback?: AIFeedbackContent
   }) => Promise<void>
   createCategory: (category: string, type?: 'income' | 'expense') => Promise<void>
+  deleteCategory: (category: string) => Promise<void>
   updateTransaction: (id: string, data: { amount: number; category: string; merchant: string; date: string; note?: string }) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
   fetchBudgetSummary: () => Promise<void>
@@ -113,15 +115,14 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   budgetContext: null,
   budgetSummary: null,
   recentTransactions: [],
-  categories: ['food', 'transport', 'entertainment', 'shopping', 'daily', 'medical', 'education', 'other'],
+  categories: ['entertainment', 'food', 'daily', 'education', 'medical', 'transport', 'other'],
   categoryInfoList: [
-    { category: 'food', type: 'expense' },
-    { category: 'transport', type: 'expense' },
     { category: 'entertainment', type: 'expense' },
-    { category: 'shopping', type: 'expense' },
+    { category: 'food', type: 'expense' },
     { category: 'daily', type: 'expense' },
-    { category: 'medical', type: 'expense' },
     { category: 'education', type: 'expense' },
+    { category: 'medical', type: 'expense' },
+    { category: 'transport', type: 'expense' },
     { category: 'other', type: 'expense' },
   ],
   errorMessage: '',
@@ -131,11 +132,12 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   fetchCategories: async () => {
     try {
       const res = await api.get('/budget/categories')
-      const rawCats = res.data.data as Array<{ category: string; type?: string }>
+      const rawCats = res.data.data as Array<{ category: string; type?: string; isCustom?: boolean }>
       const cats = rawCats.map((c) => c.category)
       const infoList: CategoryInfo[] = rawCats.map((c) => ({
         category: c.category,
         type: (c.type as 'income' | 'expense') || 'expense',
+        isCustom: c.isCustom ?? false,
       }))
       if (cats.length > 0) set({ categories: cats, categoryInfoList: infoList })
     } catch {
@@ -248,6 +250,19 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message ?? '新增類別失敗'
+      set({ status: 'error', errorMessage: message })
+      throw err
+    }
+  },
+
+  deleteCategory: async (category: string) => {
+    try {
+      await api.delete(`/budget/categories/${encodeURIComponent(category)}`)
+      await get().fetchCategories()
+    } catch (err: unknown) {
+      const message =
+        (err as { response?: { data?: { message?: string } } })?.response?.data
+          ?.message ?? '刪除類別失敗'
       set({ status: 'error', errorMessage: message })
       throw err
     }

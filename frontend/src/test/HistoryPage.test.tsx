@@ -112,7 +112,7 @@ describe('HistoryPage', () => {
 
     const select = screen.getByLabelText('類別篩選') as HTMLSelectElement
     const options = select.querySelectorAll('option')
-    expect(options.length).toBe(9) // 全部 + 8 categories
+    expect(options.length).toBe(8) // 全部 + 7 categories
   })
 
   it('shows load more button when hasMore is true', () => {

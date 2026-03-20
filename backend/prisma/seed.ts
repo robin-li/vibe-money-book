@@ -4,13 +4,12 @@ const prisma = new PrismaClient();
 
 const DEFAULT_CATEGORIES = [
   // 支出類別
-  { category: 'food', type: 'expense', budgetLimit: 8000 },
-  { category: 'transport', type: 'expense', budgetLimit: 3000 },
   { category: 'entertainment', type: 'expense', budgetLimit: 3000 },
-  { category: 'shopping', type: 'expense', budgetLimit: 3000 },
+  { category: 'food', type: 'expense', budgetLimit: 8000 },
   { category: 'daily', type: 'expense', budgetLimit: 2000 },
-  { category: 'medical', type: 'expense', budgetLimit: 2000 },
   { category: 'education', type: 'expense', budgetLimit: 2000 },
+  { category: 'medical', type: 'expense', budgetLimit: 2000 },
+  { category: 'transport', type: 'expense', budgetLimit: 3000 },
   { category: 'other', type: 'expense', budgetLimit: 0 },
   // 收入類別
   { category: 'salary', type: 'income', budgetLimit: 0 },

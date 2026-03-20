@@ -1,12 +1,11 @@
 /** Category color mapping per UI spec */
 export const CATEGORY_COLORS: Record<string, string> = {
-  food: '#FF6B6B',
-  transport: '#4ECDC4',
   entertainment: '#45B7D1',
-  shopping: '#F9CA24',
+  food: '#FF6B6B',
   daily: '#A29BFE',
-  medical: '#FD79A8',
   education: '#6C5CE7',
+  medical: '#FD79A8',
+  transport: '#4ECDC4',
   other: '#B2BEC3',
   // 收入類別
   salary: '#22C55E',
@@ -21,20 +20,19 @@ const CUSTOM_COLORS = ['#E17055', '#00B894', '#FDCB6E', '#E84393', '#0984E3']
 
 /** Category display name mapping */
 export const CATEGORY_NAMES: Record<string, string> = {
-  food: '飲食',
-  transport: '交通',
   entertainment: '娛樂',
-  shopping: '購物',
+  food: '飲食',
   daily: '日用品',
-  medical: '醫療',
   education: '教育',
-  other: '其他',
+  medical: '醫療',
+  transport: '交通',
+  other: '其它',
   // 收入類別
   salary: '薪資收入',
   investment: '投資收益',
   pension: '退休金',
   insurance: '保險理賠',
-  other_income: '其他收入',
+  other_income: '其它',
 }
 
 /** 收入類別集合 */

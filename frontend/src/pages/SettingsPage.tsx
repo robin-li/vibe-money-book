@@ -101,6 +101,7 @@ function SettingsPage() {
   const categoryInfoList = useDashboardStore((s) => s.categoryInfoList)
   const fetchCategories = useDashboardStore((s) => s.fetchCategories)
   const createCategoryAction = useDashboardStore((s) => s.createCategory)
+  const deleteCategoryAction = useDashboardStore((s) => s.deleteCategory)
 
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryType, setNewCategoryType] = useState<'income' | 'expense'>('expense')
@@ -125,6 +126,15 @@ function SettingsPage() {
       setCategoryAdding(false)
     }
   }, [newCategoryName, newCategoryType, createCategoryAction])
+
+  const handleDeleteCategory = useCallback(async (category: string) => {
+    if (!window.confirm(`確定要刪除類別「${getCategoryName(category)}」嗎？相關交易將歸類為「其它」。`)) return
+    try {
+      await deleteCategoryAction(category)
+    } catch {
+      // Error handled by store
+    }
+  }, [deleteCategoryAction])
 
   const handleLogout = useCallback(() => {
     logout()
@@ -350,9 +360,19 @@ function SettingsPage() {
             {expenseCategories.map((c: CategoryInfo) => (
               <span
                 key={c.category}
-                className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('expense')} bg-[#FFF0F0]`}
+                className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('expense')} bg-[#FFF0F0] inline-flex items-center gap-xs`}
               >
                 {getCategoryName(c.category)}
+                {c.isCustom && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCategory(c.category)}
+                    className="ml-xs text-danger hover:text-red-700 font-bold leading-none"
+                    aria-label={`刪除類別 ${getCategoryName(c.category)}`}
+                  >
+                    ✕
+                  </button>
+                )}
               </span>
             ))}
           </div>
@@ -365,9 +385,19 @@ function SettingsPage() {
             {incomeCategories.map((c: CategoryInfo) => (
               <span
                 key={c.category}
-                className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('income')} bg-[#F0FFF0]`}
+                className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('income')} bg-[#F0FFF0] inline-flex items-center gap-xs`}
               >
                 {getCategoryName(c.category)}
+                {c.isCustom && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCategory(c.category)}
+                    className="ml-xs text-danger hover:text-red-700 font-bold leading-none"
+                    aria-label={`刪除類別 ${getCategoryName(c.category)}`}
+                  >
+                    ✕
+                  </button>
+                )}
               </span>
             ))}
           </div>
@@ -401,7 +431,7 @@ function SettingsPage() {
               type="button"
               onClick={handleAddCategory}
               disabled={categoryAdding || !newCategoryName.trim()}
-              className="h-9 px-lg rounded-md bg-primary text-white text-caption font-semibold disabled:opacity-50"
+              className="h-9 px-lg min-w-[80px] whitespace-nowrap rounded-md bg-primary text-white text-caption font-semibold disabled:opacity-50"
               aria-label="新增類別"
             >
               {categoryAdding ? '新增中...' : '新增'}

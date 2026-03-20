@@ -6,7 +6,7 @@ import type { Transaction } from '../stores/index'
 import { getCategoryName } from '../lib/categoryUtils'
 
 const CATEGORY_ICONS: Record<string, string> = {
-  food: '🍽️', transport: '🚌', entertainment: '🎬', shopping: '🛍️',
+  food: '🍽️', transport: '🚌', entertainment: '🎬',
   daily: '🧴', medical: '🏥', education: '📚', other: '📦',
   salary: '💰', investment: '📈', pension: '🏦', insurance: '🛡️', other_income: '💵',
 }
