@@ -143,6 +143,7 @@ function HistoryPage() {
             type="date"
             value={filters.startDate}
             onChange={handleStartDateChange}
+            placeholder="開始日期"
             className="px-lg py-sm bg-bg rounded-xl text-caption text-text-secondary border-0 outline-none"
             aria-label="開始日期"
             data-testid="start-date-filter"
@@ -152,6 +153,7 @@ function HistoryPage() {
             type="date"
             value={filters.endDate}
             onChange={handleEndDateChange}
+            placeholder="結束日期"
             className="px-lg py-sm bg-bg rounded-xl text-caption text-text-secondary border-0 outline-none"
             aria-label="結束日期"
             data-testid="end-date-filter"
