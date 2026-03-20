@@ -20,7 +20,7 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
         <h2 className="text-caption text-text-secondary mb-sm">
           預算剩餘
         </h2>
-        <p className="text-display font-bold text-text-primary">
+        <p className="text-headline font-bold text-text-primary truncate">
           --
         </p>
         <p className="text-caption text-text-secondary mt-sm">
@@ -57,7 +57,7 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
           預算剩餘
         </p>
         <p
-          className={`text-display font-bold ${getPercentColor()}`}
+          className={`text-headline font-bold truncate ${getPercentColor()}`}
           aria-live="polite"
         >
           {isOverBudget ? '超支' : `${remainingPercent}%`}
@@ -68,11 +68,11 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
           <BudgetBar usedRatio={usedRatio} />
         </div>
 
-        <div className="flex justify-between">
-          <span className="text-small text-text-secondary">
+        <div className="flex justify-between gap-sm">
+          <span className="text-small text-text-secondary truncate min-w-0">
             支出 {formatMoney(totalSpent)}
           </span>
-          <span className="text-small text-text-secondary">
+          <span className="text-small text-text-secondary truncate min-w-0 text-right">
             目標 {formatMoney(monthlyBudget)}
           </span>
         </div>
@@ -91,7 +91,7 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
             預算剩餘
           </p>
           <p
-            className={`text-display font-bold ${getPercentColor()}`}
+            className={`text-headline font-bold truncate ${getPercentColor()}`}
             aria-live="polite"
           >
             {isOverBudget ? '超支' : `${remainingPercent}%`}
@@ -102,7 +102,7 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
             本月支出
           </p>
           <p
-            className="text-headline font-bold text-danger"
+            className="text-headline font-bold text-danger truncate"
             aria-live="polite"
           >
             {formatMoney(totalSpent)}
@@ -115,11 +115,11 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
         <BudgetBar usedRatio={usedRatio} />
       </div>
 
-      <div className="flex justify-between">
+      <div className="flex justify-between gap-sm">
         <span className="text-small text-text-secondary">
           $0
         </span>
-        <span className="text-small text-text-secondary">
+        <span className="text-small text-text-secondary truncate min-w-0 text-right">
           目標：{formatMoney(monthlyBudget)}
         </span>
       </div>
