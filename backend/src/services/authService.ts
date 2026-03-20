@@ -7,16 +7,22 @@ import { RegisterInput, LoginInput } from '../validators/authValidators';
 
 const BCRYPT_ROUNDS = 10;
 
-/** SRD SS3.4 - 8 default category budgets */
+/** Default category budgets for new users */
 const DEFAULT_CATEGORY_BUDGETS = [
-  { category: 'food', budgetLimit: 8000, isCustom: false },
-  { category: 'transport', budgetLimit: 3000, isCustom: false },
-  { category: 'entertainment', budgetLimit: 3000, isCustom: false },
-  { category: 'shopping', budgetLimit: 3000, isCustom: false },
-  { category: 'daily', budgetLimit: 2000, isCustom: false },
-  { category: 'medical', budgetLimit: 2000, isCustom: false },
-  { category: 'education', budgetLimit: 2000, isCustom: false },
-  { category: 'other', budgetLimit: 0, isCustom: false },
+  // 支出類別
+  { category: 'entertainment', type: 'expense', budgetLimit: 3000, isCustom: false },
+  { category: 'food', type: 'expense', budgetLimit: 8000, isCustom: false },
+  { category: 'daily', type: 'expense', budgetLimit: 2000, isCustom: false },
+  { category: 'education', type: 'expense', budgetLimit: 2000, isCustom: false },
+  { category: 'medical', type: 'expense', budgetLimit: 2000, isCustom: false },
+  { category: 'transport', type: 'expense', budgetLimit: 3000, isCustom: false },
+  { category: 'other', type: 'expense', budgetLimit: 0, isCustom: false },
+  // 收入類別
+  { category: 'salary', type: 'income', budgetLimit: 0, isCustom: false },
+  { category: 'investment', type: 'income', budgetLimit: 0, isCustom: false },
+  { category: 'pension', type: 'income', budgetLimit: 0, isCustom: false },
+  { category: 'insurance', type: 'income', budgetLimit: 0, isCustom: false },
+  { category: 'other_income', type: 'income', budgetLimit: 0, isCustom: false },
 ];
 
 function generateToken(userId: string): string {

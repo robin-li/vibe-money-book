@@ -14,7 +14,6 @@ const categoryIcons: Record<string, string> = {
   food: '🍽️',
   transport: '🚌',
   entertainment: '🎬',
-  shopping: '🛍️',
   daily: '🧴',
   medical: '🏥',
   education: '📚',
