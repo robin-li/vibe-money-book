@@ -11,6 +11,7 @@ import {
   ParsedTransaction,
   AIFeedbackContent,
   BudgetContext,
+  FinancialContext,
   PersonaFeedbackInput,
 } from '../types/llm';
 import { AppError } from '../middlewares/errorHandler';
@@ -55,8 +56,8 @@ export async function parseTransaction(
 
   // 1. If chat intent → generate chat reply and return
   if (intent === 'chat') {
-    const budgetContext = await getBudgetContext(userId, user.monthlyBudget);
-    const chatReply = await generateChatReply(persona, rawText, budgetContext, apiKey, provider);
+    const financialContext = await getFinancialContext(userId, user.monthlyBudget);
+    const chatReply = await generateChatReply(persona, rawText, financialContext, apiKey, provider);
     return {
       intent: 'chat',
       reply: chatReply,
@@ -166,45 +167,77 @@ async function detectIntent(
   }
 }
 
-async function getBudgetContext(userId: string, userMonthlyBudget: unknown): Promise<BudgetContext> {
+async function getFinancialContext(userId: string, userMonthlyBudget: unknown): Promise<FinancialContext> {
   const monthlyBudget = Number(userMonthlyBudget);
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  const transactions = await prisma.transaction.findMany({
-    where: {
-      userId,
-      transactionDate: {
-        gte: monthStart,
-        lte: monthEnd,
+  // Query current month transactions and recent 10 transactions in parallel
+  const [monthTransactions, recentTransactions] = await Promise.all([
+    prisma.transaction.findMany({
+      where: {
+        userId,
+        transactionDate: {
+          gte: monthStart,
+          lte: monthEnd,
+        },
       },
-    },
-  });
+    }),
+    prisma.transaction.findMany({
+      where: { userId },
+      orderBy: { transactionDate: 'desc' },
+      take: 10,
+      select: {
+        transactionDate: true,
+        category: true,
+        type: true,
+        amount: true,
+        merchant: true,
+      },
+    }),
+  ]);
 
-  const spentThisMonth = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  const totalIncome = monthTransactions
+    .filter((t) => t.type === 'income')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const totalExpense = monthTransactions
+    .filter((t) => t.type === 'expense')
+    .reduce((sum, t) => sum + Number(t.amount), 0);
+
+  const spentThisMonth = totalExpense;
   const remaining = monthlyBudget - spentThisMonth;
   const usedRatio = monthlyBudget > 0 ? spentThisMonth / monthlyBudget : 0;
+  const netAssets = totalIncome - totalExpense;
 
   return {
     monthly_budget: monthlyBudget,
     spent_this_month: spentThisMonth,
     remaining,
     used_ratio: Math.round(usedRatio * 100) / 100,
-    category_spent: 0,
-    category_limit: 0,
+    total_income: totalIncome,
+    total_expense: totalExpense,
+    net_assets: netAssets,
+    recent_transactions: recentTransactions.map((t) => ({
+      date: t.transactionDate.toISOString().split('T')[0],
+      category: t.category,
+      type: t.type as 'income' | 'expense',
+      amount: Number(t.amount),
+      merchant: t.merchant,
+    })),
   };
 }
 
 async function generateChatReply(
   persona: Persona,
   rawText: string,
-  budgetContext: BudgetContext,
+  financialContext: FinancialContext,
   apiKey: string,
   provider: ReturnType<typeof getProvider>
 ): Promise<AIFeedbackContent> {
   const systemPrompt = getChatPersonaSystemPrompt(persona);
-  const userPrompt = buildChatReplyPrompt({ persona, rawText, budgetContext });
+  const userPrompt = buildChatReplyPrompt({ persona, rawText, financialContext });
   const combinedPrompt = `${systemPrompt}\n---SYSTEM---\n${userPrompt}`;
 
   return provider.generateFeedback(combinedPrompt, apiKey);

@@ -1,9 +1,9 @@
-import { Persona, BudgetContext } from '../types/llm';
+import { Persona, FinancialContext } from '../types/llm';
 
 export interface ChatReplyInput {
   persona: Persona;
   rawText: string;
-  budgetContext: BudgetContext;
+  financialContext: FinancialContext;
 }
 
 const PERSONA_CHAT_DEFINITIONS: Record<Persona, string> = {
@@ -26,16 +26,41 @@ const PERSONA_CHAT_DEFINITIONS: Record<Persona, string> = {
     - 不要太過分，保持可愛的情緒勒索風格`,
 };
 
+function formatAmount(amount: number, type?: 'income' | 'expense'): string {
+  const prefix = type === 'income' ? '+' : type === 'expense' ? '-' : '';
+  return `${prefix}${amount.toLocaleString('zh-TW')}`;
+}
+
+function buildFinancialContextBlock(ctx: FinancialContext): string {
+  const usedPercent = Math.round(ctx.used_ratio * 100);
+
+  let block = `## 使用者財務現況
+- 總資產：${formatAmount(ctx.net_assets)} 元
+- 本月收入：${formatAmount(ctx.total_income, 'income')} 元
+- 本月支出：${formatAmount(ctx.total_expense, 'expense')} 元
+- 月預算：${ctx.monthly_budget.toLocaleString('zh-TW')} 元
+- 已消費：${ctx.spent_this_month.toLocaleString('zh-TW')} 元（${usedPercent}%）
+- 預算剩餘：${ctx.remaining.toLocaleString('zh-TW')} 元`;
+
+  if (ctx.recent_transactions.length > 0) {
+    block += '\n\n## 近期帳目';
+    ctx.recent_transactions.forEach((t, i) => {
+      const sign = t.type === 'income' ? '+' : '-';
+      const merchant = t.merchant || '';
+      block += `\n${i + 1}. ${t.date} ${t.category} ${sign}${t.amount.toLocaleString('zh-TW')} ${merchant}`;
+    });
+  }
+
+  return block;
+}
+
 export function buildChatReplyPrompt(input: ChatReplyInput): string {
-  const { budgetContext } = input;
-  const usedPercent = Math.round(budgetContext.used_ratio * 100);
+  const financialBlock = buildFinancialContextBlock(input.financialContext);
 
   return `根據使用者的輸入，用你的角色風格回應。回覆要簡短有趣（80字以內）。
+請根據使用者的真實財務狀況來回應，讓回覆更貼近使用者的實際情況。
 
-## 使用者的預算狀況
-- 月預算總額：${budgetContext.monthly_budget} 元
-- 已花費：${budgetContext.spent_this_month} 元（${usedPercent}%）
-- 剩餘預算：${budgetContext.remaining} 元
+${financialBlock}
 
 ## 使用者輸入
 ${input.rawText}

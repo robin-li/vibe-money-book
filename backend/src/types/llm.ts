@@ -42,6 +42,25 @@ export interface DataExtractorInput {
   currentDate: string;
 }
 
+export interface RecentTransaction {
+  date: string;
+  category: string;
+  type: 'income' | 'expense';
+  amount: number;
+  merchant: string | null;
+}
+
+export interface FinancialContext {
+  monthly_budget: number;
+  spent_this_month: number;
+  remaining: number;
+  used_ratio: number;
+  total_income: number;
+  total_expense: number;
+  net_assets: number;
+  recent_transactions: RecentTransaction[];
+}
+
 export interface PersonaFeedbackInput {
   persona: Persona;
   amount: number;
