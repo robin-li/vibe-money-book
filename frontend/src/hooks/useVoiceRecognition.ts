@@ -43,8 +43,10 @@ export function useVoiceRecognition(
 
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const callbacksRef = useRef({ onResult, onInterimResult, onError })
-  // Track accumulated final transcript to avoid duplication (#69)
-  const finalTranscriptRef = useRef('')
+  // Store the latest computed transcript from onresult for delivery on stop.
+  // This is NOT used for accumulation — it simply caches the last computed value
+  // so stopRecording can deliver it synchronously.
+  const latestTranscriptRef = useRef('')
 
   // Keep callbacks ref updated
   useEffect(() => {
@@ -61,8 +63,8 @@ export function useVoiceRecognition(
       recognitionRef.current = null
     }
 
-    // Reset accumulated final transcript
-    finalTranscriptRef.current = ''
+    // Reset latest transcript cache
+    latestTranscriptRef.current = ''
 
     const recognition = new SpeechRecognitionClass()
     recognition.lang = lang
@@ -78,27 +80,28 @@ export function useVoiceRecognition(
     }
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      // Fix #69: Properly accumulate final results without duplication.
-      // Each result in event.results transitions from interim to final exactly once.
-      // We rebuild the full text from all results on every event to avoid
-      // double-counting previously finalized segments.
-      let finalText = ''
-      let interimText = ''
+      // Fix #76: Rebuild transcript from event.results on every onresult call.
+      // event.results contains the COMPLETE history of all recognition results
+      // in continuous mode. We must NOT accumulate via ref/state — just recompute
+      // from the source of truth each time to avoid duplication on pauses.
+      let finalTranscript = ''
+      let interimTranscript = ''
 
       for (let i = 0; i < event.results.length; i++) {
         const result = event.results[i]
         if (result.isFinal) {
-          finalText += result[0].transcript
+          finalTranscript += result[0].transcript
         } else {
-          interimText += result[0].transcript
+          interimTranscript += result[0].transcript
         }
       }
 
-      // Store the accumulated final transcript for delivery on stop
-      finalTranscriptRef.current = finalText
+      // Cache the full text (final + interim) for delivery on stop.
+      // Prefer final-only when available; fall back to combined text.
+      const liveText = finalTranscript + interimTranscript
+      latestTranscriptRef.current = finalTranscript || liveText
 
       // Show combined final + interim as live feedback
-      const liveText = finalText + interimText
       if (liveText) {
         setInterimTranscript(liveText)
         setStatus('recognizing')
@@ -127,18 +130,14 @@ export function useVoiceRecognition(
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
       recognitionRef.current.stop()
-      // Deliver the accumulated final transcript (or interim if no finals yet)
-      const finalText = finalTranscriptRef.current
-      setInterimTranscript((current) => {
-        // Prefer accumulated final results; fall back to whatever interim we have
-        const deliverText = finalText || current
-        if (deliverText) {
-          setTranscript(deliverText)
-          callbacksRef.current.onResult?.(deliverText)
-        }
-        return ''
-      })
-      finalTranscriptRef.current = ''
+      // Deliver the latest computed transcript (recomputed from event.results each time)
+      const deliverText = latestTranscriptRef.current
+      if (deliverText) {
+        setTranscript(deliverText)
+        callbacksRef.current.onResult?.(deliverText)
+      }
+      setInterimTranscript('')
+      latestTranscriptRef.current = ''
     }
   }, [])
 
