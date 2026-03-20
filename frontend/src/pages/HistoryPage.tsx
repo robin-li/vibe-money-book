@@ -56,17 +56,17 @@ function HistoryPage() {
     updateTransaction,
   } = useHistoryStore()
 
-  const storeCategories = useDashboardStore((s) => s.categories)
+  const categoryInfoList = useDashboardStore((s) => s.categoryInfoList)
   const fetchCategories = useDashboardStore((s) => s.fetchCategories)
 
-  const categoryOptions = useMemo(() => {
-    const opts = [{ value: '', label: '全部類別' }]
-    for (const cat of storeCategories) {
-      const icon = CATEGORY_ICONS[cat] ?? '📦'
-      opts.push({ value: cat, label: `${icon} ${getCategoryName(cat)}` })
-    }
-    return opts
-  }, [storeCategories])
+  const expenseCategories = useMemo(
+    () => categoryInfoList.filter((c) => c.type === 'expense'),
+    [categoryInfoList]
+  )
+  const incomeCategories = useMemo(
+    () => categoryInfoList.filter((c) => c.type === 'income'),
+    [categoryInfoList]
+  )
 
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
@@ -164,11 +164,25 @@ function HistoryPage() {
             aria-label="類別篩選"
             data-testid="category-filter"
           >
-            {categoryOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
+            <option value="">全部類別</option>
+            {expenseCategories.length > 0 && (
+              <optgroup label="支出">
+                {expenseCategories.map((c) => (
+                  <option key={c.category} value={c.category}>
+                    {(CATEGORY_ICONS[c.category] ?? '📦') + ' ' + getCategoryName(c.category)}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {incomeCategories.length > 0 && (
+              <optgroup label="收入">
+                {incomeCategories.map((c) => (
+                  <option key={c.category} value={c.category}>
+                    {(CATEGORY_ICONS[c.category] ?? '📦') + ' ' + getCategoryName(c.category)}
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </select>
 
           {hasActiveFilters && (
