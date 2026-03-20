@@ -57,11 +57,12 @@ function DashboardPage() {
       category: string
       merchant: string
       date: string
+      note?: string
     }) => {
       await confirmTransaction({
         ...data,
         rawText: lastRawText || data.merchant,
-        note: parsedResult?.note,
+        note: data.note ?? parsedResult?.note,
         feedback: aiFeedback ?? undefined,
       })
       fetchBudgetSummary()
