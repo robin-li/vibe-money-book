@@ -4,6 +4,8 @@ export type VoiceStatus = 'idle' | 'recording' | 'recognizing' | 'error'
 
 interface UseVoiceRecognitionOptions {
   lang?: string
+  /** 靜默超時時間（毫秒），預設 5000ms */
+  silenceTimeout?: number
   onResult?: (transcript: string) => void
   onInterimResult?: (transcript: string) => void
   onError?: (error: string) => void
@@ -33,7 +35,7 @@ export function isSpeechRecognitionSupported(): boolean {
 export function useVoiceRecognition(
   options: UseVoiceRecognitionOptions = {}
 ): UseVoiceRecognitionReturn {
-  const { lang = 'zh-TW', onResult, onInterimResult, onError } = options
+  const { lang = 'zh-TW', silenceTimeout = 5000, onResult, onInterimResult, onError } = options
 
   const [isSupported] = useState(() => isSpeechRecognitionSupported())
   const [status, setStatus] = useState<VoiceStatus>('idle')
@@ -48,6 +50,8 @@ export function useVoiceRecognition(
   // accumulation — it is overwritten (not appended) on every onresult event.
   const latestFinalRef = useRef('')
   const latestInterimRef = useRef('')
+  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const stopRecordingRef = useRef<() => void>(() => {})
 
   // Keep callbacks ref updated
   useEffect(() => {
@@ -79,6 +83,13 @@ export function useVoiceRecognition(
       setErrorMessage('')
       setTranscript('')
       setInterimTranscript('')
+      // #94: Start silence timer — if no speech detected within timeout, auto-stop
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      if (silenceTimeout > 0) {
+        silenceTimerRef.current = setTimeout(() => {
+          stopRecordingRef.current()
+        }, silenceTimeout)
+      }
     }
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -111,6 +122,14 @@ export function useVoiceRecognition(
         setStatus('recognizing')
         callbacksRef.current.onInterimResult?.(displayText)
       }
+
+      // #94: Reset silence timer — auto-stop after silenceTimeout ms of no new results
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      if (silenceTimeout > 0) {
+        silenceTimerRef.current = setTimeout(() => {
+          stopRecordingRef.current()
+        }, silenceTimeout)
+      }
     }
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -129,9 +148,14 @@ export function useVoiceRecognition(
 
     recognitionRef.current = recognition
     recognition.start()
-  }, [lang])
+  }, [lang, silenceTimeout])
 
   const stopRecording = useCallback(() => {
+    // #94: Clear silence timer
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = null
+    }
     if (recognitionRef.current) {
       recognitionRef.current.stop()
       // Deliver the latest computed transcript (final + interim).
@@ -148,6 +172,11 @@ export function useVoiceRecognition(
     }
   }, [])
 
+  // Keep stopRecordingRef in sync so silence timer always calls the latest version
+  useEffect(() => {
+    stopRecordingRef.current = stopRecording
+  }, [stopRecording])
+
   // Toggle recording: start if idle, stop if active (#70)
   const toggleRecording = useCallback(() => {
     if (recognitionRef.current) {
@@ -160,6 +189,7 @@ export function useVoiceRecognition(
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
       if (recognitionRef.current) {
         recognitionRef.current.abort()
         recognitionRef.current = null
