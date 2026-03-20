@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import type { Transaction } from '../stores/index'
 import { useDashboardStore } from '../stores/dashboardStore'
-import { getCategoryName, getCategoryTypeColorClass, CATEGORY_NAMES, INCOME_CATEGORIES } from '../lib/categoryUtils'
+import { getCategoryName, getCategoryTypeColorClass } from '../lib/categoryUtils'
 
 interface RecentTransactionsProps {
   transactions: Transaction[]
@@ -38,10 +38,6 @@ function formatDate(dateStr: string): string {
   return dateStr.split('T')[0]
 }
 
-const EXPENSE_CATEGORIES = Object.keys(CATEGORY_NAMES).filter((c) => !INCOME_CATEGORIES.has(c))
-const INCOME_CATEGORY_LIST = Object.keys(CATEGORY_NAMES).filter((c) => INCOME_CATEGORIES.has(c))
-
-
 function RecentTransactions({ transactions }: RecentTransactionsProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -51,6 +47,16 @@ function RecentTransactions({ transactions }: RecentTransactionsProps) {
   const updateTransaction = useDashboardStore((s) => s.updateTransaction)
   const deleteTransaction = useDashboardStore((s) => s.deleteTransaction)
   const fetchBudgetSummary = useDashboardStore((s) => s.fetchBudgetSummary)
+  const categoryInfoList = useDashboardStore((s) => s.categoryInfoList)
+
+  const expenseCategoryList = useMemo(
+    () => categoryInfoList.filter((c) => c.type === 'expense').map((c) => c.category),
+    [categoryInfoList]
+  )
+  const incomeCategoryList = useMemo(
+    () => categoryInfoList.filter((c) => c.type === 'income').map((c) => c.category),
+    [categoryInfoList]
+  )
 
   const handleToggle = useCallback((id: string) => {
     setExpandedId((prev) => (prev === id ? null : id))
@@ -72,7 +78,7 @@ function RecentTransactions({ transactions }: RecentTransactionsProps) {
 
   const handleEditTypeChange = useCallback((newType: 'income' | 'expense') => {
     setEditForm((prev) => {
-      const categoryList = newType === 'income' ? INCOME_CATEGORY_LIST : EXPENSE_CATEGORIES
+      const categoryList = newType === 'income' ? incomeCategoryList : expenseCategoryList
       const categoryStillValid = categoryList.includes(prev.category)
       return {
         ...prev,
@@ -80,7 +86,7 @@ function RecentTransactions({ transactions }: RecentTransactionsProps) {
         category: categoryStillValid ? prev.category : categoryList[0],
       }
     })
-  }, [])
+  }, [incomeCategoryList, expenseCategoryList])
 
   const handleSaveEdit = useCallback(async (id: string) => {
     const parsedAmount = parseFloat(editForm.amount)
@@ -230,7 +236,7 @@ function RecentTransactions({ transactions }: RecentTransactionsProps) {
                             onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
                             className={`flex-1 h-9 rounded-md border border-border px-sm text-body ${getCategoryTypeColorClass(editForm.type)}`}
                           >
-                            {(editForm.type === 'income' ? INCOME_CATEGORY_LIST : EXPENSE_CATEGORIES).map((cat) => (
+                            {(editForm.type === 'income' ? incomeCategoryList : expenseCategoryList).map((cat) => (
                               <option key={cat} value={cat}>
                                 {categoryIcons[cat] ?? '📦'} {getCategoryName(cat)}
                               </option>

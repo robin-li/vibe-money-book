@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import type { Transaction } from '../stores/index'
-import { getCategoryName, getCategoryTypeColorClass, CATEGORY_NAMES, INCOME_CATEGORIES } from '../lib/categoryUtils'
+import { getCategoryName, getCategoryTypeColorClass } from '../lib/categoryUtils'
 import type { UpdateTransactionInput } from '../stores/historyStore'
+import type { CategoryInfo } from '../stores/dashboardStore'
 
 interface TransactionItemProps {
   transaction: Transaction
@@ -11,6 +12,7 @@ interface TransactionItemProps {
   onUpdate: (id: string, input: UpdateTransactionInput) => Promise<void>
   isDeleting: boolean
   isUpdating: boolean
+  categoryInfoList?: CategoryInfo[]
 }
 
 const categoryIcons: Record<string, string> = {
@@ -29,9 +31,6 @@ const categoryIcons: Record<string, string> = {
   adjustment_expense: '🔧',
   adjustment_income: '🔧',
 }
-
-const EXPENSE_CATEGORIES = Object.keys(CATEGORY_NAMES).filter((c) => !INCOME_CATEGORIES.has(c))
-const INCOME_CATEGORY_LIST = Object.keys(CATEGORY_NAMES).filter((c) => INCOME_CATEGORIES.has(c))
 
 function formatTime(dateStr: string): string {
   const date = new Date(dateStr)
@@ -55,7 +54,17 @@ function TransactionItem({
   onUpdate,
   isDeleting,
   isUpdating,
+  categoryInfoList = [],
 }: TransactionItemProps) {
+  const expenseCategoryList = useMemo(
+    () => categoryInfoList.filter((c) => c.type === 'expense').map((c) => c.category),
+    [categoryInfoList]
+  )
+  const incomeCategoryList = useMemo(
+    () => categoryInfoList.filter((c) => c.type === 'income').map((c) => c.category),
+    [categoryInfoList]
+  )
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -119,7 +128,7 @@ function TransactionItem({
 
   const handleTypeChange = useCallback((newType: string) => {
     setEditForm((prev) => {
-      const categoryList = newType === 'income' ? INCOME_CATEGORY_LIST : EXPENSE_CATEGORIES
+      const categoryList = newType === 'income' ? incomeCategoryList : expenseCategoryList
       const categoryStillValid = categoryList.includes(prev.category)
       return {
         ...prev,
@@ -127,7 +136,7 @@ function TransactionItem({
         category: categoryStillValid ? prev.category : categoryList[0],
       }
     })
-  }, [])
+  }, [incomeCategoryList, expenseCategoryList])
 
   const txType = tx.type ?? 'expense'
 
@@ -239,7 +248,7 @@ function TransactionItem({
                     className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none"
                     data-testid="edit-category"
                   >
-                    {(editForm.type === 'income' ? INCOME_CATEGORY_LIST : EXPENSE_CATEGORIES).map((cat) => (
+                    {(editForm.type === 'income' ? incomeCategoryList : expenseCategoryList).map((cat) => (
                       <option key={cat} value={cat}>
                         {categoryIcons[cat] ?? '📦'} {getCategoryName(cat)}
                       </option>
