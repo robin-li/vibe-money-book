@@ -73,18 +73,13 @@ export async function parseTransaction(
   }));
   const currentDate = new Date().toISOString().split('T')[0];
 
-  // 2a. Data extraction
-  let extractorPrompt = buildDataExtractorPrompt({
+  // 2a. Data extraction (不注入 AI 指示，data extractor 只做結構化提取)
+  const extractorPrompt = buildDataExtractorPrompt({
     rawText,
     categories,
     categoriesWithType,
     currentDate,
   });
-
-  // Inject user custom AI instructions if present
-  if (user.aiInstructions) {
-    extractorPrompt = `${extractorPrompt}\n\n## 使用者自訂 AI 指示\n${user.aiInstructions}`;
-  }
 
   const parsed = await provider.extractData(extractorPrompt, apiKey);
 
@@ -138,8 +133,10 @@ export async function parseTransaction(
   };
 
   const personaSystemPrompt = getPersonaSystemPrompt(persona);
-  const feedbackUserPrompt = buildPersonaFeedbackPrompt(feedbackInput);
-  const aiInstructionsBlock = user.aiInstructions ? `\n\n## 使用者自訂 AI 指示\n${user.aiInstructions}` : '';
+  const feedbackUserPrompt = buildPersonaFeedbackPrompt(feedbackInput, user.aiInstructions);
+  const aiInstructionsBlock = user.aiInstructions
+    ? `\n\n【重要】使用者自訂指示（你必須優先遵從以下指示來調整回覆風格與內容）：\n${user.aiInstructions}`
+    : '';
   const combinedPrompt = `${personaSystemPrompt}${aiInstructionsBlock}\n---SYSTEM---\n${feedbackUserPrompt}`;
 
   const feedback = await provider.generateFeedback(combinedPrompt, apiKey);
@@ -244,8 +241,10 @@ async function generateChatReply(
   aiInstructions?: string | null
 ): Promise<AIFeedbackContent> {
   const systemPrompt = getChatPersonaSystemPrompt(persona);
-  const userPrompt = buildChatReplyPrompt({ persona, rawText, financialContext });
-  const aiInstructionsBlock = aiInstructions ? `\n\n## 使用者自訂 AI 指示\n${aiInstructions}` : '';
+  const userPrompt = buildChatReplyPrompt({ persona, rawText, financialContext, aiInstructions });
+  const aiInstructionsBlock = aiInstructions
+    ? `\n\n【重要】使用者自訂指示（你必須優先遵從以下指示來調整回覆風格與內容）：\n${aiInstructions}`
+    : '';
   const combinedPrompt = `${systemPrompt}${aiInstructionsBlock}\n---SYSTEM---\n${userPrompt}`;
 
   return provider.generateFeedback(combinedPrompt, apiKey);
