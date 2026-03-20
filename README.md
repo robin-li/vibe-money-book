@@ -81,10 +81,36 @@
 
 ### AI / LLM
 
-| 引擎 | 模型 |
-|------|------|
-| Google Gemini (預設) | gemini-2.0-flash-lite |
-| OpenAI | gpt-4o-mini |
+| 引擎 | 預設模型 | 環境變數 |
+|------|---------|---------|
+| Google Gemini (預設) | `gemini-3-flash-preview` | `GEMINI_MODEL` |
+| OpenAI | `gpt-5.4-mini` | `OPENAI_MODEL` |
+
+<details>
+<summary>📋 可用模型列表</summary>
+
+#### Google Gemini
+
+| 模型名稱 | 特點 | 價格 (per 1M tokens) |
+|---------|------|---------------------|
+| `gemini-3-flash-preview` ⭐ | 比 2.5 Pro 更強、3x 更快（推薦） | $0.50 / $3.00 |
+| `gemini-3.1-flash-lite-preview` | 最快最便宜 | $0.25 / $1.50 |
+| `gemini-2.5-flash` | 穩定、有推理能力 | — |
+| `gemini-2.5-pro` | 最強推理 | — |
+| `gemini-2.0-flash` | 快速、穩定 | — |
+
+#### OpenAI
+
+| 模型名稱 | 特點 | 價格 (per 1M tokens) |
+|---------|------|---------------------|
+| `gpt-5.4-mini` ⭐ | 比 GPT-5 mini 更強、2x 更快、400k context（推薦） | $0.75 / $4.50 |
+| `gpt-5.4-nano` | 最低成本 | $0.20 / $1.25 |
+| `gpt-5.4` | 旗艦模型，複雜推理 | — |
+| `gpt-5.4-pro` | 最高品質 | — |
+| `gpt-4.1` | 上一代，支援 fine-tuning | — |
+| `gpt-4.1-mini` | 上一代快速版 | — |
+
+</details>
 
 ### 測試
 
@@ -212,8 +238,10 @@ JWT_SECRET=your-jwt-secret-key
 JWT_EXPIRE=7d
 
 # LLM 模型設定（API Key 由使用者在前端自行輸入，不儲存於伺服器）
-OPENAI_MODEL=gpt-4o-mini
-GEMINI_MODEL=gemini-2.0-flash-lite
+# 可用模型見上方「AI / LLM」段落
+GEMINI_MODEL=gemini-3-flash-preview
+OPENAI_MODEL=gpt-5.4-mini
+LLM_TIMEOUT_MS=30000
 
 # 伺服器設定
 PORT=3000

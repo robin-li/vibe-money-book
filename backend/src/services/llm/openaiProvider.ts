@@ -29,7 +29,7 @@ export class OpenAIProvider implements LLMProvider {
             { role: 'user', content: userPrompt },
           ],
           temperature,
-          max_tokens: maxTokens,
+          max_completion_tokens: maxTokens,
         });
 
         const text = response.choices[0]?.message?.content;
@@ -46,6 +46,7 @@ export class OpenAIProvider implements LLMProvider {
     }
 
     const message = lastError?.message || '';
+    console.error('[OpenAI Error]', message, lastError);
     if (message.includes('Incorrect API key') || message.includes('invalid_api_key')) {
       throw new AppError('OpenAI API Key 無效，請確認您的 API Key', 403);
     }

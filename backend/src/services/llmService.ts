@@ -299,6 +299,7 @@ export async function validateApiKey(userId: string, apiKey: string): Promise<{ 
     );
     return { valid: true, engine };
   } catch (err) {
+    console.error('[validateApiKey] Raw error:', err);
     if (err instanceof AppError && err.statusCode === 403) {
       throw err;
     }
