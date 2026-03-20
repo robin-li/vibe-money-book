@@ -39,8 +39,7 @@ export interface DataExtractorInput {
   rawText: string;
   categories: string[];
   categoriesWithType?: CategoryWithType[];
-  currentDate: string;
-  currentDayOfWeek: string;
+  currentDateTime: string;
   aiInstructions?: string | null;
 }
 

@@ -57,7 +57,13 @@ export async function parseTransaction(
   // 1. If chat intent → generate chat reply and return
   if (intent === 'chat') {
     const financialContext = await getFinancialContext(userId, user.monthlyBudget);
-    const chatReply = await generateChatReply(persona, rawText, financialContext, apiKey, provider, user.aiInstructions);
+    let chatReply: AIFeedbackContent;
+    try {
+      chatReply = await generateChatReply(persona, rawText, financialContext, apiKey, provider, user.aiInstructions);
+    } catch (err) {
+      console.warn('[Chat Fallback] generateChatReply 失敗，使用預設回饋', err);
+      chatReply = { text: '已記錄！', emotion_tag: 'neutral' };
+    }
     return {
       intent: 'chat',
       reply: chatReply,
@@ -72,17 +78,25 @@ export async function parseTransaction(
     type: (cb.type || 'expense') as 'income' | 'expense',
   }));
   const now = new Date();
-  const currentDate = now.toISOString().split('T')[0];
-  const dayNames = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-  const currentDayOfWeek = dayNames[now.getDay()];
+  const dateTimeOptions: Intl.DateTimeFormatOptions = {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  };
+  const currentDateTime = now.toLocaleString('zh-TW', dateTimeOptions) + ' (GMT+8)';
 
   // 2a. Data extraction
   const extractorPrompt = buildDataExtractorPrompt({
     rawText,
     categories,
     categoriesWithType,
-    currentDate,
-    currentDayOfWeek,
+    currentDateTime,
     aiInstructions: user.aiInstructions,
   });
 
@@ -143,7 +157,13 @@ export async function parseTransaction(
     : '';
   const combinedPrompt = `${personaSystemPrompt}${aiInstructionsBlock}\n---SYSTEM---\n${feedbackUserPrompt}`;
 
-  const feedback = await provider.generateFeedback(combinedPrompt, apiKey);
+  let feedback: AIFeedbackContent;
+  try {
+    feedback = await provider.generateFeedback(combinedPrompt, apiKey);
+  } catch (err) {
+    console.warn('[Feedback Fallback] generateFeedback 失敗，使用預設回饋', err);
+    feedback = { text: '已記錄！', emotion_tag: 'neutral' };
+  }
 
   return { intent: 'transaction', parsed, feedback, budget_context: budgetContext };
 }
