@@ -4,7 +4,7 @@ import { ParsedTransaction, AIFeedbackContent } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { AppError } from '../../middlewares/errorHandler';
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
 const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 30000;
 const MAX_RETRIES = 2;
 
