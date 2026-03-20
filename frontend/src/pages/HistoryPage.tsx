@@ -230,6 +230,7 @@ function HistoryPage() {
                     onUpdate={handleUpdate}
                     isDeleting={isDeleting === tx.id}
                     isUpdating={isUpdating === tx.id}
+                    categoryInfoList={categoryInfoList}
                   />
                 ))}
               </div>
