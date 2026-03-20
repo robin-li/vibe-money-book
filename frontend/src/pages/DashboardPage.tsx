@@ -18,6 +18,7 @@ function DashboardPage() {
   const {
     status,
     parsedResult,
+    lastRawText,
     aiFeedback,
     budgetSummary,
     recentTransactions,
@@ -58,13 +59,13 @@ function DashboardPage() {
     }) => {
       await confirmTransaction({
         ...data,
-        rawText: parsedResult?.merchant ?? data.merchant,
+        rawText: lastRawText || data.merchant,
         note: parsedResult?.note,
         feedback: aiFeedback ?? undefined,
       })
       fetchBudgetSummary()
     },
-    [confirmTransaction, parsedResult, aiFeedback, fetchBudgetSummary]
+    [confirmTransaction, lastRawText, parsedResult, aiFeedback, fetchBudgetSummary]
   )
 
   const handleNewCategoryConfirm = useCallback(
@@ -78,7 +79,7 @@ function DashboardPage() {
             category: categoryName,
             merchant: parsedResult.merchant,
             date: parsedResult.date,
-            rawText: parsedResult.merchant,
+            rawText: lastRawText || parsedResult.merchant,
             note: parsedResult.note,
             feedback: aiFeedback ?? undefined,
           })
@@ -92,6 +93,7 @@ function DashboardPage() {
       createCategory,
       confirmTransaction,
       parsedResult,
+      lastRawText,
       aiFeedback,
       fetchBudgetSummary,
     ]
@@ -106,14 +108,14 @@ function DashboardPage() {
           category,
           merchant: parsedResult.merchant,
           date: parsedResult.date,
-          rawText: parsedResult.merchant,
+          rawText: lastRawText || parsedResult.merchant,
           note: parsedResult.note,
           feedback: aiFeedback ?? undefined,
         })
         fetchBudgetSummary()
       }
     },
-    [confirmTransaction, parsedResult, aiFeedback, fetchBudgetSummary]
+    [confirmTransaction, parsedResult, lastRawText, aiFeedback, fetchBudgetSummary]
   )
 
   const isParsing = status === 'parsing'

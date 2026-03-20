@@ -1,18 +1,34 @@
 import { DataExtractorInput } from '../types/llm';
 
 export function buildDataExtractorPrompt(input: DataExtractorInput): string {
-  const categoriesList = input.categories.join(', ');
+  // Build categorized list if available, otherwise use flat list
+  let categorySection: string;
+  if (input.categoriesWithType && input.categoriesWithType.length > 0) {
+    const expenseCats = input.categoriesWithType
+      .filter((c) => c.type === 'expense')
+      .map((c) => c.category);
+    const incomeCats = input.categoriesWithType
+      .filter((c) => c.type === 'income')
+      .map((c) => c.category);
+    categorySection = `   - 消費類別：[${expenseCats.join(', ')}]\n   - 收入類別：[${incomeCats.join(', ')}]`;
+  } else {
+    categorySection = `   [${input.categories.join(', ')}]`;
+  }
 
   return `你是一個記帳助手，負責將使用者的自然語言輸入轉換為結構化的 JSON 資料。
 
 ## 規則
 1. 從使用者輸入中萃取：交易類型、金額、類別、商家、日期
 2. **交易類型（type）**：判斷是收入（income）還是消費（expense）
-   - 收入關鍵字：薪水、薪資、獎金、紅包、退款、利息、收入、入帳、進帳、賣出、兼職、稿費、股息等
+   - 收入關鍵字：薪水、薪資、獎金、紅包、退款、利息、收入、入帳、進帳、賣出、兼職、稿費、股息、投資獲利、賺、中獎等
    - 消費關鍵字：買、吃、喝、搭、付、花、繳、租、訂閱等（或任何花錢行為）
    - 若無法明確判斷收入或消費，設 type 為 "expense"（預設為消費）
 3. 金額必須為正數。若無法辨識金額，回傳 amount 為 null
-4. 類別必須從以下清單中選擇：[${categoriesList}]
+4. **類別選擇**：根據判斷的交易類型（type），從對應的類別清單中選擇：
+${categorySection}
+   - 若 type 為 "income"，**必須**從收入類別中選擇最匹配的項目
+   - 若 type 為 "expense"，**必須**從消費類別中選擇最匹配的項目
+   - 例如：投資股票賺錢 → type: "income", category: "investment"；領薪水 → type: "income", category: "salary"
 5. 「other」僅用於真正無法歸類的雜項消費。若消費有明確主題（如寵物、健身、才藝、育兒等），不應歸入 other，而應設 is_new_category 為 true，並在 suggested_category 中填入建議的新類別名稱（使用中文）
 6. 偵測相似類別名稱（如「咖啡」與「飲料」），避免重複建立，優先歸入現有類別
 7. 若未提及商家，根據消費內容推測合理的商家名稱

@@ -30,14 +30,19 @@ export async function parseTransaction(
   const persona = user.persona as Persona;
   const provider = getProvider(engine);
 
-  // Build category list for prompt
+  // Build category list for prompt (with type info for correct income/expense mapping)
   const categories = user.categoryBudgets.map((cb) => cb.category);
+  const categoriesWithType = user.categoryBudgets.map((cb) => ({
+    category: cb.category,
+    type: (cb.type || 'expense') as 'income' | 'expense',
+  }));
   const currentDate = new Date().toISOString().split('T')[0];
 
   // 1. Data extraction
   const extractorPrompt = buildDataExtractorPrompt({
     rawText,
     categories,
+    categoriesWithType,
     currentDate,
   });
 
