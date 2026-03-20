@@ -30,6 +30,7 @@ function SettingsPage() {
     monthlyBudget,
     userName,
     userEmail,
+    aiInstructions,
     loading,
     saving,
     error,
@@ -38,9 +39,14 @@ function SettingsPage() {
     updatePersona,
     updateBudget,
     updateAIEngine,
+    updateAIInstructions,
     validateApiKey,
     clearError,
   } = useSettingsStore()
+
+  // Local state for AI instructions
+  const [aiInstructionsInput, setAiInstructionsInput] = useState(aiInstructions)
+  const [aiInstructionsEditing, setAiInstructionsEditing] = useState(false)
 
   // Local state for budget input (so user can type freely)
   const [budgetInput, setBudgetInput] = useState(() =>
@@ -67,12 +73,13 @@ function SettingsPage() {
   const [showApiKey, setShowApiKey] = useState(false)
   const currentApiKey = apiKeys[aiEngine] ?? ''
 
-  // Load profile on mount and sync budget input
+  // Load profile on mount and sync budget input / AI instructions
   useEffect(() => {
     const load = async () => {
       await fetchProfile()
-      const budget = useSettingsStore.getState().monthlyBudget
-      if (budget > 0) setBudgetInput(String(budget))
+      const state = useSettingsStore.getState()
+      if (state.monthlyBudget > 0) setBudgetInput(String(state.monthlyBudget))
+      setAiInstructionsInput(state.aiInstructions)
     }
     load()
   }, [fetchProfile])
@@ -87,6 +94,13 @@ function SettingsPage() {
     }
     setBudgetEditing(false)
   }, [budgetInput, updateBudget, monthlyBudget])
+
+  const handleAiInstructionsSave = useCallback(() => {
+    if (aiInstructionsInput !== aiInstructions) {
+      updateAIInstructions(aiInstructionsInput)
+    }
+    setAiInstructionsEditing(false)
+  }, [aiInstructionsInput, aiInstructions, updateAIInstructions])
 
   const saveApiKeys = useCallback((keys: Record<string, string>) => {
     localStorage.setItem('llm_api_keys', JSON.stringify(keys))
@@ -238,6 +252,41 @@ function SettingsPage() {
               </button>
             )
           })}
+        </div>
+      </section>
+
+      {/* AI 指示 */}
+      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label="AI 指示">
+        <h2 className="text-caption text-text-secondary mb-md">
+          AI 指示
+        </h2>
+        <textarea
+          value={aiInstructionsInput}
+          onChange={(e) => {
+            setAiInstructionsInput(e.target.value)
+            setAiInstructionsEditing(true)
+          }}
+          onBlur={handleAiInstructionsSave}
+          placeholder="例如：若無適當分類，請建議新的類別名稱"
+          maxLength={1000}
+          rows={5}
+          className="w-full rounded-md border border-border bg-bg px-lg py-md text-body text-text-primary resize-none focus:outline-none focus:border-primary"
+          aria-label="自訂 AI 指示"
+        />
+        <div className="flex justify-between items-center mt-sm">
+          <p className="text-small text-text-secondary">
+            {aiInstructionsInput.length}/1000
+          </p>
+          {aiInstructionsEditing && (
+            <button
+              onClick={handleAiInstructionsSave}
+              disabled={saving}
+              className="h-9 px-lg rounded-md bg-primary text-white text-caption font-semibold disabled:opacity-50 transition-all hover:bg-primary-dark"
+              aria-label="儲存 AI 指示"
+            >
+              儲存
+            </button>
+          )}
         </div>
       </section>
 

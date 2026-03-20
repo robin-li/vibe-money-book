@@ -21,6 +21,11 @@ export const updateProfileSchema = z.object({
     .min(0, '月預算不可為負數')
     .max(10000000, '月預算不可超過 10,000,000')
     .optional(),
+  ai_instructions: z
+    .string()
+    .max(1000, 'AI 指示最多 1000 個字元')
+    .nullable()
+    .optional(),
 }).refine(
   (data) => Object.keys(data).length > 0,
   { message: '至少需提供一個欄位進行更新' }
