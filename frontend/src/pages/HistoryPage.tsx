@@ -46,12 +46,14 @@ function HistoryPage() {
     hasMore,
     isLoading,
     isDeleting,
+    isUpdating,
     errorMessage,
     fetchTransactions,
     loadMore,
     setFilters,
     resetFilters,
     deleteTransaction,
+    updateTransaction,
   } = useHistoryStore()
 
   const storeCategories = useDashboardStore((s) => s.categories)
@@ -113,6 +115,13 @@ function HistoryPage() {
       setExpandedId(null)
     },
     [deleteTransaction]
+  )
+
+  const handleUpdate = useCallback(
+    async (id: string, input: Parameters<typeof updateTransaction>[1]) => {
+      await updateTransaction(id, input)
+    },
+    [updateTransaction]
   )
 
   const grouped = useMemo(() => groupByDate(transactions), [transactions])
@@ -204,7 +213,9 @@ function HistoryPage() {
                     isExpanded={expandedId === tx.id}
                     onToggle={() => handleToggle(tx.id)}
                     onDelete={handleDelete}
+                    onUpdate={handleUpdate}
                     isDeleting={isDeleting === tx.id}
+                    isUpdating={isUpdating === tx.id}
                   />
                 ))}
               </div>
