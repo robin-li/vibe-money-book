@@ -44,13 +44,15 @@ function AssetCard({ summary }: AssetCardProps) {
       >
         {isPositive ? '+' : '-'}{formatMoney(totalAsset)}
       </p>
-      <div className="flex justify-between mt-sm gap-sm">
-        <span className="text-small text-text-secondary truncate min-w-0">
-          收入 {formatMoney(totalIncome)}
-        </span>
-        <span className="text-small text-text-secondary truncate min-w-0 text-right">
-          支出 {formatMoney(totalSpent)}
-        </span>
+      <div className="space-y-xs mt-sm text-caption">
+        <div className="flex justify-between">
+          <span className="text-text-secondary">收入</span>
+          <span className="text-success">+{formatMoney(totalIncome)}</span>
+        </div>
+        <div className="flex justify-between">
+          <span className="text-text-secondary">支出</span>
+          <span className="text-danger">-{formatMoney(totalSpent)}</span>
+        </div>
       </div>
     </section>
   )

@@ -68,13 +68,15 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
           <BudgetBar usedRatio={usedRatio} />
         </div>
 
-        <div className="flex justify-between gap-sm">
-          <span className="text-small text-text-secondary truncate min-w-0">
-            支出 {formatMoney(totalSpent)}
-          </span>
-          <span className="text-small text-text-secondary truncate min-w-0 text-right">
-            目標 {formatMoney(monthlyBudget)}
-          </span>
+        <div className="space-y-xs text-caption">
+          <div className="flex justify-between">
+            <span className="text-text-secondary">支出</span>
+            <span className="text-danger">-{formatMoney(totalSpent)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-text-secondary">目標</span>
+            <span className="text-text-primary">{formatMoney(monthlyBudget)}</span>
+          </div>
         </div>
       </section>
     )
