@@ -958,6 +958,12 @@ components:
           type: number
         used_ratio:
           type: number
+        total_income:
+          type: number
+          description: 當月總收入
+        total_asset:
+          type: number
+          description: 當月總資產（收入 - 支出）
         transaction_count:
           type: integer
         category_summary:

@@ -23,6 +23,8 @@ describe('BudgetCard', () => {
       totalSpent: 5000,
       remaining: 15000,
       usedRatio: 0.25,
+      totalIncome: 10000,
+      totalAsset: 5000,
       transactionCount: 10,
     }
     render(<BudgetCard summary={summary} />)
@@ -38,6 +40,8 @@ describe('BudgetCard', () => {
       totalSpent: 18000,
       remaining: 2000,
       usedRatio: 0.9,
+      totalIncome: 20000,
+      totalAsset: 2000,
       transactionCount: 30,
     }
     render(<BudgetCard summary={summary} />)
@@ -51,6 +55,8 @@ describe('BudgetCard', () => {
       totalSpent: 22000,
       remaining: -2000,
       usedRatio: 1.1,
+      totalIncome: 20000,
+      totalAsset: -2000,
       transactionCount: 40,
     }
     render(<BudgetCard summary={summary} />)
