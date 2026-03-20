@@ -17,7 +17,7 @@ function AssetCard({ summary }: AssetCardProps) {
         <h2 className="text-caption text-text-secondary mb-sm">
           總資產
         </h2>
-        <p className="text-display font-bold text-text-primary">
+        <p className="text-headline font-bold text-text-primary truncate">
           --
         </p>
         <p className="text-caption text-text-secondary mt-sm">
@@ -39,16 +39,16 @@ function AssetCard({ summary }: AssetCardProps) {
         總資產
       </p>
       <p
-        className={`text-display font-bold ${isPositive ? 'text-primary' : 'text-danger'}`}
+        className={`text-headline font-bold truncate ${isPositive ? 'text-primary' : 'text-danger'}`}
         aria-live="polite"
       >
         {isPositive ? '+' : '-'}{formatMoney(totalAsset)}
       </p>
-      <div className="flex justify-between mt-sm">
-        <span className="text-small text-text-secondary">
+      <div className="flex justify-between mt-sm gap-sm">
+        <span className="text-small text-text-secondary truncate min-w-0">
           收入 {formatMoney(totalIncome)}
         </span>
-        <span className="text-small text-text-secondary">
+        <span className="text-small text-text-secondary truncate min-w-0 text-right">
           支出 {formatMoney(totalSpent)}
         </span>
       </div>
