@@ -13,10 +13,32 @@ function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
   const [inputText, setInputText] = useState('')
   const [showError, setShowError] = useState(false)
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // #94: Ref to flag that the next onResult should trigger auto-submit
+  const autoSubmitRef = useRef(false)
+  const onSubmitRef = useRef(onSubmit)
+  const disabledRef = useRef(disabled)
   const isSupported = isSpeechRecognitionSupported()
 
+  useEffect(() => {
+    onSubmitRef.current = onSubmit
+    disabledRef.current = disabled
+  }, [onSubmit, disabled])
+
   const handleVoiceResult = useCallback((transcript: string) => {
-    setInputText(transcript)
+    // #94: If auto-submit was requested (send button pressed during recording),
+    // submit the transcript immediately instead of just setting inputText.
+    if (autoSubmitRef.current) {
+      autoSubmitRef.current = false
+      const text = transcript.trim()
+      if (text) {
+        setInputText('')
+        onSubmitRef.current(text)
+      } else {
+        setInputText(transcript)
+      }
+    } else {
+      setInputText(transcript)
+    }
   }, [])
 
   const handleVoiceInterim = useCallback((interim: string) => {
@@ -29,13 +51,17 @@ function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
     errorTimerRef.current = setTimeout(() => setShowError(false), 3000)
   }, [])
 
-  const { status, errorMessage, toggleRecording } =
+  const { status, errorMessage, toggleRecording, stopRecording } =
     useVoiceRecognition({
       lang: 'zh-TW',
       onResult: handleVoiceResult,
       onInterimResult: handleVoiceInterim,
       onError: handleVoiceError,
     })
+
+  const isRecording = status === 'recording'
+  const isRecognizing = status === 'recognizing'
+  const isActive = isRecording || isRecognizing
 
   // Cleanup error timer on unmount
   useEffect(() => {
@@ -44,16 +70,20 @@ function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
     }
   }, [])
 
-  const isRecording = status === 'recording'
-  const isRecognizing = status === 'recognizing'
-  const isActive = isRecording || isRecognizing
-
   const handleSubmit = useCallback(() => {
+    // #94: If recording is active, stop recording and auto-submit the result.
+    // stopRecording() synchronously delivers the transcript via onResult callback,
+    // where autoSubmitRef triggers immediate submission.
+    if (isActive) {
+      autoSubmitRef.current = true
+      stopRecording()
+      return
+    }
     const text = inputText.trim()
     if (!text || disabled) return
     onSubmit(text)
     setInputText('')
-  }, [inputText, onSubmit, disabled])
+  }, [inputText, onSubmit, disabled, isActive, stopRecording])
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -166,11 +196,11 @@ function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
           </button>
         )}
 
-        {/* Send button */}
+        {/* Send button — enabled during recording so user can stop+send (#94) */}
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={disabled || !inputText.trim()}
+          disabled={disabled || (!inputText.trim() && !isActive)}
           className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-fab transition-opacity duration-[var(--transition-fast)] disabled:opacity-40"
           aria-label="送出"
         >
