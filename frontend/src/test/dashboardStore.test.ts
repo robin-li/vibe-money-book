@@ -113,6 +113,8 @@ describe('dashboardStore', () => {
           totalSpent: 5000,
           remaining: 15000,
           usedRatio: 0.25,
+          totalIncome: 10000,
+          totalAsset: 5000,
           transactionCount: 10,
         },
       })

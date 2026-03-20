@@ -3,13 +3,18 @@ import BudgetBar from './BudgetBar'
 
 interface BudgetCardProps {
   summary: BudgetSummary | null
+  compact?: boolean
 }
 
-function BudgetCard({ summary }: BudgetCardProps) {
+function BudgetCard({ summary, compact }: BudgetCardProps) {
+  const baseClass = compact
+    ? 'bg-surface rounded-lg shadow-card p-lg flex-1 min-w-0'
+    : 'bg-surface rounded-lg shadow-card p-lg mx-2xl mb-xl'
+
   if (!summary || summary.monthlyBudget <= 0) {
     return (
       <section
-        className="bg-surface rounded-lg shadow-card p-lg mx-2xl mb-xl"
+        className={baseClass}
         aria-label="預算概覽"
       >
         <h2 className="text-caption text-text-secondary mb-sm">
@@ -42,9 +47,42 @@ function BudgetCard({ summary }: BudgetCardProps) {
   const formatMoney = (n: number) =>
     `$${n.toLocaleString('zh-TW', { maximumFractionDigits: 0 })}`
 
+  if (compact) {
+    return (
+      <section
+        className={baseClass}
+        aria-label="預算概覽"
+      >
+        <p className="text-caption text-text-secondary mb-xs">
+          預算剩餘
+        </p>
+        <p
+          className={`text-display font-bold ${getPercentColor()}`}
+          aria-live="polite"
+        >
+          {isOverBudget ? '超支' : `${remainingPercent}%`}
+        </p>
+
+        {/* Progress bar */}
+        <div className="my-sm">
+          <BudgetBar usedRatio={usedRatio} />
+        </div>
+
+        <div className="flex justify-between">
+          <span className="text-small text-text-secondary">
+            支出 {formatMoney(totalSpent)}
+          </span>
+          <span className="text-small text-text-secondary">
+            目標 {formatMoney(monthlyBudget)}
+          </span>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section
-      className="bg-surface rounded-lg shadow-card p-lg mx-2xl mb-xl"
+      className={baseClass}
       aria-label="預算概覽"
     >
       <div className="flex justify-between items-start mb-sm">

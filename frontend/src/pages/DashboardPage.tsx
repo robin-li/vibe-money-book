@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useDashboardStore } from '../stores/dashboardStore'
 import VoiceInput from '../components/VoiceInput'
+import AssetCard from '../components/AssetCard'
 import BudgetCard from '../components/BudgetCard'
 import AIFeedbackCard from '../components/AIFeedbackCard'
 import RecentTransactions from '../components/RecentTransactions'
@@ -157,8 +158,11 @@ function DashboardPage() {
           </button>
         </header>
 
-        {/* Budget Card */}
-        <BudgetCard summary={budgetSummary} />
+        {/* Asset & Budget Cards */}
+        <div className="flex gap-md mx-2xl mb-xl">
+          <AssetCard summary={budgetSummary} />
+          <BudgetCard summary={budgetSummary} compact />
+        </div>
 
         {/* AI Feedback Card */}
         <AIFeedbackCard
