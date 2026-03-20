@@ -17,11 +17,15 @@ const PERSONA_DEFINITIONS: Record<string, string> = {
     - 若超預算，加重情緒勒索`,
 };
 
-export function buildPersonaFeedbackPrompt(input: PersonaFeedbackInput): string {
+export function buildPersonaFeedbackPrompt(input: PersonaFeedbackInput, aiInstructions?: string | null): string {
   const budgetUsedPercent = Math.round(input.budgetUsedRatio * 100);
   const categoryUsedPercent = Math.round(input.categoryBudgetUsedRatio * 100);
 
-  return `根據以下消費資訊，用你的角色風格給出簡短的財務評論（50字以內）。
+  const aiInstructionsReminder = aiInstructions
+    ? `\n\n## 注意：請務必遵從系統指示中的使用者自訂指示來調整你的回覆風格與內容。`
+    : '';
+
+  return `根據以下消費資訊，用你的角色風格給出簡短的財務評論（50字以內）。${aiInstructionsReminder}
 
 ## 消費資訊
 - 金額：${input.amount} 元

@@ -54,11 +54,15 @@ function buildFinancialContextBlock(ctx: FinancialContext): string {
   return block;
 }
 
-export function buildChatReplyPrompt(input: ChatReplyInput): string {
+export function buildChatReplyPrompt(input: ChatReplyInput & { aiInstructions?: string | null }): string {
   const financialBlock = buildFinancialContextBlock(input.financialContext);
 
+  const aiInstructionsReminder = input.aiInstructions
+    ? `\n\n## 注意：請務必遵從系統指示中的使用者自訂指示來調整你的回覆風格與內容。`
+    : '';
+
   return `根據使用者的輸入，用你的角色風格回應。回覆要簡短有趣（80字以內）。
-請根據使用者的真實財務狀況來回應，讓回覆更貼近使用者的實際情況。
+請根據使用者的真實財務狀況來回應，讓回覆更貼近使用者的實際情況。${aiInstructionsReminder}
 
 ${financialBlock}
 
