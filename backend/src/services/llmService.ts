@@ -57,7 +57,7 @@ export async function parseTransaction(
   // 1. If chat intent → generate chat reply and return
   if (intent === 'chat') {
     const financialContext = await getFinancialContext(userId, user.monthlyBudget);
-    const chatReply = await generateChatReply(persona, rawText, financialContext, apiKey, provider);
+    const chatReply = await generateChatReply(persona, rawText, financialContext, apiKey, provider, user.aiInstructions);
     return {
       intent: 'chat',
       reply: chatReply,
@@ -74,12 +74,17 @@ export async function parseTransaction(
   const currentDate = new Date().toISOString().split('T')[0];
 
   // 2a. Data extraction
-  const extractorPrompt = buildDataExtractorPrompt({
+  let extractorPrompt = buildDataExtractorPrompt({
     rawText,
     categories,
     categoriesWithType,
     currentDate,
   });
+
+  // Inject user custom AI instructions if present
+  if (user.aiInstructions) {
+    extractorPrompt = `${extractorPrompt}\n\n## 使用者自訂 AI 指示\n${user.aiInstructions}`;
+  }
 
   const parsed = await provider.extractData(extractorPrompt, apiKey);
 
@@ -134,7 +139,8 @@ export async function parseTransaction(
 
   const personaSystemPrompt = getPersonaSystemPrompt(persona);
   const feedbackUserPrompt = buildPersonaFeedbackPrompt(feedbackInput);
-  const combinedPrompt = `${personaSystemPrompt}\n---SYSTEM---\n${feedbackUserPrompt}`;
+  const aiInstructionsBlock = user.aiInstructions ? `\n\n## 使用者自訂 AI 指示\n${user.aiInstructions}` : '';
+  const combinedPrompt = `${personaSystemPrompt}${aiInstructionsBlock}\n---SYSTEM---\n${feedbackUserPrompt}`;
 
   const feedback = await provider.generateFeedback(combinedPrompt, apiKey);
 
@@ -234,11 +240,13 @@ async function generateChatReply(
   rawText: string,
   financialContext: FinancialContext,
   apiKey: string,
-  provider: ReturnType<typeof getProvider>
+  provider: ReturnType<typeof getProvider>,
+  aiInstructions?: string | null
 ): Promise<AIFeedbackContent> {
   const systemPrompt = getChatPersonaSystemPrompt(persona);
   const userPrompt = buildChatReplyPrompt({ persona, rawText, financialContext });
-  const combinedPrompt = `${systemPrompt}\n---SYSTEM---\n${userPrompt}`;
+  const aiInstructionsBlock = aiInstructions ? `\n\n## 使用者自訂 AI 指示\n${aiInstructions}` : '';
+  const combinedPrompt = `${systemPrompt}${aiInstructionsBlock}\n---SYSTEM---\n${userPrompt}`;
 
   return provider.generateFeedback(combinedPrompt, apiKey);
 }

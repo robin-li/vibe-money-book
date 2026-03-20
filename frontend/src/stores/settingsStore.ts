@@ -13,6 +13,7 @@ interface SettingsState {
   monthlyBudget: number
   userName: string
   userEmail: string
+  aiInstructions: string
 
   /** 載入/更新狀態 */
   loading: boolean
@@ -30,6 +31,8 @@ interface SettingsState {
   updateBudget: (monthlyBudget: number) => Promise<void>
   /** 更新 AI 引擎 */
   updateAIEngine: (aiEngine: AIEngine) => Promise<void>
+  /** 更新 AI 指示 */
+  updateAIInstructions: (aiInstructions: string) => Promise<void>
   /** 驗證 API Key */
   validateApiKey: (apiKey: string) => Promise<boolean>
   /** 清除錯誤 */
@@ -42,6 +45,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   monthlyBudget: 0,
   userName: '',
   userEmail: '',
+  aiInstructions: '',
   loading: false,
   saving: false,
   error: null,
@@ -58,6 +62,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         monthlyBudget: Number(d.monthly_budget ?? d.monthlyBudget ?? 0),
         userName: d.name ?? '',
         userEmail: d.email ?? '',
+        aiInstructions: d.ai_instructions ?? '',
         loading: false,
       })
     } catch (err: unknown) {
@@ -99,6 +104,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     } catch (err: unknown) {
       const message = extractErrorMessage(err, '更新 AI 引擎失敗')
       set({ aiEngine: prev, saving: false, error: message })
+    }
+  },
+
+  updateAIInstructions: async (aiInstructions: string) => {
+    const prev = get().aiInstructions
+    set({ aiInstructions, saving: true, error: null })
+    try {
+      await api.put('/users/profile', { ai_instructions: aiInstructions || null })
+      set({ saving: false })
+    } catch (err: unknown) {
+      const message = extractErrorMessage(err, '更新 AI 指示失敗')
+      set({ aiInstructions: prev, saving: false, error: message })
     }
   },
 
