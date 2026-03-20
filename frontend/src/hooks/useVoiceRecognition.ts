@@ -43,10 +43,11 @@ export function useVoiceRecognition(
 
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const callbacksRef = useRef({ onResult, onInterimResult, onError })
-  // Store the latest computed transcript from onresult for delivery on stop.
-  // This is NOT used for accumulation — it simply caches the last computed value
-  // so stopRecording can deliver it synchronously.
-  const latestTranscriptRef = useRef('')
+  // Cache the latest transcript computed from event.results for synchronous
+  // delivery when stopRecording is called. This ref is NEVER used for
+  // accumulation — it is overwritten (not appended) on every onresult event.
+  const latestFinalRef = useRef('')
+  const latestInterimRef = useRef('')
 
   // Keep callbacks ref updated
   useEffect(() => {
@@ -64,7 +65,8 @@ export function useVoiceRecognition(
     }
 
     // Reset latest transcript cache
-    latestTranscriptRef.current = ''
+    latestFinalRef.current = ''
+    latestInterimRef.current = ''
 
     const recognition = new SpeechRecognitionClass()
     recognition.lang = lang
@@ -80,32 +82,34 @@ export function useVoiceRecognition(
     }
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      // Fix #76: Rebuild transcript from event.results on every onresult call.
-      // event.results contains the COMPLETE history of all recognition results
-      // in continuous mode. We must NOT accumulate via ref/state — just recompute
-      // from the source of truth each time to avoid duplication on pauses.
+      // Fix #87: Rebuild transcript from event.results on EVERY onresult call.
+      // In continuous mode, event.results is the COMPLETE history of all
+      // recognition results. We iterate from index 0 each time and never
+      // accumulate via external refs or state — the loop below is the single
+      // source of truth.
       let finalTranscript = ''
       let interimTranscript = ''
 
       for (let i = 0; i < event.results.length; i++) {
-        const result = event.results[i]
-        if (result.isFinal) {
-          finalTranscript += result[0].transcript
+        const transcript = event.results[i][0].transcript
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript
         } else {
-          interimTranscript += result[0].transcript
+          interimTranscript += transcript
         }
       }
 
-      // Cache the full text (final + interim) for delivery on stop.
-      // Prefer final-only when available; fall back to combined text.
-      const liveText = finalTranscript + interimTranscript
-      latestTranscriptRef.current = finalTranscript || liveText
+      // Cache computed values for synchronous read in stopRecording.
+      // These refs are OVERWRITTEN (not appended) on every call.
+      latestFinalRef.current = finalTranscript
+      latestInterimRef.current = interimTranscript
 
-      // Show combined final + interim as live feedback
-      if (liveText) {
-        setInterimTranscript(liveText)
+      // Display combined text as live feedback
+      const displayText = finalTranscript + interimTranscript
+      if (displayText) {
+        setInterimTranscript(displayText)
         setStatus('recognizing')
-        callbacksRef.current.onInterimResult?.(liveText)
+        callbacksRef.current.onInterimResult?.(displayText)
       }
     }
 
@@ -130,14 +134,17 @@ export function useVoiceRecognition(
   const stopRecording = useCallback(() => {
     if (recognitionRef.current) {
       recognitionRef.current.stop()
-      // Deliver the latest computed transcript (recomputed from event.results each time)
-      const deliverText = latestTranscriptRef.current
+      // Deliver the latest computed transcript (final + interim).
+      // Include interim so nothing is lost if user stops before the engine
+      // finalises the last segment (e.g. short or mid-utterance stops).
+      const deliverText = latestFinalRef.current + latestInterimRef.current
       if (deliverText) {
         setTranscript(deliverText)
         callbacksRef.current.onResult?.(deliverText)
       }
       setInterimTranscript('')
-      latestTranscriptRef.current = ''
+      latestFinalRef.current = ''
+      latestInterimRef.current = ''
     }
   }, [])
 
