@@ -70,6 +70,7 @@ export interface CategoryInfo {
 interface DashboardState {
   status: DashboardStatus
   parsedResult: ParsedResult | null
+  lastRawText: string
   aiFeedback: AIFeedbackContent | null
   budgetContext: BudgetContext | null
   budgetSummary: BudgetSummary | null
@@ -105,6 +106,7 @@ interface DashboardState {
 export const useDashboardStore = create<DashboardState>((set, get) => ({
   status: 'idle',
   parsedResult: null,
+  lastRawText: '',
   aiFeedback: null,
   budgetContext: null,
   budgetSummary: null,
@@ -140,7 +142,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   },
 
   parseInput: async (rawText: string) => {
-    set({ status: 'parsing', errorMessage: '' })
+    set({ status: 'parsing', errorMessage: '', lastRawText: rawText })
     try {
       const llmApiKey = getActiveApiKey()
       const res = await api.post(
@@ -334,7 +336,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   },
 
   resetParsedResult: () => {
-    set({ status: 'idle', parsedResult: null, errorMessage: '' })
+    set({ status: 'idle', parsedResult: null, lastRawText: '', errorMessage: '' })
   },
 
   setError: (message: string) => {

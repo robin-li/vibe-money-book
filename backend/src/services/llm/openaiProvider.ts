@@ -74,9 +74,10 @@ export class OpenAIProvider implements LLMProvider {
     // Strip thinking tags
     cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
-    // Strip markdown code blocks
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+    // Strip markdown code blocks anywhere in the text (not just at start)
+    const codeBlockMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (codeBlockMatch) {
+      cleaned = codeBlockMatch[1].trim();
     }
 
     try {

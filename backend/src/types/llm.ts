@@ -29,9 +29,15 @@ export interface BudgetContext {
   category_limit: number;
 }
 
+export interface CategoryWithType {
+  category: string;
+  type: 'income' | 'expense';
+}
+
 export interface DataExtractorInput {
   rawText: string;
   categories: string[];
+  categoriesWithType?: CategoryWithType[];
   currentDate: string;
 }
 
