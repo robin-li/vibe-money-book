@@ -17,15 +17,29 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+// 不應觸發自動登出的 API 路徑（登入/註冊本身回傳 401 屬正常業務錯誤）
+const AUTH_WHITELIST = ['/auth/login', '/auth/register']
+
 // Response interceptor — 統一錯誤處理
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // 401 時可導向登入頁
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token')
-      localStorage.removeItem('auth_user')
-      window.location.href = '/login'
+      const requestUrl = error.config?.url ?? ''
+      const isAuthRequest = AUTH_WHITELIST.some((path) => requestUrl.includes(path))
+
+      if (!isAuthRequest) {
+        // Token 失效：清除本地狀態並導向登入頁
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('auth_user')
+
+        // 重置 Zustand auth store（延遲 import 避免循環依賴）
+        import('../stores/authStore.ts').then(({ useAuthStore }) => {
+          useAuthStore.getState().logout()
+        })
+
+        window.location.href = '/login'
+      }
     }
     return Promise.reject(error)
   },
