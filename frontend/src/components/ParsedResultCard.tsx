@@ -16,11 +16,6 @@ interface ParsedResultCardProps {
   categoryInfoList?: CategoryInfo[]
 }
 
-const typeLabels: Record<TransactionType, string> = {
-  income: '收入',
-  expense: '消費',
-}
-
 function ParsedResultCard({
   result,
   onConfirm,
@@ -73,44 +68,39 @@ function ParsedResultCard({
         AI 幫你整理好了
       </h3>
 
-      <div className="space-y-sm mb-lg">
-        {/* Issue #58: Transaction type selector */}
-        <div className="flex items-center gap-md">
-          <span className="text-caption text-text-secondary w-[60px] shrink-0">
-            類型
-          </span>
-          <div className="flex gap-sm" role="radiogroup" aria-label="交易類型">
-            <button
-              type="button"
-              onClick={() => handleTypeChange('expense')}
-              className={`px-md py-xs rounded-md text-caption font-semibold transition-colors ${
-                type === 'expense'
-                  ? 'bg-danger text-surface'
-                  : 'bg-bg text-text-secondary border border-border'
-              }`}
-              role="radio"
-              aria-checked={type === 'expense'}
-              aria-label="消費"
-            >
-              {typeLabels.expense}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTypeChange('income')}
-              className={`px-md py-xs rounded-md text-caption font-semibold transition-colors ${
-                type === 'income'
-                  ? 'bg-success text-surface'
-                  : 'bg-bg text-text-secondary border border-border'
-              }`}
-              role="radio"
-              aria-checked={type === 'income'}
-              aria-label="收入"
-            >
-              {typeLabels.income}
-            </button>
-          </div>
-        </div>
+      {/* Issue #105: 收入/支出 頁籤 */}
+      <div className="flex border-b border-border mb-lg" role="tablist" aria-label="交易類型">
+        <button
+          type="button"
+          onClick={() => handleTypeChange('expense')}
+          className={`flex-1 py-2 text-body font-semibold transition-colors ${
+            type === 'expense'
+              ? 'border-b-2 border-danger text-danger'
+              : 'text-text-secondary'
+          }`}
+          role="tab"
+          aria-selected={type === 'expense'}
+          aria-label="支出"
+        >
+          支出
+        </button>
+        <button
+          type="button"
+          onClick={() => handleTypeChange('income')}
+          className={`flex-1 py-2 text-body font-semibold transition-colors ${
+            type === 'income'
+              ? 'border-b-2 border-success text-success'
+              : 'text-text-secondary'
+          }`}
+          role="tab"
+          aria-selected={type === 'income'}
+          aria-label="收入"
+        >
+          收入
+        </button>
+      </div>
 
+      <div className="space-y-sm mb-lg">
         {/* Issue #59: always editable (default edit mode) */}
         <div className="flex items-center gap-md">
           <span className="text-caption text-text-secondary w-[60px] shrink-0">

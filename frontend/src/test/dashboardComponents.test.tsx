@@ -153,8 +153,8 @@ describe('ParsedResultCard', () => {
     expect(screen.getByLabelText('類別')).toBeInTheDocument()
     expect(screen.getByLabelText('商家')).toBeInTheDocument()
     expect(screen.getByLabelText('日期')).toBeInTheDocument()
-    // Should have type selector (Issue #58)
-    expect(screen.getByLabelText('消費')).toBeInTheDocument()
+    // Should have type tab selector (Issue #105)
+    expect(screen.getByLabelText('支出')).toBeInTheDocument()
     expect(screen.getByLabelText('收入')).toBeInTheDocument()
   })
 
@@ -209,9 +209,9 @@ describe('ParsedResultCard', () => {
         categories={categories}
       />
     )
-    // Income button should be selected
-    const incomeBtn = screen.getByLabelText('收入')
-    expect(incomeBtn.getAttribute('aria-checked')).toBe('true')
+    // Income tab should be selected (Issue #105)
+    const incomeTab = screen.getByLabelText('收入')
+    expect(incomeTab.getAttribute('aria-selected')).toBe('true')
   })
 
   it('allows switching between income and expense types', async () => {
@@ -225,11 +225,11 @@ describe('ParsedResultCard', () => {
         categories={categories}
       />
     )
-    // Default is expense
-    expect(screen.getByLabelText('消費').getAttribute('aria-checked')).toBe('true')
+    // Default is expense (Issue #105: tabs use aria-selected)
+    expect(screen.getByLabelText('支出').getAttribute('aria-selected')).toBe('true')
     // Switch to income
     await user.click(screen.getByLabelText('收入'))
-    expect(screen.getByLabelText('收入').getAttribute('aria-checked')).toBe('true')
+    expect(screen.getByLabelText('收入').getAttribute('aria-selected')).toBe('true')
     // Confirm with income type
     await user.click(screen.getByText('確認新增'))
     expect(onConfirm).toHaveBeenCalledWith(

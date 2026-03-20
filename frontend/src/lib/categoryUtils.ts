@@ -7,12 +7,14 @@ export const CATEGORY_COLORS: Record<string, string> = {
   medical: '#FD79A8',
   transport: '#4ECDC4',
   other: '#B2BEC3',
+  adjustment_expense: '#95A5A6',
   // 收入類別
   salary: '#22C55E',
   investment: '#10B981',
   pension: '#059669',
   insurance: '#047857',
   other_income: '#6EE7B7',
+  adjustment_income: '#86EFAC',
 }
 
 /** Fallback colors for custom categories */
@@ -27,16 +29,18 @@ export const CATEGORY_NAMES: Record<string, string> = {
   medical: '醫療',
   transport: '交通',
   other: '其它',
+  adjustment_expense: '帳務調整',
   // 收入類別
   salary: '薪資收入',
   investment: '投資收益',
   pension: '退休金',
   insurance: '保險理賠',
   other_income: '其它',
+  adjustment_income: '帳務調整',
 }
 
 /** 收入類別集合 */
-export const INCOME_CATEGORIES = new Set(['salary', 'investment', 'pension', 'insurance', 'other_income'])
+export const INCOME_CATEGORIES = new Set(['salary', 'investment', 'pension', 'insurance', 'other_income', 'adjustment_income'])
 
 /** 根據類別判斷是否為收入類別 */
 export function isIncomeCategory(category: string): boolean {

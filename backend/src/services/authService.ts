@@ -17,12 +17,14 @@ const DEFAULT_CATEGORY_BUDGETS = [
   { category: 'medical', type: 'expense', budgetLimit: 2000, isCustom: false },
   { category: 'transport', type: 'expense', budgetLimit: 3000, isCustom: false },
   { category: 'other', type: 'expense', budgetLimit: 0, isCustom: false },
+  { category: 'adjustment_expense', type: 'expense', budgetLimit: 0, isCustom: false },
   // 收入類別
   { category: 'salary', type: 'income', budgetLimit: 0, isCustom: false },
   { category: 'investment', type: 'income', budgetLimit: 0, isCustom: false },
   { category: 'pension', type: 'income', budgetLimit: 0, isCustom: false },
   { category: 'insurance', type: 'income', budgetLimit: 0, isCustom: false },
   { category: 'other_income', type: 'income', budgetLimit: 0, isCustom: false },
+  { category: 'adjustment_income', type: 'income', budgetLimit: 0, isCustom: false },
 ];
 
 function generateToken(userId: string): string {

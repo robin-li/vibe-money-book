@@ -26,6 +26,8 @@ const categoryIcons: Record<string, string> = {
   pension: '🏦',
   insurance: '🛡️',
   other_income: '💵',
+  adjustment_expense: '🔧',
+  adjustment_income: '🔧',
 }
 
 const EXPENSE_CATEGORIES = Object.keys(CATEGORY_NAMES).filter((c) => !INCOME_CATEGORIES.has(c))
