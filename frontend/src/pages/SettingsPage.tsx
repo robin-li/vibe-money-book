@@ -406,11 +406,11 @@ function SettingsPage() {
         {/* 新增自訂類別 */}
         <div className="border-t border-border pt-md">
           <p className="text-caption text-text-secondary mb-sm">新增自訂類別</p>
-          <div className="flex gap-sm items-center">
+          <div className="flex gap-sm items-center overflow-hidden">
             <select
               value={newCategoryType}
               onChange={(e) => setNewCategoryType(e.target.value as 'income' | 'expense')}
-              className="h-9 rounded-md border border-border px-sm text-caption"
+              className="h-9 flex-shrink-0 rounded-md border border-border px-sm text-caption"
               aria-label="新類別類型"
             >
               <option value="expense">支出</option>
@@ -421,7 +421,7 @@ function SettingsPage() {
               value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
               placeholder="類別名稱"
-              className="flex-1 h-9 rounded-md border border-border px-sm text-body"
+              className="flex-1 min-w-0 h-9 rounded-md border border-border px-sm text-body"
               aria-label="新類別名稱"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAddCategory()
@@ -431,7 +431,7 @@ function SettingsPage() {
               type="button"
               onClick={handleAddCategory}
               disabled={categoryAdding || !newCategoryName.trim()}
-              className="h-9 px-lg min-w-[80px] whitespace-nowrap rounded-md bg-primary text-white text-caption font-semibold disabled:opacity-50"
+              className="h-9 px-lg flex-shrink-0 min-w-[80px] whitespace-nowrap rounded-md bg-primary text-white text-caption font-semibold disabled:opacity-50"
               aria-label="新增類別"
             >
               {categoryAdding ? '新增中...' : '新增'}
