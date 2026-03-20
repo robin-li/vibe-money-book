@@ -1,5 +1,6 @@
 export type AIEngine = 'gemini' | 'openai';
 export type Persona = 'sarcastic' | 'gentle' | 'guilt_trip';
+export type Intent = 'transaction' | 'chat';
 
 export type TransactionType = 'income' | 'expense';
 

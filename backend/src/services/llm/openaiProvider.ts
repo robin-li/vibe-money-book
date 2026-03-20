@@ -68,6 +68,10 @@ export class OpenAIProvider implements LLMProvider {
     return this.parseJSON<AIFeedbackContent>(text);
   }
 
+  async generateText(systemPrompt: string, userPrompt: string, apiKey: string): Promise<string> {
+    return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024);
+  }
+
   private parseJSON<T>(text: string): T {
     let cleaned = text.trim();
 

@@ -2,9 +2,12 @@ import prisma from '../config/database';
 import { getProvider } from './llm/llmFactory';
 import { buildDataExtractorPrompt } from '../prompts/dataExtractorPrompt';
 import { buildPersonaFeedbackPrompt, getPersonaSystemPrompt } from '../prompts/personaFeedbackPrompt';
+import { buildIntentDetectorPrompt, INTENT_DETECTOR_SYSTEM_PROMPT } from '../prompts/intentDetectorPrompt';
+import { buildChatReplyPrompt, getChatPersonaSystemPrompt } from '../prompts/chatReplyPrompt';
 import {
   AIEngine,
   Persona,
+  Intent,
   ParsedTransaction,
   AIFeedbackContent,
   BudgetContext,
@@ -12,11 +15,28 @@ import {
 } from '../types/llm';
 import { AppError } from '../middlewares/errorHandler';
 
+/** 記帳意圖回應 */
+export interface TransactionResult {
+  intent: 'transaction';
+  parsed: ParsedTransaction;
+  feedback: AIFeedbackContent;
+  budget_context: BudgetContext;
+}
+
+/** 對話意圖回應 */
+export interface ChatResult {
+  intent: 'chat';
+  reply: AIFeedbackContent;
+  feedback: null;
+}
+
+export type ParseResult = TransactionResult | ChatResult;
+
 export async function parseTransaction(
   userId: string,
   rawText: string,
   apiKey: string
-): Promise<{ parsed: ParsedTransaction; feedback: AIFeedbackContent; budget_context: BudgetContext }> {
+): Promise<ParseResult> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: { categoryBudgets: true },
@@ -30,7 +50,21 @@ export async function parseTransaction(
   const persona = user.persona as Persona;
   const provider = getProvider(engine);
 
-  // Build category list for prompt (with type info for correct income/expense mapping)
+  // 0. Intent detection
+  const intent = await detectIntent(rawText, apiKey, provider);
+
+  // 1. If chat intent → generate chat reply and return
+  if (intent === 'chat') {
+    const budgetContext = await getBudgetContext(userId, user.monthlyBudget);
+    const chatReply = await generateChatReply(persona, rawText, budgetContext, apiKey, provider);
+    return {
+      intent: 'chat',
+      reply: chatReply,
+      feedback: null,
+    };
+  }
+
+  // 2. Transaction intent → existing flow
   const categories = user.categoryBudgets.map((cb) => cb.category);
   const categoriesWithType = user.categoryBudgets.map((cb) => ({
     category: cb.category,
@@ -38,7 +72,7 @@ export async function parseTransaction(
   }));
   const currentDate = new Date().toISOString().split('T')[0];
 
-  // 1. Data extraction
+  // 2a. Data extraction
   const extractorPrompt = buildDataExtractorPrompt({
     rawText,
     categories,
@@ -48,7 +82,8 @@ export async function parseTransaction(
 
   const parsed = await provider.extractData(extractorPrompt, apiKey);
 
-  // 2. Get budget context
+  // 2b. Get budget context
+  const monthlyBudget = Number(user.monthlyBudget);
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -63,7 +98,6 @@ export async function parseTransaction(
     },
   });
 
-  const monthlyBudget = Number(user.monthlyBudget);
   const spentThisMonth = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
   const remaining = monthlyBudget - spentThisMonth;
   const usedRatio = monthlyBudget > 0 ? spentThisMonth / monthlyBudget : 0;
@@ -85,7 +119,7 @@ export async function parseTransaction(
     category_limit: categoryLimit,
   };
 
-  // 3. Generate persona feedback
+  // 2c. Generate persona feedback
   const feedbackInput: PersonaFeedbackInput = {
     persona,
     amount: parsed.amount || 0,
@@ -103,7 +137,77 @@ export async function parseTransaction(
 
   const feedback = await provider.generateFeedback(combinedPrompt, apiKey);
 
-  return { parsed, feedback, budget_context: budgetContext };
+  return { intent: 'transaction', parsed, feedback, budget_context: budgetContext };
+}
+
+async function detectIntent(
+  rawText: string,
+  apiKey: string,
+  provider: ReturnType<typeof getProvider>
+): Promise<Intent> {
+  try {
+    const userPrompt = buildIntentDetectorPrompt(rawText);
+    const text = await provider.generateText(INTENT_DETECTOR_SYSTEM_PROMPT, userPrompt, apiKey);
+
+    // Parse intent from JSON response
+    let cleaned = text.trim();
+    // Strip markdown code blocks
+    const codeBlockMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (codeBlockMatch) {
+      cleaned = codeBlockMatch[1].trim();
+    }
+
+    const result = JSON.parse(cleaned) as { intent: string };
+    if (result.intent === 'chat') return 'chat';
+    return 'transaction';
+  } catch {
+    // If intent detection fails, default to transaction (safe fallback)
+    return 'transaction';
+  }
+}
+
+async function getBudgetContext(userId: string, userMonthlyBudget: unknown): Promise<BudgetContext> {
+  const monthlyBudget = Number(userMonthlyBudget);
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      transactionDate: {
+        gte: monthStart,
+        lte: monthEnd,
+      },
+    },
+  });
+
+  const spentThisMonth = transactions.reduce((sum, t) => sum + Number(t.amount), 0);
+  const remaining = monthlyBudget - spentThisMonth;
+  const usedRatio = monthlyBudget > 0 ? spentThisMonth / monthlyBudget : 0;
+
+  return {
+    monthly_budget: monthlyBudget,
+    spent_this_month: spentThisMonth,
+    remaining,
+    used_ratio: Math.round(usedRatio * 100) / 100,
+    category_spent: 0,
+    category_limit: 0,
+  };
+}
+
+async function generateChatReply(
+  persona: Persona,
+  rawText: string,
+  budgetContext: BudgetContext,
+  apiKey: string,
+  provider: ReturnType<typeof getProvider>
+): Promise<AIFeedbackContent> {
+  const systemPrompt = getChatPersonaSystemPrompt(persona);
+  const userPrompt = buildChatReplyPrompt({ persona, rawText, budgetContext });
+  const combinedPrompt = `${systemPrompt}\n---SYSTEM---\n${userPrompt}`;
+
+  return provider.generateFeedback(combinedPrompt, apiKey);
 }
 
 export async function validateApiKey(userId: string, apiKey: string): Promise<{ valid: boolean; engine: AIEngine }> {

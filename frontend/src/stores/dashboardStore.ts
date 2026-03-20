@@ -56,10 +56,13 @@ export interface BudgetSummary {
   transactionCount: number
 }
 
+export type Intent = 'transaction' | 'chat'
+
 export type DashboardStatus =
   | 'idle'
   | 'parsing'
   | 'parsed'
+  | 'chat_reply'
   | 'confirming'
   | 'saving'
   | 'error'
@@ -154,7 +157,25 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
         { raw_text: rawText },
         { headers: { 'X-LLM-API-Key': llmApiKey } }
       )
-      const { parsed, feedback, budget_context: bc } = res.data.data
+      const data = res.data.data
+      const intent: Intent = data.intent ?? 'transaction'
+
+      if (intent === 'chat') {
+        // Chat intent: show AI coach reply, no parsed result card
+        const reply = data.reply
+        set({
+          status: 'chat_reply',
+          parsedResult: null,
+          aiFeedback: reply
+            ? { text: reply.text, emotionTag: reply.emotion_tag }
+            : null,
+          lastFeedbackText: reply?.text ?? '',
+        })
+        return
+      }
+
+      // Transaction intent: existing flow
+      const { parsed, feedback, budget_context: bc } = data
       set({
         status: 'parsed',
         parsedResult: {

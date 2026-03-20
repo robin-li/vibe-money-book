@@ -121,13 +121,14 @@ function DashboardPage() {
 
   const isParsing = status === 'parsing'
   const isSaving = status === 'saving'
+  const isChatReply = status === 'chat_reply'
   const showParsedResult =
     status === 'parsed' && parsedResult && !parsedResult.isNewCategory
   const showNewCategoryDialog =
     status === 'parsed' && parsedResult?.isNewCategory
 
   const feedbackText =
-    lastFeedbackText ||
+    (isChatReply && aiFeedback?.text) || lastFeedbackText ||
     '歡迎使用 Vibe Money Book！開始記錄你的第一筆消費吧～'
 
   return (

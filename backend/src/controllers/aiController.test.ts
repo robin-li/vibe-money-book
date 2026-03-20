@@ -67,11 +67,13 @@ vi.mock('../config/database', () => ({
 
 const mockExtractData = vi.fn();
 const mockGenerateFeedback = vi.fn();
+const mockGenerateText = vi.fn();
 
 vi.mock('../services/llm/llmFactory', () => ({
   getProvider: vi.fn(() => ({
     extractData: mockExtractData,
     generateFeedback: mockGenerateFeedback,
+    generateText: mockGenerateText,
   })),
 }));
 
@@ -99,6 +101,9 @@ function postValidateKey(apiKey = API_KEY_HEADER) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+
+  // Default: intent detection returns transaction
+  mockGenerateText.mockResolvedValue('{"intent":"transaction"}');
 
   // Default mock responses
   mockExtractData.mockResolvedValue({
@@ -130,6 +135,7 @@ describe('POST /api/v1/ai/parse', () => {
     expect(res.status).toBe(200);
     expect(res.body.code).toBe(200);
     expect(res.body.message).toBe('解析成功');
+    expect(res.body.data.intent).toBe('transaction');
     expect(res.body.data.parsed).toEqual({
       type: 'expense',
       amount: 180,
@@ -327,6 +333,53 @@ describe('POST /api/v1/ai/parse', () => {
     expect(prompt).toContain('food');
     expect(prompt).toContain('transport');
     expect(prompt).toContain('entertainment');
+  });
+
+  // --- 案例 15b: Chat 意圖 — 對話回覆 ---
+  it('應在 chat 意圖時回傳 AI 教練對話回覆', async () => {
+    mockGenerateText.mockResolvedValue('{"intent":"chat"}');
+    mockGenerateFeedback.mockResolvedValue({
+      text: '預算都快見底了啊！你還想花？',
+      emotion_tag: 'sarcastic_warning',
+    });
+
+    const res = await postParse('目前還有多少預算可以使用');
+
+    expect(res.status).toBe(200);
+    expect(res.body.code).toBe(200);
+    expect(res.body.message).toBe('對話回覆成功');
+    expect(res.body.data.intent).toBe('chat');
+    expect(res.body.data.reply).toBeDefined();
+    expect(res.body.data.reply.text).toBe('預算都快見底了啊！你還想花？');
+    expect(res.body.data.feedback).toBeNull();
+    // Should NOT have parsed or budget_context
+    expect(res.body.data.parsed).toBeUndefined();
+  });
+
+  // --- 案例 15c: Chat 意圖 — 閒聊回覆 ---
+  it('應在閒聊輸入時回傳 AI 教練回覆', async () => {
+    mockGenerateText.mockResolvedValue('{"intent":"chat"}');
+    mockGenerateFeedback.mockResolvedValue({
+      text: '天氣好心情也好～記得記帳喔',
+      emotion_tag: 'gentle_encouragement',
+    });
+
+    const res = await postParse('今天天氣真好');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.intent).toBe('chat');
+    expect(res.body.data.reply.text).toContain('記帳');
+  });
+
+  // --- 案例 15d: Intent 偵測失敗時預設為 transaction ---
+  it('應在 intent 偵測失敗時回退為 transaction 流程', async () => {
+    mockGenerateText.mockRejectedValue(new Error('LLM timeout'));
+
+    const res = await postParse('午餐 100 元');
+
+    expect(res.status).toBe(200);
+    expect(res.body.data.intent).toBe('transaction');
+    expect(res.body.data.parsed).toBeDefined();
   });
 });
 
