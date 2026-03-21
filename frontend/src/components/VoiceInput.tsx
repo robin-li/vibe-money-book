@@ -7,9 +7,10 @@ import {
 interface VoiceInputProps {
   onSubmit: (text: string) => void
   disabled?: boolean
+  placeholder?: string
 }
 
-function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
+function VoiceInput({ onSubmit, disabled = false, placeholder: customPlaceholder }: VoiceInputProps) {
   const [inputText, setInputText] = useState('')
   const [showError, setShowError] = useState(false)
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -103,7 +104,7 @@ function VoiceInput({ onSubmit, disabled = false }: VoiceInputProps) {
   const getPlaceholder = () => {
     if (isRecording) return '正在聆聽...'
     if (isRecognizing) return '辨識中...'
-    return '例如：中午吃拉麵 280 元'
+    return customPlaceholder ?? '例如：中午吃拉麵 280 元'
   }
 
   return (
