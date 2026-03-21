@@ -10,27 +10,43 @@ router.get('/distribution', authMiddleware, async (req: AuthRequest, res: Respon
   try {
     const userId = req.userId!;
 
-    // Support optional month query param (format: YYYY-MM)
+    // Support period (week | month | custom) and date range params
+    const periodParam = req.query.period as string | undefined;
+    const startDateParam = req.query.start_date as string | undefined;
+    const endDateParam = req.query.end_date as string | undefined;
     const monthParam = req.query.month as string | undefined;
-    let year: number, month: number;
-
-    if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
-      const parts = monthParam.split('-');
-      year = parseInt(parts[0], 10);
-      month = parseInt(parts[1], 10) - 1;
-    } else {
-      const now = new Date();
-      year = now.getFullYear();
-      month = now.getMonth();
-    }
 
     // Support optional type query param (income | expense)
     const typeParam = req.query.type as string | undefined;
     const validTypes = ['income', 'expense'];
     const typeFilter = typeParam && validTypes.includes(typeParam) ? typeParam : undefined;
 
-    const monthStart = new Date(year, month, 1);
-    const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
+    let monthStart: Date;
+    let monthEnd: Date;
+
+    if (periodParam === 'custom' && startDateParam && endDateParam) {
+      // Custom date range
+      monthStart = new Date(startDateParam + 'T00:00:00');
+      monthEnd = new Date(endDateParam + 'T23:59:59.999');
+    } else if (periodParam === 'week') {
+      // Current week (Monday to Sunday)
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      monthStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + mondayOffset);
+      monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth(), monthStart.getDate() + 6, 23, 59, 59, 999);
+    } else if (monthParam && /^\d{4}-\d{2}$/.test(monthParam)) {
+      const parts = monthParam.split('-');
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      monthStart = new Date(year, month, 1);
+      monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
+    } else {
+      // Default: current month
+      const now = new Date();
+      monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    }
 
     const whereClause: Record<string, unknown> = {
       userId,
@@ -60,7 +76,9 @@ router.get('/distribution', authMiddleware, async (req: AuthRequest, res: Respon
       }))
       .sort((a, b) => b.amount - a.amount);
 
-    const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+    const monthStr = periodParam === 'custom'
+      ? `${startDateParam} ~ ${endDateParam}`
+      : `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
 
     const response: ApiResponse<Record<string, unknown>> = {
       code: 200,
