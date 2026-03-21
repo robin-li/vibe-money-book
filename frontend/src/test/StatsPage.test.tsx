@@ -216,7 +216,7 @@ describe('StatsPage', () => {
 
     // Expense tab - red headline
     await waitFor(() => {
-      const section = screen.getByLabelText('本月總支出')
+      const section = screen.getByLabelText('總支出')
       const headline = section.querySelector('.text-headline')
       expect(headline).not.toBeNull()
       expect(headline!.className).toContain('text-danger')
