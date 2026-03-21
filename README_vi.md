@@ -22,7 +22,7 @@
 </p>
 
 <p align="center">
-  <a href="https://moneybook.smart-codings.com/" target="_blank"><strong>Demo trực tuyến</strong></a> ·
+  <a href="#-demo-trực-tuyến"><strong>Demo trực tuyến</strong></a> ·
   <a href="#-tính-năng">Tính năng</a> ·
   <a href="#-bắt-đầu-nhanh">Bắt đầu nhanh</a> ·
   <a href="#-ảnh-chụp-màn-hình">Ảnh chụp màn hình</a>

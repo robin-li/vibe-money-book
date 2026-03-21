@@ -22,7 +22,7 @@
 </p>
 
 <p align="center">
-  <a href="https://moneybook.smart-codings.com/" target="_blank"><strong>Live Demo</strong></a> ·
+  <a href="#-live-demo"><strong>Live Demo</strong></a> ·
   <a href="#-features">Features</a> ·
   <a href="#-quick-start">Quick Start</a> ·
   <a href="#-screenshots">Screenshots</a>
