@@ -24,11 +24,22 @@ function StatsPage() {
   const [totalAmount, setTotalAmount] = useState(0)
   const [loading, setLoading] = useState(true)
 
+  // Custom date range
+  const today = new Date().toISOString().slice(0, 10)
+  const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
+  const [customStart, setCustomStart] = useState(firstOfMonth)
+  const [customEnd, setCustomEnd] = useState(today)
+
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
+      const params: Record<string, string> = { period: timeFilter, type: typeTab }
+      if (timeFilter === 'custom') {
+        params.start_date = customStart
+        params.end_date = customEnd
+      }
       const requests: Promise<unknown>[] = [
-        api.get('/stats/distribution', { params: { period: timeFilter, type: typeTab } }),
+        api.get('/stats/distribution', { params }),
       ]
 
       // Only fetch budget summary for expense tab
@@ -74,7 +85,7 @@ function StatsPage() {
     } finally {
       setLoading(false)
     }
-  }, [timeFilter, typeTab])
+  }, [timeFilter, typeTab, customStart, customEnd])
 
   useEffect(() => {
     void fetchData()
@@ -146,6 +157,30 @@ function StatsPage() {
         ))}
       </div>
 
+      {/* Custom date range picker */}
+      {timeFilter === 'custom' && (
+        <div className="flex gap-sm mb-xl items-center">
+          <input
+            type="date"
+            value={customStart}
+            onChange={(e) => setCustomStart(e.target.value)}
+            max={customEnd}
+            className="flex-1 h-10 rounded-md border border-border bg-surface px-md text-caption text-text-primary focus:outline-none focus:border-primary"
+            aria-label="開始日期"
+          />
+          <span className="text-caption text-text-secondary">～</span>
+          <input
+            type="date"
+            value={customEnd}
+            onChange={(e) => setCustomEnd(e.target.value)}
+            min={customStart}
+            max={today}
+            className="flex-1 h-10 rounded-md border border-border bg-surface px-md text-caption text-text-primary focus:outline-none focus:border-primary"
+            aria-label="結束日期"
+          />
+        </div>
+      )}
+
       {loading ? (
         <div className="space-y-xl">
           <div className="bg-surface rounded-lg shadow-card p-lg animate-pulse">
@@ -158,11 +193,15 @@ function StatsPage() {
           {/* Total amount card */}
           <section
             className="bg-surface rounded-lg shadow-card p-lg mb-xl"
-            aria-label={isExpense ? '本月總支出' : '本月總收入'}
+            aria-label={isExpense ? '總支出' : '總收入'}
           >
             <div className="flex justify-between items-baseline mb-sm">
               <p className="text-caption text-text-secondary">
-                {isExpense ? '本月總支出' : '本月總收入'}
+                {timeFilter === 'week'
+                  ? (isExpense ? '本週總支出' : '本週總收入')
+                  : timeFilter === 'custom'
+                    ? (isExpense ? '區間總支出' : '區間總收入')
+                    : (isExpense ? '本月總支出' : '本月總收入')}
               </p>
               {isExpense && budgetSummary && budgetSummary.monthlyBudget > 0 && (
                 <p className="text-small text-text-secondary">
