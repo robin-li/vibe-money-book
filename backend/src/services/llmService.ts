@@ -5,6 +5,12 @@ import { buildPersonaFeedbackPrompt, getPersonaSystemPrompt } from '../prompts/p
 import { buildIntentDetectorPrompt, INTENT_DETECTOR_SYSTEM_PROMPT } from '../prompts/intentDetectorPrompt';
 import { buildChatReplyPrompt, getChatPersonaSystemPrompt } from '../prompts/chatReplyPrompt';
 import {
+  TIME_RANGE_SYSTEM_PROMPT,
+  buildTimeRangePrompt,
+  buildTransactionMatchSystemPrompt,
+  buildTransactionMatchUserPrompt,
+} from '../prompts/queryPrompt';
+import {
   AIEngine,
   Persona,
   Intent,
@@ -13,6 +19,10 @@ import {
   BudgetContext,
   FinancialContext,
   PersonaFeedbackInput,
+  QueryTimeRange,
+  TransactionSummaryForQuery,
+  QueryMatchResult,
+  AIQueryResult,
 } from '../types/llm';
 import { AppError } from '../middlewares/errorHandler';
 
@@ -280,6 +290,161 @@ async function generateChatReply(
 
 
   return provider.generateFeedback(combinedPrompt, apiKey);
+}
+
+// ─── AI 語義查詢 (PRD-F-014) ───
+
+export async function queryTransactions(
+  userId: string,
+  queryText: string,
+  apiKey: string
+): Promise<AIQueryResult> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new AppError('使用者不存在', 404);
+  }
+
+  const engine = user.aiEngine as AIEngine;
+  const persona = user.persona as Persona;
+  const provider = getProvider(engine);
+
+  // 當前時間（台北時區）
+  const now = new Date();
+  const taipeiDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+  const year = taipeiDate.getFullYear();
+  const month = taipeiDate.getMonth() + 1;
+  const day = taipeiDate.getDate();
+  const dayNames = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  const weekday = dayNames[taipeiDate.getDay()];
+  const hh = String(taipeiDate.getHours()).padStart(2, '0');
+  const mm = String(taipeiDate.getMinutes()).padStart(2, '0');
+  const ss = String(taipeiDate.getSeconds()).padStart(2, '0');
+  const currentDateTime = `${year}年${month}月${day}日 ${weekday} ${hh}:${mm}:${ss} (GMT+8)`;
+
+  // 階段 1：時間範圍解析
+  const timeRange = await parseTimeRange(queryText, currentDateTime, apiKey, provider, taipeiDate);
+
+  // 階段 2a：查詢 DB 取得交易記錄
+  const startDate = new Date(timeRange.start_date);
+  const endDate = new Date(timeRange.end_date);
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      userId,
+      transactionDate: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
+    orderBy: { transactionDate: 'desc' },
+    take: 200, // SRD §4.1.3: 最多 200 筆
+    select: {
+      id: true,
+      amount: true,
+      type: true,
+      category: true,
+      merchant: true,
+      note: true,
+      transactionDate: true,
+    },
+  });
+
+  const txnSummaries: TransactionSummaryForQuery[] = transactions.map((t) => ({
+    id: t.id,
+    amount: Number(t.amount),
+    type: t.type,
+    category: t.category,
+    merchant: t.merchant,
+    note: t.note,
+    transaction_date: t.transactionDate.toISOString().split('T')[0],
+  }));
+
+  // 階段 2b：LLM 匹配分析
+  const matchResult = await matchTransactions(queryText, txnSummaries, persona, apiKey, provider);
+
+  return {
+    summary: {
+      text: matchResult.summary_text,
+      emotion_tag: matchResult.emotion_tag,
+      total_amount: matchResult.total_amount,
+      match_count: matchResult.matched_ids.length,
+    },
+    matched_transaction_ids: matchResult.matched_ids,
+    time_range: timeRange,
+  };
+}
+
+async function parseTimeRange(
+  queryText: string,
+  currentDateTime: string,
+  apiKey: string,
+  provider: ReturnType<typeof getProvider>,
+  taipeiDate: Date
+): Promise<QueryTimeRange> {
+  // 預設當月
+  const defaultStart = `${taipeiDate.getFullYear()}-${String(taipeiDate.getMonth() + 1).padStart(2, '0')}-01`;
+  const lastDay = new Date(taipeiDate.getFullYear(), taipeiDate.getMonth() + 1, 0).getDate();
+  const defaultEnd = `${taipeiDate.getFullYear()}-${String(taipeiDate.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+  try {
+    const userPrompt = buildTimeRangePrompt(queryText, currentDateTime);
+    const text = await provider.generateText(TIME_RANGE_SYSTEM_PROMPT, userPrompt, apiKey);
+
+    let cleaned = text.trim();
+    const codeBlockMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (codeBlockMatch) {
+      cleaned = codeBlockMatch[1].trim();
+    }
+
+    const result = JSON.parse(cleaned) as QueryTimeRange;
+    if (result.start_date && result.end_date) {
+      return result;
+    }
+  } catch {
+    // fallback to current month
+  }
+
+  return { start_date: defaultStart, end_date: defaultEnd };
+}
+
+async function matchTransactions(
+  queryText: string,
+  transactions: TransactionSummaryForQuery[],
+  persona: Persona,
+  apiKey: string,
+  provider: ReturnType<typeof getProvider>
+): Promise<QueryMatchResult> {
+  const systemPrompt = buildTransactionMatchSystemPrompt(persona);
+  const userPrompt = buildTransactionMatchUserPrompt(queryText, transactions);
+
+  try {
+    const text = await provider.generateText(systemPrompt, userPrompt, apiKey);
+
+    let cleaned = text.trim();
+    const codeBlockMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (codeBlockMatch) {
+      cleaned = codeBlockMatch[1].trim();
+    }
+
+    const result = JSON.parse(cleaned) as QueryMatchResult;
+
+    // 驗證 matched_ids 皆為有效的交易 ID
+    const validIds = new Set(transactions.map((t) => t.id));
+    result.matched_ids = result.matched_ids.filter((id) => validIds.has(id));
+
+    return {
+      matched_ids: result.matched_ids,
+      total_amount: result.total_amount || 0,
+      summary_text: result.summary_text || '查詢完成。',
+      emotion_tag: result.emotion_tag || 'neutral',
+    };
+  } catch {
+    return {
+      matched_ids: [],
+      total_amount: 0,
+      summary_text: '查詢處理時發生問題，請稍後再試。',
+      emotion_tag: 'neutral',
+    };
+  }
 }
 
 export async function validateApiKey(userId: string, apiKey: string): Promise<{ valid: boolean; engine: AIEngine }> {

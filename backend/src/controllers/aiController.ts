@@ -1,6 +1,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth';
-import { aiParseSchema } from '../validators/aiValidators';
+import { aiParseSchema, aiQuerySchema } from '../validators/aiValidators';
 import * as llmService from '../services/llmService';
 import { AppError } from '../middlewares/errorHandler';
 import { ApiResponse } from '../types';
@@ -64,6 +64,35 @@ export async function validateKey(
     const response: ApiResponse<typeof result> = {
       code: 200,
       message: '驗證成功',
+      data: result,
+      timestamp: new Date().toISOString(),
+    };
+
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function aiQuery(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const parsed = aiQuerySchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw new AppError('參數驗證失敗', 400, formatZodErrors(parsed.error));
+    }
+
+    const apiKey = extractApiKey(req);
+    const userId = req.userId!;
+
+    const result = await llmService.queryTransactions(userId, parsed.data.query_text, apiKey);
+
+    const response: ApiResponse<typeof result> = {
+      code: 200,
+      message: '查詢成功',
       data: result,
       timestamp: new Date().toISOString(),
     };
