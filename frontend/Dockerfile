@@ -9,6 +9,8 @@ RUN npm ci --legacy-peer-deps
 
 # Copy source and build
 COPY . .
+ARG VITE_API_BASE_URL=https://moneybook-api.smart-codings.com/api/v1
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN npm run build
 
 # ---- Production Stage ----

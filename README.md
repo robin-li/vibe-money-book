@@ -174,10 +174,10 @@ cd frontend
 npm run dev
 ```
 
-### Docker 一鍵啟動
+### Docker 一鍵啟動（本地）
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
 啟動後：
@@ -217,6 +217,9 @@ vibe-money-book2/
 │   └── Dockerfile
 ├── tests/                   # E2E 測試（Playwright）
 ├── docs/                    # 規格文件（PRD、SRD、Dev Plan 等）
+├── scripts/
+│   ├── start.sh             # 一鍵啟動（Docker + Cloudflare Tunnel）
+│   └── stop.sh              # 一鍵停止
 ├── docker-compose.yml
 └── playwright.config.ts
 ```
@@ -246,6 +249,12 @@ LLM_TIMEOUT_MS=30000
 # 伺服器設定
 PORT=3000
 NODE_ENV=development
+
+# CORS 允許的來源（部署時設定為前端網址）
+CORS_ORIGIN=https://moneybook.smart-codings.com
+
+# 前端 API Base URL（Docker build 時注入）
+VITE_API_BASE_URL=https://moneybook-api.smart-codings.com/api/v1
 
 # 速率限制
 RATE_LIMIT_LLM_PER_MIN=20
@@ -344,13 +353,84 @@ npm run test:e2e:ui      # Playwright UI 模式
 
 ## 🐳 部署
 
-### Docker Compose 部署
+### 方案一：本地部署 + Cloudflare Tunnel（推薦）
+
+透過 Docker Compose 在本地執行，搭配 Cloudflare Tunnel 對外提供 HTTPS 存取，零成本、完全掌控。
+
+**架構**
+
+```
+使用者 → Cloudflare Edge (HTTPS + CDN)
+            ↓ Cloudflare Tunnel
+       本地主機
+       ├─ frontend (:80)  → moneybook.smart-codings.com
+       └─ backend  (:3000) → moneybook-api.smart-codings.com
+```
+
+**前置需求**
+
+- [Docker](https://docs.docker.com/get-docker/) + Docker Compose
+- [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/get-started/) (`brew install cloudflared`)
+- 已在 Cloudflare 管理的網域
+
+**啟動 / 停止**
+
+```bash
+# 一鍵啟動（Docker 容器 + Cloudflare Tunnel）
+./scripts/start.sh
+
+# 一鍵停止
+./scripts/stop.sh
+```
+
+啟動後可透過以下網址存取：
+
+| 服務 | 本地位址 | 公開網址 |
+|------|---------|---------|
+| 前端 | `http://localhost:80` | `https://moneybook.smart-codings.com` |
+| 後端 API | `http://localhost:3000` | `https://moneybook-api.smart-codings.com` |
+
+**Cloudflare Tunnel 設定**
+
+Tunnel 設定檔位於 `~/.cloudflared/config-moneybook.yml`，包含兩條 ingress 規則分別對應前端與後端子域名。首次設定步驟：
+
+```bash
+# 1. 登入 Cloudflare
+cloudflared tunnel login
+
+# 2. 建立 Tunnel
+cloudflared tunnel create vibe-money-book
+
+# 3. 建立設定檔 (~/.cloudflared/config-moneybook.yml)
+# tunnel: <TUNNEL_ID>
+# credentials-file: ~/.cloudflared/<TUNNEL_ID>.json
+# ingress:
+#   - hostname: moneybook.your-domain.com
+#     service: http://localhost:80
+#   - hostname: moneybook-api.your-domain.com
+#     service: http://localhost:3000
+#   - service: http_status:404
+
+# 4. 設定 DNS 路由
+cloudflared tunnel --config ~/.cloudflared/config-moneybook.yml route dns vibe-money-book moneybook.your-domain.com
+cloudflared tunnel --config ~/.cloudflared/config-moneybook.yml route dns vibe-money-book moneybook-api.your-domain.com
+```
+
+### 方案二：雲端部署
+
+| 層級 | 推薦服務 |
+|------|---------|
+| 全端 (Docker) | Railway / Render / Fly.io |
+| 前端 | Vercel / Netlify |
+| 後端 | Railway / Render / Fly.io |
+| 資料庫 | Supabase PostgreSQL / Railway PostgreSQL |
+
+### Docker Compose 手動啟動
 
 ```bash
 # 1. 設定環境變數
-export JWT_SECRET=your-production-secret
-export DATABASE_URL=file:/app/data/dev.db
-export NODE_ENV=production
+cp .env.example .env
+# 編輯 .env 填入 JWT_SECRET 等設定
 
 # 2. 建構並啟動
 docker compose up -d --build
@@ -365,14 +445,6 @@ docker compose ps
 |------|-------|------|
 | frontend | 80 | Nginx 靜態資源伺服器 |
 | backend | 3000 | Express API 伺服器 |
-
-### 推薦的雲端部署方案
-
-| 層級 | 推薦服務 |
-|------|---------|
-| 前端 | Vercel / Netlify |
-| 後端 | Railway / Render / Fly.io |
-| 資料庫 | Supabase PostgreSQL / Railway PostgreSQL |
 
 ---
 

@@ -9,6 +9,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-here}
       PORT: ${PORT:-3000}
       NODE_ENV: ${NODE_ENV:-production}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://moneybook.smart-codings.com}
       RATE_LIMIT_AUTH_PER_MIN: ${RATE_LIMIT_AUTH_PER_MIN:-200}
     volumes:
       - backend_data:/app/data
@@ -21,6 +22,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://moneybook-api.smart-codings.com/api/v1}
     restart: unless-stopped
     ports:
       - "80:80"
