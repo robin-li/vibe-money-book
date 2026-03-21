@@ -2,8 +2,8 @@
 
 > **專案名稱**：Vibe Money Book — 語音記帳應用
 > **API 版本**：v1.0
-> **文檔版本**：v1.1
-> **最後更新**：2026-03-21
+> **文檔版本**：v1.2
+> **最後更新**：2026-03-22
 
 ---
 
@@ -138,6 +138,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
 | POST | /ai/validate-key | 驗證使用者提供的 LLM API Key 是否有效（PRD-F-013） | ✓ |
 | POST | /ai/parse | 解析自然語言輸入（資料萃取 + 人設回饋） | ✓ |
 | POST | /ai/query | 自然語言篩選查詢交易記錄（PRD-F-014） | ✓ |
+| GET | /ai/config | 查詢 AI 配置（預設 API Key 可用狀態） | ✓ |
 
 ### 4.4 交易模組
 
@@ -477,6 +478,23 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 - 429：超過 LLM 速率限制
 - 502：LLM 服務暫時不可用
 
+#### GET /ai/config — 查詢 AI 配置
+
+查詢伺服器是否配置了預設 API Key（不回傳 Key 本身，僅回傳可用狀態）。
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "hasDefaultKey": {
+      "gemini": true,
+      "openai": false
+    }
+  }
+}
+```
+
 ---
 
 ### 5.4 交易模組
@@ -731,7 +749,11 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 #### GET /stats/distribution — 消費類別分佈
 
 **查詢參數**：
-- `month`：月份（可選，YYYY-MM，預設當月）
+- `period`：時段範圍（可選，`week` | `month` | `custom`，預設 `month`）
+- `start_date`：起始日期（可選，YYYY-MM-DD，`period=custom` 時必填）
+- `end_date`：結束日期（可選，YYYY-MM-DD，`period=custom` 時必填）
+- `month`：月份（可選，YYYY-MM，預設當月，與 `period` 互斥，向後相容）
+- `type`：交易類型篩選（可選，`income` | `expense`）
 
 **成功響應 (200)**：
 ```json
@@ -772,7 +794,7 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 ---
 
 **文檔責任人**：技術架構團隊
-**最後修訂日期**：2026-03-21
+**最後修訂日期**：2026-03-22
 
 ---
 
@@ -782,3 +804,4 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 |------|------|---------|
 | v1.0 | 2026-03-16 | 初版定稿 |
 | v1.1 | 2026-03-21 | 配合 PRD-F-014（語義篩選查詢）新增：§4.3 AI 記帳模組新增 `POST /ai/query` 端點清單；§5.3 新增 `POST /ai/query` 詳細端點規範（含請求/響應格式、兩階段處理流程說明、錯誤碼） |
+| v1.2 | 2026-03-22 | §4.3 新增 `GET /ai/config` 端點（預設 API Key 狀態查詢）；§5.6 `/stats/distribution` 新增 `period`、`start_date`、`end_date`、`type` 查詢參數，支援本週與自訂日期範圍 |

@@ -1,13 +1,14 @@
 openapi: 3.0.3
 info:
   title: Vibe Money Book API
-  version: 1.1.0
+  version: 1.2.0
   description: |
     語音記帳應用 API — 透過自然語言實現一句話記帳
 
     ## 版本修訂說明
     - v1.0.0 (2026-03-16)：初版定稿
     - v1.1.0 (2026-03-21)：配合 PRD-F-014（語義篩選查詢）新增 POST /ai/query 端點與 AIQueryResult schema
+    - v1.2.0 (2026-03-22)：新增 GET /ai/config 端點；/stats/distribution 新增 period、start_date、end_date 參數
   contact:
     name: Development Team
 
@@ -199,6 +200,38 @@ paths:
                     $ref: '#/components/schemas/User'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /ai/config:
+    get:
+      tags: [AI]
+      summary: 查詢 AI 配置
+      description: 查詢伺服器是否配置了預設 API Key（不回傳 Key 本身，僅回傳各引擎的可用狀態）
+      operationId: getAIConfig
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      hasDefaultKey:
+                        type: object
+                        properties:
+                          gemini:
+                            type: boolean
+                          openai:
+                            type: boolean
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -810,9 +843,27 @@ paths:
       security:
         - BearerAuth: []
       parameters:
+        - name: period
+          in: query
+          description: 時段範圍（week=本週、month=本月、custom=自訂），預設 month
+          schema:
+            type: string
+            enum: [week, month, custom]
+        - name: start_date
+          in: query
+          description: 起始日期（YYYY-MM-DD），period=custom 時必填
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: 結束日期（YYYY-MM-DD），period=custom 時必填
+          schema:
+            type: string
+            format: date
         - name: month
           in: query
-          description: 月份 (YYYY-MM)，預設當月
+          description: 月份 (YYYY-MM)，預設當月，與 period 互斥（向後相容）
           schema:
             type: string
             pattern: '^\d{4}-\d{2}$'
