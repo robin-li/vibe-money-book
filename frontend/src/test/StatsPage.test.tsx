@@ -227,7 +227,7 @@ describe('StatsPage', () => {
     await user.click(screen.getByTestId('tab-income'))
 
     await waitFor(() => {
-      const section = screen.getByLabelText('本月總收入')
+      const section = screen.getByLabelText('總收入')
       const headline = section.querySelector('.text-headline')
       expect(headline).not.toBeNull()
       expect(headline!.className).toContain('text-success')
