@@ -263,7 +263,7 @@ T-{ID}：{任務名稱}
 
 Issues 全部建立完成後，**必須主動詢問開發者（導演）是否建立 GitHub Project 看板**。
 
-- **Project 命名**：默認與 Repo 名稱相同（例如 repo 為 `vibe-money-book2`，Project 名稱即為 `vibe-money-book2`）
+- **Project 命名**：默認與 Repo 名稱相同（例如 repo 為 `vibe-money-book`，Project 名稱即為 `vibe-money-book`）
 - **檢查現有 Project**：建立前先用 `gh project list --owner {owner}` 檢查是否已有同名 Project，避免重複建立
 - **建立 Project**：使用 `gh project create --owner {owner} --title {repo-name}`
 - **加入 Issues**：使用 `gh project item-add {project-number} --owner {owner} --url {issue-url}` 逐一加入

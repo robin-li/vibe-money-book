@@ -150,8 +150,8 @@
 
 ```bash
 # 1. 複製專案
-git clone https://github.com/robin-li/vibe-money-book2.git
-cd vibe-money-book2
+git clone https://github.com/robin-li/vibe-money-book.git
+cd vibe-money-book
 
 # 2. 安裝後端依賴
 cd backend
@@ -197,7 +197,7 @@ docker compose up -d --build
 ## 📁 專案結構
 
 ```
-vibe-money-book2/
+vibe-money-book/
 ├── backend/                 # 後端 API
 │   ├── src/
 │   │   ├── controllers/     # 控制層
