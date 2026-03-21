@@ -74,3 +74,40 @@ export interface PersonaFeedbackInput {
   monthlyBudget: number;
   remainingBudget: number;
 }
+
+/** AI 語義查詢：時間範圍 */
+export interface QueryTimeRange {
+  start_date: string;
+  end_date: string;
+}
+
+/** AI 語義查詢：交易記錄摘要（送入 LLM 的精簡格式） */
+export interface TransactionSummaryForQuery {
+  id: string;
+  amount: number;
+  type: string;
+  category: string;
+  merchant: string | null;
+  note: string | null;
+  transaction_date: string;
+}
+
+/** AI 語義查詢：LLM 匹配分析結果 */
+export interface QueryMatchResult {
+  matched_ids: string[];
+  total_amount: number;
+  summary_text: string;
+  emotion_tag: string;
+}
+
+/** AI 語義查詢：最終回應 */
+export interface AIQueryResult {
+  summary: {
+    text: string;
+    emotion_tag: string;
+    total_amount: number;
+    match_count: number;
+  };
+  matched_transaction_ids: string[];
+  time_range: QueryTimeRange;
+}
