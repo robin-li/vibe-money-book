@@ -1,8 +1,13 @@
 openapi: 3.0.3
 info:
   title: Vibe Money Book API
-  version: 1.0.0
-  description: 語音記帳應用 API — 透過自然語言實現一句話記帳
+  version: 1.1.0
+  description: |
+    語音記帳應用 API — 透過自然語言實現一句話記帳
+
+    ## 版本修訂說明
+    - v1.0.0 (2026-03-16)：初版定稿
+    - v1.1.0 (2026-03-21)：配合 PRD-F-014（語義篩選查詢）新增 POST /ai/query 端點與 AIQueryResult schema
   contact:
     name: Development Team
 
@@ -249,8 +254,12 @@ paths:
   /ai/parse:
     post:
       tags: [AI]
-      summary: 解析自然語言輸入
-      description: 接收使用者的自然語言文字，呼叫 LLM 資料萃取引擎與人設回饋引擎，回傳結構化結果。不會自動建立交易記錄。後端根據使用者的 ai_engine 偏好選擇對應的 LLM 引擎（PRD-F-013）。
+      summary: 解析自然語言輸入（含意圖判斷）
+      description: |
+        接收使用者的自然語言文字，先判斷輸入意圖（記帳 / 對話），再依意圖分流處理：
+        - **transaction**：呼叫 LLM 資料萃取引擎與人設回饋引擎，回傳結構化結果
+        - **chat**：由 AI 教練依人設風格直接回覆，不產生帳目卡片
+        後端根據使用者的 ai_engine 偏好選擇對應的 LLM 引擎（PRD-F-013）。
       operationId: aiParse
       security:
         - BearerAuth: []
@@ -276,7 +285,107 @@ paths:
                   example: 午餐吃拉麵 180 元
       responses:
         '200':
-          description: 解析成功
+          description: 解析成功（回應格式依 intent 不同）
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - title: TransactionResult
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 200
+                      data:
+                        type: object
+                        required: [intent, parsed, feedback, budget_context]
+                        properties:
+                          intent:
+                            type: string
+                            enum: [transaction]
+                          parsed:
+                            $ref: '#/components/schemas/ParsedTransaction'
+                          feedback:
+                            $ref: '#/components/schemas/AIFeedbackContent'
+                          budget_context:
+                            $ref: '#/components/schemas/BudgetContext'
+                      timestamp:
+                        type: string
+                        format: date-time
+                  - title: ChatResult
+                    type: object
+                    properties:
+                      code:
+                        type: integer
+                        example: 200
+                      data:
+                        type: object
+                        required: [intent, reply, feedback]
+                        properties:
+                          intent:
+                            type: string
+                            enum: [chat]
+                          reply:
+                            $ref: '#/components/schemas/AIFeedbackContent'
+                          feedback:
+                            type: "null"
+                      timestamp:
+                        type: string
+                        format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          description: LLM API Key 無效或 quota 耗盡（PRD-F-013）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '502':
+          description: LLM 服務暫時不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/query:
+    post:
+      tags: [AI]
+      summary: 自然語言篩選查詢交易記錄（PRD-F-014）
+      description: |
+        接收使用者的自然語言查詢文字，透過兩階段 AI 處理流程，回傳匹配的交易記錄 ID 與 AI 總結評語。
+        流程：
+        1. AI 解析查詢文字中的時間範圍（無法解析則預設當月）
+        2. 依時間範圍查詢使用者的完整交易記錄（含 note）
+        3. 將交易記錄集附加至原始查詢，送 AI 分析篩選
+        4. 回傳匹配的交易 ID 列表 + 依人設風格生成的總結評語
+      operationId: aiQuery
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: X-LLM-API-Key
+          in: header
+          required: true
+          description: 使用者自行提供的 LLM API Key，後端用後即棄不持久化（PRD-F-013）
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query_text]
+              properties:
+                query_text:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                  example: 阿貓阿狗這家店我花了多少錢
+      responses:
+        '200':
+          description: 查詢成功
           content:
             application/json:
               schema:
@@ -286,19 +395,14 @@ paths:
                     type: integer
                     example: 200
                   data:
-                    type: object
-                    properties:
-                      parsed:
-                        $ref: '#/components/schemas/ParsedTransaction'
-                      feedback:
-                        $ref: '#/components/schemas/AIFeedbackContent'
-                      budget_context:
-                        $ref: '#/components/schemas/BudgetContext'
+                    $ref: '#/components/schemas/AIQueryResult'
                   timestamp:
                     type: string
                     format: date-time
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: LLM API Key 無效或 quota 耗盡（PRD-F-013）
           content:
@@ -329,6 +433,11 @@ paths:
               type: object
               required: [amount, category, raw_text, transaction_date]
               properties:
+                type:
+                  type: string
+                  enum: [income, expense]
+                  default: expense
+                  description: 交易類型（收入或消費）
                 amount:
                   type: number
                   format: decimal
@@ -532,6 +641,13 @@ paths:
       operationId: getCategoryBudgets
       security:
         - BearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: 篩選類別類型（income 或 expense）
+          schema:
+            type: string
+            enum: [income, expense]
       responses:
         '200':
           description: 成功
@@ -553,7 +669,7 @@ paths:
     post:
       tags: [Budget]
       summary: 新增自訂類別（PRD-F-012）
-      description: 使用者確認 AI 建議的新類別時呼叫此端點。類別數量上限 20。
+      description: 使用者確認 AI 建議的新類別時呼叫此端點。類別數量上限 50。
       operationId: createCategory
       security:
         - BearerAuth: []
@@ -570,6 +686,11 @@ paths:
                   minLength: 2
                   maxLength: 50
                   example: 寵物
+                type:
+                  type: string
+                  enum: [income, expense]
+                  default: expense
+                  description: 類別類型（收入或支出）
                 budget_limit:
                   type: number
                   format: decimal
@@ -684,7 +805,7 @@ paths:
   /stats/distribution:
     get:
       tags: [Stats]
-      summary: 取得消費類別分佈
+      summary: 取得類別分佈統計
       operationId: getDistribution
       security:
         - BearerAuth: []
@@ -695,6 +816,12 @@ paths:
           schema:
             type: string
             pattern: '^\d{4}-\d{2}$'
+        - name: type
+          in: query
+          description: 篩選交易類型（income 或 expense），不傳則返回全部
+          schema:
+            type: string
+            enum: [income, expense]
       responses:
         '200':
           description: 成功
@@ -758,6 +885,11 @@ components:
     ParsedTransaction:
       type: object
       properties:
+        type:
+          type: string
+          enum: [income, expense]
+          default: expense
+          description: 交易類型（收入或消費）
         amount:
           type: number
           format: decimal
@@ -814,6 +946,10 @@ components:
         id:
           type: string
           format: uuid
+        type:
+          type: string
+          enum: [income, expense]
+          default: expense
         amount:
           type: number
           format: decimal
@@ -841,6 +977,10 @@ components:
         id:
           type: string
           format: uuid
+        type:
+          type: string
+          enum: [income, expense]
+          default: expense
         amount:
           type: number
           format: decimal
@@ -861,6 +1001,10 @@ components:
         id:
           type: string
           format: uuid
+        type:
+          type: string
+          enum: [income, expense]
+          default: expense
         amount:
           type: number
           format: decimal
@@ -918,6 +1062,12 @@ components:
           type: number
         used_ratio:
           type: number
+        total_income:
+          type: number
+          description: 當月總收入
+        total_asset:
+          type: number
+          description: 當月總資產（收入 - 支出）
         transaction_count:
           type: integer
         category_summary:
@@ -939,6 +1089,11 @@ components:
       properties:
         category:
           type: string
+        type:
+          type: string
+          enum: [income, expense]
+          default: expense
+          description: 類別類型（收入或支出）
         budget_limit:
           type: number
           format: decimal
@@ -958,6 +1113,42 @@ components:
           type: number
         count:
           type: integer
+
+    AIQueryResult:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            text:
+              type: string
+              description: AI 依當前人設風格生成的總結評語
+            emotion_tag:
+              type: string
+              description: 情緒標籤
+            total_amount:
+              type: number
+              description: 匹配交易的金額總和
+            match_count:
+              type: integer
+              description: 匹配交易筆數
+        matched_transaction_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: 匹配的交易 ID 列表
+        time_range:
+          type: object
+          properties:
+            start_date:
+              type: string
+              format: date
+              description: AI 解析出的時間範圍起始日期
+            end_date:
+              type: string
+              format: date
+              description: AI 解析出的時間範圍結束日期
 
     Pagination:
       type: object
