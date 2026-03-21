@@ -1,8 +1,13 @@
 openapi: 3.0.3
 info:
   title: Vibe Money Book API
-  version: 1.0.0
-  description: 語音記帳應用 API — 透過自然語言實現一句話記帳
+  version: 1.1.0
+  description: |
+    語音記帳應用 API — 透過自然語言實現一句話記帳
+
+    ## 版本修訂說明
+    - v1.0.0 (2026-03-16)：初版定稿
+    - v1.1.0 (2026-03-21)：配合 PRD-F-014（語義篩選查詢）新增 POST /ai/query 端點與 AIQueryResult schema
   contact:
     name: Development Team
 
@@ -329,6 +334,75 @@ paths:
                         format: date-time
         '400':
           $ref: '#/components/responses/BadRequest'
+        '403':
+          description: LLM API Key 無效或 quota 耗盡（PRD-F-013）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '502':
+          description: LLM 服務暫時不可用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ai/query:
+    post:
+      tags: [AI]
+      summary: 自然語言篩選查詢交易記錄（PRD-F-014）
+      description: |
+        接收使用者的自然語言查詢文字，透過兩階段 AI 處理流程，回傳匹配的交易記錄 ID 與 AI 總結評語。
+        流程：
+        1. AI 解析查詢文字中的時間範圍（無法解析則預設當月）
+        2. 依時間範圍查詢使用者的完整交易記錄（含 note）
+        3. 將交易記錄集附加至原始查詢，送 AI 分析篩選
+        4. 回傳匹配的交易 ID 列表 + 依人設風格生成的總結評語
+      operationId: aiQuery
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: X-LLM-API-Key
+          in: header
+          required: true
+          description: 使用者自行提供的 LLM API Key，後端用後即棄不持久化（PRD-F-013）
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query_text]
+              properties:
+                query_text:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                  example: 阿貓阿狗這家店我花了多少錢
+      responses:
+        '200':
+          description: 查詢成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    $ref: '#/components/schemas/AIQueryResult'
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           description: LLM API Key 無效或 quota 耗盡（PRD-F-013）
           content:
@@ -1039,6 +1113,42 @@ components:
           type: number
         count:
           type: integer
+
+    AIQueryResult:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            text:
+              type: string
+              description: AI 依當前人設風格生成的總結評語
+            emotion_tag:
+              type: string
+              description: 情緒標籤
+            total_amount:
+              type: number
+              description: 匹配交易的金額總和
+            match_count:
+              type: integer
+              description: 匹配交易筆數
+        matched_transaction_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: 匹配的交易 ID 列表
+        time_range:
+          type: object
+          properties:
+            start_date:
+              type: string
+              format: date
+              description: AI 解析出的時間範圍起始日期
+            end_date:
+              type: string
+              format: date
+              description: AI 解析出的時間範圍結束日期
 
     Pagination:
       type: object

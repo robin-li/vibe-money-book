@@ -15,6 +15,8 @@ user_invocable: true
 1. **人類決策、AI 執行、GitHub 管控**
 2. 所有開發工作皆以 `/docs` 中的規格文件為唯一真相來源
 3. 每個階段有明確的前置條件與完成條件，未達成不得跳過
+4. **規格文件版本化管理**：任何對 `/docs` 規格文件的修改，都必須同步更新該文件的版本號、最後更新日期、版本修訂說明表格，確保修訂軌跡可追溯
+5. **臨時需求即時同步**：開發過程中若有臨時新增需求、Bug 修正導致規格變更、或新增 Issue，應即時回溯修改對應的規格文件與 Dev Plan，而非等到迭代結束才統一更新
 
 ## 流程階段
 
@@ -165,7 +167,70 @@ gh pr list -R {owner}/{repo} --state merged --limit 5 --json number,title,merged
 
 # 4. CI 最新狀態（若有 open PR）
 gh pr checks {PR-number} -R {owner}/{repo}
+
+# 5. 部署現況偵測（若專案有部署腳本）
+#    見「步驟 1a：偵測部署現況」
 ```
+
+### 步驟 1a：偵測部署現況
+
+若專案根目錄存在 `docker-compose.yml`（或 `docker-compose.yaml`、`compose.yml`），則偵測部署相關服務的運行狀態。此步驟可與步驟 1 的其他指令並行執行。
+
+**偵測項目與指令**：
+
+```bash
+# 1a-1. Docker 容器狀態
+docker compose ps --format json 2>/dev/null || echo "DOCKER_NOT_RUNNING"
+
+# 1a-2. Cloudflare Tunnel 狀態（若使用 Tunnel 部署）
+#   優先檢查 PID 檔（路徑從 scripts/start.sh 中解析，預設為 {project_root}/.tunnel.pid）
+#   若 PID 檔不存在，則 fallback 透過 ps 偵測 cloudflared 進程
+if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+    echo "TUNNEL_RUNNING (PID: $(cat "$PID_FILE"))"
+else
+    # Fallback：直接搜尋 cloudflared 進程（涵蓋非透過 start.sh 啟動的情況）
+    TUNNEL_PID=$(ps aux | grep 'cloudflared tunnel' | grep -v grep | awk '{print $2}' | head -1)
+    if [ -n "$TUNNEL_PID" ]; then
+        # 嘗試從進程參數取得 config 檔名
+        TUNNEL_INFO=$(ps aux | grep 'cloudflared tunnel' | grep -v grep | head -1)
+        echo "TUNNEL_RUNNING_NO_PID_FILE (PID: $TUNNEL_PID)"
+    else
+        echo "TUNNEL_NOT_RUNNING"
+    fi
+fi
+
+# 1a-3. 服務健康檢查（從 docker-compose.yml 解析 ports 與環境變數）
+#   後端：curl -sf http://localhost:{backend_port}/health
+#   前端：curl -sf -o /dev/null -w "%{http_code}" http://localhost:{frontend_port}
+
+# 1a-4. 公網端點檢查（從 docker-compose.yml 環境變數中解析對外 URL）
+#   例：CORS_ORIGIN, VITE_API_BASE_URL 等可能包含公網域名
+#   curl -sf -o /dev/null -w "%{http_code}" {public_url}
+```
+
+**偵測邏輯**：
+
+1. **解析 `docker-compose.yml`**：讀取 services 定義，取得各服務的 port mapping 與環境變數
+2. **解析啟動腳本**（如 `scripts/start.sh`）：取得 Tunnel 設定檔路徑、PID 檔路徑、公網 URL 等
+3. **判定部署狀態**：
+
+| 狀態 | 條件 |
+|------|------|
+| 🟢 運行中 | Docker 容器 running + 健康檢查通過 |
+| 🟡 部分運行 | 部分容器 running 或健康檢查失敗 |
+| 🔴 未運行 | 無容器運行或 Docker 未啟動 |
+| ⚪ 未配置 | 無 docker-compose.yml |
+
+Tunnel 狀態獨立判定：
+
+| 狀態 | 條件 |
+|------|------|
+| 🟢 連線中 | PID 檔或 ps 偵測到 cloudflared 進程運行中 + 公網端點可達 |
+| 🟡 程序運行但端點不可達 | cloudflared 進程存在但公網 curl 失敗 |
+| 🔴 未運行 | PID 檔不存在且 ps 未偵測到 cloudflared 進程 |
+| ⚪ 未配置 | 無啟動腳本或 Tunnel 設定 |
+
+> **注意**：Tunnel 可能透過 `scripts/start.sh`（產生 PID 檔）或直接以 `cloudflared tunnel run` 啟動（無 PID 檔）。偵測時應同時檢查 PID 檔與 `ps aux | grep cloudflared` 兩種途徑。
 
 ### 步驟 2：讀取 Dev Plan 任務狀態
 
@@ -200,6 +265,17 @@ gh pr checks {PR-number} -R {owner}/{repo}
 │    - #{num} {title}                          │
 └──────────────────────────────────────────────┘
 
+┌─ 部署現況 ───────────────────────────────────┐
+│ 🐳 Docker：{🟢 運行中 / 🟡 部分運行 / 🔴 未運行 / ⚪ 未配置}  │
+│    - {service_name}: {status} (port: {port})  │
+│    - {service_name}: {status} (port: {port})  │
+│ 🔗 Tunnel：{🟢 連線中 / 🔴 未運行 / ⚪ 未配置}               │
+│ 🌐 公網端點：                                 │
+│    - {url} → {HTTP status / 不可達}           │
+│    - {url} → {HTTP status / 不可達}           │
+│ 📅 上次部署 commit：{short_hash} {message}    │
+└──────────────────────────────────────────────┘
+
 ┌─ 最近動態 ───────────────────────────────────┐
 │ ✅ #{num} {title} — merged {date}            │
 │ ✅ #{num} {title} — merged {date}            │
@@ -211,6 +287,12 @@ gh pr checks {PR-number} -R {owner}/{repo}
 **進度條規則**：
 - 使用 `█`（已完成）和 `░`（未完成），共 10 格
 - 例：60% → `██████░░░░`
+
+**部署現況區塊規則**：
+- 若專案無 `docker-compose.yml` 且無部署腳本，則**省略整個「部署現況」區塊**，不顯示
+- 「上次部署 commit」：比對目前正在運行的容器 image 與本地最新 commit，若無法取得容器資訊則顯示最近一次與部署相關的 commit（搜尋關鍵字：`deploy`, `部署`, `release`, `docker`, `tunnel`）
+- 公網端點：從 `docker-compose.yml` 的環境變數（如 `CORS_ORIGIN`、`VITE_API_BASE_URL`）或啟動腳本中解析；若無公網端點則省略該行
+- 健康檢查逾時設為 5 秒（`curl --max-time 5`）
 
 **同步 Dev Plan 狀態**
 

@@ -43,6 +43,7 @@ user_invocable: true
 | 3 | **開發者** | Code Review，核准後點擊 Merge | Merge commit |
 | 4 | **GitHub** | 觸發 CD pipeline（如已配置） | 部署 |
 | 5 | **AI 助手** | 將 `02-Dev_Plan.md` 中對應任務標記為 `[x] Completed` | Dev Plan 更新 |
+| 5a | **AI 助手** | 若 PR 內容涉及規格變更（如新增/修改 API、變更資料模型、調整功能行為），同步更新對應規格文件（PRD/SRD/API Spec）並更新版本修訂記錄 | 規格文件同步 |
 | 6 | **AI 助手** | 更新看板狀態為 `Done`，並在 Issue 發佈完成 Comment | 狀態更新 |
 | 7 | **AI 助手** | 提醒開發者：若該任務有對應的手動驗證 Issues，現在可交由審查角色開始驗證 | 驗證提醒 |
 
