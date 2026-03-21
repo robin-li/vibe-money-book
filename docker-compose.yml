@@ -1,3 +1,5 @@
+name: vibe-money-book
+
 services:
   backend:
     build:
