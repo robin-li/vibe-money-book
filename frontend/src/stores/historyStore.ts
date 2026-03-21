@@ -236,27 +236,36 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
       const result = res.data.data as AIQueryResult
 
       // 載入匹配時間範圍內的交易記錄
-      const params: Record<string, string | number> = {
-        page: 1,
-        limit: 200,
-        sort: 'desc',
-        start_date: result.time_range.start_date,
-        end_date: result.time_range.end_date,
+      // 後端 limit 上限為 100，分頁載入所有匹配時間範圍的交易
+      const allItems: Transaction[] = []
+      let txPage = 1
+      let txHasMore = true
+      while (txHasMore) {
+        const params: Record<string, string | number> = {
+          page: txPage,
+          limit: 100,
+          sort: 'desc',
+          start_date: result.time_range.start_date,
+          end_date: result.time_range.end_date,
+        }
+        const txRes = await api.get('/transactions', { params })
+        const items: Transaction[] = txRes.data.data.items.map(
+          (t: Record<string, unknown>) => ({
+            id: t.id as string,
+            type: (t.type as 'income' | 'expense') ?? 'expense',
+            amount: t.amount as number,
+            category: t.category as string,
+            merchant: t.merchant as string,
+            rawText: (t.raw_text as string) ?? '',
+            note: (t.note as string) ?? undefined,
+            transactionDate: t.transaction_date as string,
+            createdAt: t.created_at as string,
+          })
+        )
+        allItems.push(...items)
+        txHasMore = items.length >= 100
+        txPage++
       }
-      const txRes = await api.get('/transactions', { params })
-      const allItems: Transaction[] = txRes.data.data.items.map(
-        (t: Record<string, unknown>) => ({
-          id: t.id as string,
-          type: (t.type as 'income' | 'expense') ?? 'expense',
-          amount: t.amount as number,
-          category: t.category as string,
-          merchant: t.merchant as string,
-          rawText: (t.raw_text as string) ?? '',
-          note: (t.note as string) ?? undefined,
-          transactionDate: t.transaction_date as string,
-          createdAt: t.created_at as string,
-        })
-      )
 
       // 篩選出匹配的交易
       const matchedIds = new Set(result.matched_transaction_ids)
