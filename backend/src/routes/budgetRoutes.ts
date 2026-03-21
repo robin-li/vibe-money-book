@@ -6,7 +6,7 @@ import { ApiResponse } from '../types';
 
 const router = Router();
 
-const MAX_CATEGORIES = 20;
+const MAX_CATEGORIES = 50;
 
 // POST /budget/categories - 新增類別
 router.post('/categories', authMiddleware, async (req: AuthRequest, res: Response, next: NextFunction) => {

@@ -485,7 +485,7 @@ gantt
   1. 實作 `GET /budget/summary`：月度預算摘要（總預算、已消費、剩餘），含各類別明細
   2. 實作 `GET /budget/categories`：取得使用者所有類別（含預設 + 自訂標識）
   3. 實作 `PUT /budget/categories`：批次更新類別預算限額
-  4. 實作 `POST /budget/categories`（PRD-F-012）：新增自訂類別，驗證名稱不重複、總數上限 20
+  4. 實作 `POST /budget/categories`（PRD-F-012）：新增自訂類別，驗證名稱不重複、總數上限 50
   5. 實作 `DELETE /budget/categories/:category`（PRD-F-012）：刪除自訂類別，將關聯交易重新歸類至「其他」
   6. 實作 `GET /stats/distribution`：消費分佈比例（各類別佔總消費百分比）
   7. 撰寫單元測試：摘要計算、分佈比例加總驗證、類別上限檢查、刪除後歸類邏輯
@@ -494,7 +494,7 @@ gantt
 - **產出**：`budgetController.ts`、`budgetService.ts`、`statsController.ts`、`statsService.ts`、單元測試
 - **驗證**：
   - ✅ 自動：單元測試通過 — 摘要數據正確計算、分佈比例加總為 1.0
-  - ✅ 自動：新增類別驗證（名稱重複拒絕、超過上限 20 拒絕）
+  - ✅ 自動：新增類別驗證（名稱重複拒絕、超過上限 50 拒絕）
   - ✅ 自動：刪除自訂類別後關聯交易 category 更新為「其他」
   - ✅ 自動：CI Pipeline 通過
 - **優先級**：P0

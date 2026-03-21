@@ -669,7 +669,7 @@ paths:
     post:
       tags: [Budget]
       summary: 新增自訂類別（PRD-F-012）
-      description: 使用者確認 AI 建議的新類別時呼叫此端點。類別數量上限 20。
+      description: 使用者確認 AI 建議的新類別時呼叫此端點。類別數量上限 50。
       operationId: createCategory
       security:
         - BearerAuth: []

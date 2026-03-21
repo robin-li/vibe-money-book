@@ -698,7 +698,7 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 **錯誤**：
 - 400：類別名稱為空或過長
 - 409：類別已存在
-- 422：類別數量已達上限（20）
+- 422：類別數量已達上限（50）
 
 #### DELETE /budget/categories/:category — 刪除自訂類別（PRD-F-012）
 
