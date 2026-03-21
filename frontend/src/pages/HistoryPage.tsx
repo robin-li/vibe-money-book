@@ -1,7 +1,10 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useHistoryStore } from '../stores/historyStore'
 import { useDashboardStore } from '../stores/dashboardStore'
+import { useSettingsStore } from '../stores/settingsStore'
 import TransactionItem from '../components/TransactionItem'
+import AIFeedbackCard from '../components/AIFeedbackCard'
+import VoiceInput from '../components/VoiceInput'
 import type { Transaction } from '../stores/index'
 import { getCategoryName } from '../lib/categoryUtils'
 
@@ -48,16 +51,22 @@ function HistoryPage() {
     isDeleting,
     isUpdating,
     errorMessage,
+    aiQueryResult,
+    isQuerying,
     fetchTransactions,
     loadMore,
     setFilters,
-    resetFilters,
     deleteTransaction,
     updateTransaction,
+    queryTransactions,
+    clearAIQuery,
+    clearAllFilters,
   } = useHistoryStore()
 
   const categoryInfoList = useDashboardStore((s) => s.categoryInfoList)
   const fetchCategories = useDashboardStore((s) => s.fetchCategories)
+  const persona = useSettingsStore((s) => s.persona)
+  const aiEngine = useSettingsStore((s) => s.aiEngine)
 
   const expenseCategories = useMemo(
     () => categoryInfoList.filter((c) => c.type === 'expense'),
@@ -75,35 +84,46 @@ function HistoryPage() {
     fetchTransactions(true)
   }, [fetchCategories, fetchTransactions])
 
+  // 手動篩選器變更 → 清除 AI 查詢（互斥）
   const handleCategoryChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
+      clearAIQuery()
       setFilters({ category: e.target.value })
-      // Trigger re-fetch after state update
       setTimeout(() => useHistoryStore.getState().fetchTransactions(true), 0)
     },
-    [setFilters]
+    [setFilters, clearAIQuery]
   )
 
   const handleStartDateChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      clearAIQuery()
       setFilters({ startDate: e.target.value })
       setTimeout(() => useHistoryStore.getState().fetchTransactions(true), 0)
     },
-    [setFilters]
+    [setFilters, clearAIQuery]
   )
 
   const handleEndDateChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
+      clearAIQuery()
       setFilters({ endDate: e.target.value })
       setTimeout(() => useHistoryStore.getState().fetchTransactions(true), 0)
     },
-    [setFilters]
+    [setFilters, clearAIQuery]
   )
 
+  // 清除所有篩選（手動 + AI 查詢）
   const handleResetFilters = useCallback(() => {
-    resetFilters()
-    setTimeout(() => useHistoryStore.getState().fetchTransactions(true), 0)
-  }, [resetFilters])
+    clearAllFilters()
+  }, [clearAllFilters])
+
+  // AI 語義查詢
+  const handleAIQuery = useCallback(
+    (text: string) => {
+      queryTransactions(text)
+    },
+    [queryTransactions]
+  )
 
   const handleToggle = useCallback((id: string) => {
     setExpandedId((prev) => (prev === id ? null : id))
@@ -126,7 +146,7 @@ function HistoryPage() {
 
   const grouped = useMemo(() => groupByDate(transactions), [transactions])
 
-  const hasActiveFilters = filters.category || filters.startDate || filters.endDate
+  const hasActiveFilters = filters.category || filters.startDate || filters.endDate || aiQueryResult
 
   return (
     <div className="p-2xl pb-32">
@@ -208,6 +228,20 @@ function HistoryPage() {
         </div>
       </div>
 
+      {/* AI Query Feedback Card — only shown when there's a query result */}
+      {aiQueryResult && (
+        <div data-testid="ai-query-feedback">
+          <AIFeedbackCard
+            feedbackText={aiQueryResult.summary.text}
+            persona={persona}
+            aiEngine={aiEngine}
+          />
+          <div className="mx-2xl mb-lg text-small text-text-tertiary">
+            共 {aiQueryResult.summary.match_count} 筆匹配，合計 ${aiQueryResult.summary.total_amount.toLocaleString()}
+          </div>
+        </div>
+      )}
+
       {/* Error message */}
       {errorMessage && (
         <div className="mb-lg p-md bg-danger-light rounded-md text-danger text-body text-center" data-testid="error-message">
@@ -215,14 +249,21 @@ function HistoryPage() {
         </div>
       )}
 
+      {/* Querying indicator */}
+      {isQuerying && (
+        <div className="text-center py-3xl" data-testid="querying-state">
+          <p className="text-body text-text-secondary">AI 正在分析您的查詢...</p>
+        </div>
+      )}
+
       {/* Transaction list */}
-      {transactions.length === 0 && !isLoading ? (
+      {!isQuerying && transactions.length === 0 && !isLoading ? (
         <div className="text-center py-3xl" data-testid="empty-state">
           <p className="text-body text-text-tertiary">
-            還沒有記帳紀錄，開始記帳吧！
+            {aiQueryResult ? '找不到符合條件的記錄' : '還沒有記帳紀錄，開始記帳吧！'}
           </p>
         </div>
-      ) : (
+      ) : !isQuerying ? (
         <div data-testid="transaction-list">
           {Array.from(grouped.entries()).map(([dateKey, txList]) => (
             <div key={dateKey} className="mb-lg">
@@ -247,8 +288,8 @@ function HistoryPage() {
             </div>
           ))}
 
-          {/* Load more */}
-          {hasMore && (
+          {/* Load more — hidden during AI query mode */}
+          {hasMore && !aiQueryResult && (
             <div className="text-center py-lg">
               <button
                 type="button"
@@ -262,14 +303,21 @@ function HistoryPage() {
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
       {/* Loading indicator for initial load */}
-      {isLoading && transactions.length === 0 && (
+      {isLoading && transactions.length === 0 && !isQuerying && (
         <div className="text-center py-3xl" data-testid="loading-state">
           <p className="text-body text-text-secondary">載入中...</p>
         </div>
       )}
+
+      {/* AI Query Voice Input — fixed at bottom */}
+      <VoiceInput
+        onSubmit={handleAIQuery}
+        disabled={isQuerying}
+        placeholder="問問 AI 教練..."
+      />
     </div>
   )
 }
