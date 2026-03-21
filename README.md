@@ -42,7 +42,7 @@
 | 💖 溫柔模式 | 溫暖鼓勵 | 「辛苦了～偶爾犒賞自己也很重要呢」 |
 | 🥺 情勒模式 | 善意愧疚 | 「這個月已經超支了...我好擔心你啊...」 |
 
-### AI 語義查詢（PRD-F-014）
+### AI 語義查詢
 - 在記錄頁面用自然語言查詢消費紀錄
 - 查詢範例：「阿貓阿狗這家店花了多少」「最近一個月毛小孩的開銷」「吃的方面花了多少」
 - 兩階段 AI 處理：時間範圍解析 → 交易匹配分析
@@ -57,6 +57,20 @@
 ### 統計分析
 - 消費分佈圓餅圖（Recharts）
 - 交易記錄列表，支援類別篩選、日期篩選與 AI 語義查詢
+
+---
+
+## 專案演示
+
+**演示地址** :
+
+[https://moneybook.smart-codings.com/](https://moneybook.smart-codings.com/)
+
+- 重新[註冊新帳號](https://moneybook.smart-codings.com/register)
+- 使用[演示帳號](https://moneybook.smart-codings.com/login)：
+	- Email  : `test@a.b.com`
+	- Passwd : `Aaa@123456`  
+
 
 ---
 
@@ -459,16 +473,87 @@ docker compose ps
 
 ## 📸 截圖 / Demo
 
+### 首頁
+
+**儀表板**
+
 ![首頁儀表板](docs/screenshots/01-home-dashboard.jpg)
+
+**語音/自然語言**進行**記帳**
+
 ![語音輸入](docs/screenshots/02-1-talk-input.jpg)
-![語音詢問](docs/screenshots/02-2-talk-ask.jpg)
+
+**毒舌教練**幫您省錢
+
 ![毒舌教練](docs/screenshots/02-3-roasting-ai.jpg)
+
+也可以直接**詢問花錢狀況**
+
+![語音詢問](docs/screenshots/02-2-talk-ask.jpg)
+
+**自動分類** : 沒有很合適的分類時會自動提供分類建議
+
 ![自動分類1](docs/screenshots/03-1-auto-new-catagory-1.jpg)
+
 ![自動分類2](docs/screenshots/03-1-auto-new-catagory-2.jpg)
+
+**自動日期**：自動識別消費日期，比如「上週五」、「 10日時」
+
 ![語義日期](docs/screenshots/03-2-auto-date.jpg)
+
+**自動日期**：自動識別節日，比如：「白色情人節」、「38節」
+
+![語義日期2](docs/screenshots/03-2-auto-date-2.jpg)
+
+### 統計頁面
+
+依**收入**/**支出**分別進行加總與統計。
+
 ![統計頁面](docs/screenshots/04-summary.jpg)
+
+**消費記錄** : 除了手動篩選，瀏覽消費記錄以外，還能直接進行語義查詢。
+
+比如：查詢在「狗子」身上花了多少錢，即使記錄裡面都沒出現「狗子」這個詞。
+
+### 記錄頁面
+
+![記錄頁面1](docs/screenshots/04-records-1.jpg)
+
+**消費記錄** : 進行語義查詢，例如：「花在老婆大人身上多少錢」
+
+![記錄頁面2](docs/screenshots/04-records-2.jpg)
+
+### 設定頁面
+
+
+
+可以設定：
+
+- **AI人設**: AI教練的個性
+- **AI指示**: 每次分析交易前的特別指示，比如希望如何分類交易。
+
 ![設定頁面](docs/screenshots/05-settings.jpg)
 
+其它設定如：
+- 預算
+- AI 的 API Key
+- 交易類別管理
+
+![設定頁面2](docs/screenshots/05-settings-2.jpg)
+
+
+---
+
+## 🤖 開發流程
+
+本專案採用 [**Vibe-SDLC**](https://github.com/robin-li/Vibe-SDLC) 軟體開發流程，由 AI 輔助完成規格撰寫、任務拆分與開發循環。
+
+相關的技能，置於 `.claude/skills`
+
+詳細開發過程請參考： 
+- [開發日誌1](docs/worklog/Vibe-Money-Book-Worklog-1.md)
+- [開發日誌2](docs/worklog/Vibe-Money-Book-Worklog-2.md)
+- [開發日誌3](docs/worklog/Vibe-Money-Book-Worklog-3.md)
 
 ---
 
@@ -480,6 +565,6 @@ docker compose ps
 
 ## 🙏 致謝
 
-- 本專案採用 **Vibe-SDLC** 開發流程，由 AI 輔助完成規格撰寫、任務拆分與開發循環
+- 本專案採用 [**Vibe-SDLC**](https://github.com/robin-li/Vibe-SDLC) 開發流程，由 AI 輔助完成規格撰寫、任務拆分與開發循環
 - 感謝 [Claude Code](https://claude.ai/code) 在開發過程中的協助
 - UI 設計遵循 Mobile-First 原則，以手機使用場景為優先考量
