@@ -1,0 +1,14 @@
+{
+  "validation_failed": "参数验证失败",
+  "not_found": "资源不存在",
+  "unauthorized": "未授权的访问",
+  "token_missing": "未提供认证 Token",
+  "token_expired": "Token 已过期",
+  "token_invalid": "Token 无效",
+  "user_not_found": "用户不存在",
+  "email_already_exists": "此 Email 已被注册",
+  "invalid_credentials": "Email 或密码错误",
+  "internal_error": "内部服务器错误",
+  "rate_limit_exceeded": "请求过于频繁，请稍后再试",
+  "at_least_one_field": "至少需提供一个字段进行更新"
+}

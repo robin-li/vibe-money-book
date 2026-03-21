@@ -361,6 +361,7 @@ describe('Budget Routes', () => {
         aiEngine: 'gemini',
         monthlyBudget: new Prisma.Decimal(30000),
         currency: 'TWD',
+        language: 'zh-TW',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
@@ -443,6 +444,7 @@ describe('Budget Routes', () => {
         aiEngine: 'gemini',
         monthlyBudget: new Prisma.Decimal(30000),
         currency: 'TWD',
+        language: 'zh-TW',
         createdAt: new Date(),
         updatedAt: new Date(),
       });

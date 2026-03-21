@@ -1,0 +1,14 @@
+{
+  "validation_failed": "Validation failed",
+  "not_found": "Resource not found",
+  "unauthorized": "Unauthorized access",
+  "token_missing": "Authentication token not provided",
+  "token_expired": "Token has expired",
+  "token_invalid": "Invalid token",
+  "user_not_found": "User not found",
+  "email_already_exists": "This email is already registered",
+  "invalid_credentials": "Invalid email or password",
+  "internal_error": "Internal server error",
+  "rate_limit_exceeded": "Too many requests, please try again later",
+  "at_least_one_field": "At least one field must be provided for update"
+}

@@ -19,6 +19,7 @@ model User {
   aiEngine       String   @default("gemini") @map("ai_engine") // gemini, openai
   monthlyBudget  Decimal  @default(30000.00) @map("monthly_budget")
   currency       String   @default("TWD")
+  language       String   @default("zh-TW")
   aiInstructions String?  @map("ai_instructions")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")

@@ -23,6 +23,7 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
   if (input.ai_engine !== undefined) updateData.aiEngine = input.ai_engine;
   if (input.monthly_budget !== undefined) updateData.monthlyBudget = input.monthly_budget;
   if (input.ai_instructions !== undefined) updateData.aiInstructions = input.ai_instructions;
+  if (input.language !== undefined) updateData.language = input.language;
 
   const user = await prisma.user.update({
     where: { id: userId },

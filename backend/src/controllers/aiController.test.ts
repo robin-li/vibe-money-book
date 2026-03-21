@@ -14,6 +14,7 @@ const MOCK_USER = {
   aiEngine: 'gemini',
   monthlyBudget: 30000,
   currency: 'TWD',
+  language: 'zh-TW',
   createdAt: new Date(),
   updatedAt: new Date(),
   categoryBudgets: [

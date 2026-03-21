@@ -40,6 +40,7 @@ vi.mock('../config/database', () => {
             aiEngine: 'gemini',
             monthlyBudget: 30000,
             currency: 'TWD',
+            language: 'zh-TW',
             createdAt: new Date(),
             updatedAt: new Date(),
           };

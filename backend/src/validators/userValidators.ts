@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+export const SUPPORTED_LANGUAGES = ['zh-TW', 'en', 'zh-CN', 'vi'] as const;
+
 export const updateProfileSchema = z.object({
   name: z
     .string()
@@ -25,6 +27,11 @@ export const updateProfileSchema = z.object({
     .string()
     .max(1000, 'AI 指示最多 1000 個字元')
     .nullable()
+    .optional(),
+  language: z
+    .enum(SUPPORTED_LANGUAGES, {
+      error: '語言必須為 zh-TW、en、zh-CN 或 vi',
+    })
     .optional(),
 }).refine(
   (data) => Object.keys(data).length > 0,
