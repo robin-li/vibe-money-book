@@ -26,6 +26,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - T-502：記錄頁語義查詢 UI（PR #132）
   - T-503：E2E 測試更新（PR #133）
   - 驗收通過（#130 closed）
+- [ ] **M6 迭代**：i18n 多語系支援（PRD-F-015）— 規格已定稿
+  - T-601：i18n 基礎建設（後端）
+  - T-602：後端錯誤訊息多語化
+  - T-603：AI Prompt 多語化
+  - T-604：i18n 基礎建設（前端）
+  - T-605：前端 UI 多語化
+  - T-606：語言設定與偏好持久化
+  - T-607：i18n E2E 測試
 
 ---
 

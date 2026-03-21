@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Vibe Money Book API
-  version: 1.2.0
+  version: 1.3.0
   description: |
     語音記帳應用 API — 透過自然語言實現一句話記帳
 
@@ -9,6 +9,7 @@ info:
     - v1.0.0 (2026-03-16)：初版定稿
     - v1.1.0 (2026-03-21)：配合 PRD-F-014（語義篩選查詢）新增 POST /ai/query 端點與 AIQueryResult schema
     - v1.2.0 (2026-03-22)：新增 GET /ai/config 端點；/stats/distribution 新增 period、start_date、end_date 參數
+    - v1.3.0 (2026-03-22)：配合 PRD-F-015（i18n）新增 Accept-Language 請求 Header；User schema 新增 language 欄位；PUT /users/profile 新增 language 參數
   contact:
     name: Development Team
 
@@ -181,6 +182,10 @@ paths:
                   type: string
                   enum: [gemini, openai]
                   description: 使用者偏好的 AI 引擎（PRD-F-013）
+                language:
+                  type: string
+                  enum: [zh-TW, en, zh-CN, vi]
+                  description: 使用者介面語言偏好（PRD-F-015）
                 monthly_budget:
                   type: number
                   format: decimal
@@ -924,6 +929,11 @@ components:
           enum: [gemini, openai]
           default: gemini
           description: 使用者偏好的 AI 引擎（PRD-F-013）
+        language:
+          type: string
+          enum: [zh-TW, en, zh-CN, vi]
+          default: zh-TW
+          description: 使用者介面語言偏好（PRD-F-015）
         monthly_budget:
           type: number
           format: decimal
