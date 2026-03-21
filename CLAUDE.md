@@ -38,7 +38,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. 要請在要求我授權執行某些指令時，請**加上簡短的備註** (請儘量使用繁體中文進行備註)，說明這次指令的目的是什麼，備註內容儘量精簡，不要超過200字。
 4. `.env` 含有敏感資訊，嚴格禁止 commit 或傳輸 ！
 5. 技能的使用與修改，請以當前專案目錄下的技能`./.claude/skills/`為優先。
-6. **即時回報分流**：當我直接回報 Bug、功能修改、改善建議時，請先詢問處理方式（1. 小問題直接修 2. 建 Issue 再修 3. 先記下來稍後批量建 Issue），再依選擇執行。詳見 `.claude/skills/vibe-sdlc/skill.md` 的「即時回報分流」章節。
+6. **即時回報分流（強制阻斷）**：當我直接描述 Bug、功能需求、改善建議時（包含但不限於「新增需求」「幫我改」「我想要」「加一個」「應該要」等措辭），**必須立即停止，禁止直接動手寫程式碼或修改檔案**，先顯示分流選單詢問處理方式：
+   - 1️⃣ 小問題，直接修正（不建 Issue）
+   - 2️⃣ 建立 Issue 後再修正
+   - 3️⃣ 先記下來，待會一起建立 Issues
+
+   **只有在我回覆選項後，才可開始實作。** 違反此規則等同流程失控。詳見 `.claude/skills/vibe-sdlc/skill.md` 的「即時回報分流」章節。
 
 ### Performance & Execution Efficiency
 

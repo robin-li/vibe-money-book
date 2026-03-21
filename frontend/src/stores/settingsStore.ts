@@ -23,8 +23,13 @@ interface SettingsState {
   /** API Key 驗證狀態 */
   keyValidationStatus: KeyValidationStatus
 
+  /** 後端是否配置了預設 API Key（按引擎） */
+  hasDefaultKey: Record<string, boolean>
+
   /** 從後端載入使用者設定 */
   fetchProfile: () => Promise<void>
+  /** 載入 AI 配置（預設 Key 狀態） */
+  fetchAIConfig: () => Promise<void>
   /** 更新人設 */
   updatePersona: (persona: Persona) => Promise<void>
   /** 更新月預算 */
@@ -50,6 +55,15 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   saving: false,
   error: null,
   keyValidationStatus: 'idle',
+  hasDefaultKey: {},
+
+  fetchAIConfig: async () => {
+    try {
+      const res = await api.get('/ai/config')
+      const data = res.data.data as { hasDefaultKey: Record<string, boolean> }
+      set({ hasDefaultKey: data.hasDefaultKey })
+    } catch { /* ignore */ }
+  },
 
   fetchProfile: async () => {
     set({ loading: true, error: null })

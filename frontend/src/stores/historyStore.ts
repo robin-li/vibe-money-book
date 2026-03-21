@@ -68,7 +68,7 @@ const defaultFilters: HistoryFilters = {
   endDate: '',
 }
 
-/** 讀取當前引擎對應的 API Key */
+/** 讀取當前引擎對應的 API Key（空字串表示未設定） */
 function getActiveApiKey(): string {
   const engine = useSettingsStore.getState().aiEngine
   try {
@@ -79,6 +79,12 @@ function getActiveApiKey(): string {
     }
   } catch { /* ignore */ }
   return localStorage.getItem('llm_api_key') ?? ''
+}
+
+/** 建構 LLM 請求 headers */
+function llmHeaders(): Record<string, string> {
+  const key = getActiveApiKey()
+  return key ? { 'X-LLM-API-Key': key } : {}
 }
 
 export const useHistoryStore = create<HistoryState>((set, get) => ({
@@ -222,7 +228,9 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
 
     try {
       const llmApiKey = getActiveApiKey()
-      if (!llmApiKey) {
+      const { hasDefaultKey } = useSettingsStore.getState()
+      const engine = useSettingsStore.getState().aiEngine
+      if (!llmApiKey && !hasDefaultKey[engine]) {
         set({ isQuerying: false, errorMessage: '請先在設定頁面輸入 AI API Key' })
         return
       }
@@ -230,7 +238,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
       const res = await api.post(
         '/ai/query',
         { query_text: queryText },
-        { headers: { 'X-LLM-API-Key': llmApiKey } }
+        { headers: llmHeaders() }
       )
 
       const result = res.data.data as AIQueryResult
