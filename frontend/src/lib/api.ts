@@ -8,12 +8,17 @@ const api = axios.create({
   },
 })
 
-// Request interceptor — 可在此加入 auth token
+// Request interceptor — 附加 auth token 與 Accept-Language
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+
+  // 附加 Accept-Language Header（值為 i18next 當前語言）
+  const lang = localStorage.getItem('i18nextLng') || 'zh-TW'
+  config.headers['Accept-Language'] = lang
+
   return config
 })
 

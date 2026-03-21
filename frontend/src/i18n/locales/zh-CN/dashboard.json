@@ -1,0 +1,10 @@
+{
+  "budgetCard": {
+    "title": "本月预算"
+  },
+  "recentTransactions": "最近交易",
+  "voiceInput": {
+    "placeholder": "说说你花了什么...",
+    "recording": "录音中..."
+  }
+}

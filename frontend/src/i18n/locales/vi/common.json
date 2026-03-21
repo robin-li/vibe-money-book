@@ -1,0 +1,17 @@
+{
+  "save": "Lưu",
+  "cancel": "Hủy",
+  "confirm": "Xác nhận",
+  "delete": "Xóa",
+  "edit": "Sửa",
+  "loading": "Đang tải...",
+  "error": "Đã xảy ra lỗi",
+  "retry": "Thử lại",
+  "back": "Quay lại",
+  "next": "Tiếp theo",
+  "done": "Hoàn tất",
+  "close": "Đóng",
+  "search": "Tìm kiếm",
+  "noData": "Không có dữ liệu",
+  "currency": "VND"
+}

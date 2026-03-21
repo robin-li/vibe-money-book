@@ -1,0 +1,10 @@
+{
+  "budgetCard": {
+    "title": "Ngân sách tháng"
+  },
+  "recentTransactions": "Giao dịch gần đây",
+  "voiceInput": {
+    "placeholder": "Nói cho tôi biết bạn đã chi gì...",
+    "recording": "Đang ghi âm..."
+  }
+}

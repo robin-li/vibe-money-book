@@ -1,0 +1,7 @@
+{
+  "required": "Trường này là bắt buộc",
+  "invalidEmail": "Vui lòng nhập email hợp lệ",
+  "passwordTooShort": "Mật khẩu phải có ít nhất 8 ký tự",
+  "passwordMismatch": "Mật khẩu không khớp",
+  "invalidAmount": "Vui lòng nhập số tiền hợp lệ"
+}

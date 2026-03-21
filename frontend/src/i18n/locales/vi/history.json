@@ -1,0 +1,10 @@
+{
+  "filter": {
+    "category": "Danh mục",
+    "dateRange": "Khoảng thời gian",
+    "type": "Loại"
+  },
+  "aiQuery": {
+    "placeholder": "Tìm kiếm giao dịch bằng ngôn ngữ tự nhiên..."
+  }
+}

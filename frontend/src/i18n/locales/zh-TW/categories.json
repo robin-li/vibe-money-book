@@ -1,0 +1,12 @@
+{
+  "food": "飲食",
+  "transport": "交通",
+  "entertainment": "娛樂",
+  "shopping": "購物",
+  "housing": "居住",
+  "medical": "醫療",
+  "education": "教育",
+  "other": "其他",
+  "salary": "薪資",
+  "investment": "投資"
+}

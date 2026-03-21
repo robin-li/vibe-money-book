@@ -1,0 +1,12 @@
+{
+  "food": "饮食",
+  "transport": "交通",
+  "entertainment": "娱乐",
+  "shopping": "购物",
+  "housing": "居住",
+  "medical": "医疗",
+  "education": "教育",
+  "other": "其他",
+  "salary": "薪资",
+  "investment": "投资"
+}

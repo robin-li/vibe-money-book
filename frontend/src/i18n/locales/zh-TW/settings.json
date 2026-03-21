@@ -1,0 +1,14 @@
+{
+  "language": {
+    "title": "語言設定"
+  },
+  "persona": {
+    "title": "AI 人設",
+    "sarcastic": "毒舌",
+    "gentle": "溫柔",
+    "guilt_trip": "情勒"
+  },
+  "budget": {
+    "title": "月預算"
+  }
+}
