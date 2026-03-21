@@ -14,7 +14,7 @@
 
 ## ✨ 專案亮點
 
-- 🎤 **語音記帳** — 按住說話，AI 自動解析金額、類別、商家
+- 🎤 **語音記帳** — 按住說話/自然語言輸入，AI 自動解析金額、類別、商家
 - 🤖 **個性化 AI 教練** — 毒舌 🔥 / 溫柔 💖 / 情勒 🥺，三種人設即時財務評論
 - 📊 **預算血條** — 視覺化本月預算消耗，超支自動警示
 - 🥧 **消費分析** — 圓餅圖一覽各類別消費佔比
@@ -27,7 +27,7 @@
 
 ### 語音與文字輸入
 - 整合 Web Speech API，支援「按住說話」(Push-to-Talk)
-- 文字輸入支援自然語言，例如：「午餐吃拉麵 180 元」、「星巴克咖啡 150」
+- 文字輸入支援自然語言，例如：「午餐吃拉麵 180 元」、「在阿貓阿狗幫狗子買狗糧 1500」
 
 ### AI 智慧解析
 - LLM 自動萃取金額、類別、商家、日期
@@ -86,10 +86,10 @@
 | Google Gemini (預設) | `gemini-3-flash-preview` | `GEMINI_MODEL` |
 | OpenAI | `gpt-5.4-mini` | `OPENAI_MODEL` |
 
-<details>
-<summary>📋 可用模型列表</summary>
 
-#### Google Gemini
+#### **📋 可用模型列表**
+
+##### Google Gemini
 
 | 模型名稱 | 特點 | 價格 (per 1M tokens) |
 |---------|------|---------------------|
@@ -99,7 +99,7 @@
 | `gemini-2.5-pro` | 最強推理 | — |
 | `gemini-2.0-flash` | 快速、穩定 | — |
 
-#### OpenAI
+##### OpenAI
 
 | 模型名稱 | 特點 | 價格 (per 1M tokens) |
 |---------|------|---------------------|
@@ -110,7 +110,7 @@
 | `gpt-4.1` | 上一代，支援 fine-tuning | — |
 | `gpt-4.1-mini` | 上一代快速版 | — |
 
-</details>
+
 
 ### 測試
 
@@ -450,13 +450,16 @@ docker compose ps
 
 ## 📸 截圖 / Demo
 
-> 🚧 即將推出 — 敬請期待
+![首頁儀表板](docs/screenshots/01-home-dashboard.jpg)
+![語音輸入](docs/screenshots/02-1-talk-input.jpg)
+![語音詢問](docs/screenshots/02-2-talk-ask.jpg)
+![毒舌教練](docs/screenshots/02-3-roasting-ai.jpg)
+![自動分類1](docs/screenshots/03-1-auto-new-catagory-1.jpg)
+![自動分類2](docs/screenshots/03-1-auto-new-catagory-2.jpg)
+![語義日期](docs/screenshots/03-2-auto-date.jpg)
+![統計頁面](docs/screenshots/04-summary.jpg)
+![設定頁面](docs/screenshots/05-settings.jpg)
 
-<!--
-![首頁儀表板](docs/screenshots/dashboard.png)
-![統計頁面](docs/screenshots/stats.png)
-![設定頁面](docs/screenshots/settings.png)
--->
 
 ---
 
