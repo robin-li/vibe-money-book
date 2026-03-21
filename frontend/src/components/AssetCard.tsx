@@ -27,7 +27,7 @@ function AssetCard({ summary }: AssetCardProps) {
     )
   }
 
-  const { totalAsset, totalIncome, totalSpent } = summary
+  const { totalAsset, allTimeIncome, allTimeSpent } = summary
   const isPositive = totalAsset >= 0
 
   return (
@@ -47,11 +47,11 @@ function AssetCard({ summary }: AssetCardProps) {
       <div className="space-y-xs mt-sm text-caption">
         <div className="flex justify-between">
           <span className="text-text-secondary">收入</span>
-          <span className="text-success">+{formatMoney(totalIncome)}</span>
+          <span className="text-success">+{formatMoney(allTimeIncome)}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-text-secondary">支出</span>
-          <span className="text-danger">-{formatMoney(totalSpent)}</span>
+          <span className="text-danger">-{formatMoney(allTimeSpent)}</span>
         </div>
       </div>
     </section>

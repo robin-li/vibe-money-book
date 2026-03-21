@@ -230,9 +230,18 @@ router.get('/summary', authMiddleware, async (req: AuthRequest, res: Response, n
     const remaining = monthlyBudget - totalSpent;
     const usedRatio = monthlyBudget > 0 ? Math.round((totalSpent / monthlyBudget) * 100) / 100 : 0;
 
-    // Calculate total asset: income (positive) + expense (negative)
+    // Calculate monthly income for display
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
-    const totalAsset = totalIncome - totalSpent;
+
+    // Calculate total asset across ALL transactions (not just current month)
+    const allTimeAggregation = await prisma.transaction.groupBy({
+      by: ['type'],
+      where: { userId },
+      _sum: { amount: true },
+    });
+    const allTimeIncome = Number(allTimeAggregation.find(a => a.type === 'income')?._sum.amount ?? 0);
+    const allTimeExpense = Number(allTimeAggregation.find(a => a.type === 'expense')?._sum.amount ?? 0);
+    const totalAsset = allTimeIncome - allTimeExpense;
 
     // Build category breakdown
     const categoryBudgets = await prisma.categoryBudget.findMany({
@@ -275,6 +284,8 @@ router.get('/summary', authMiddleware, async (req: AuthRequest, res: Response, n
         used_ratio: usedRatio,
         total_income: totalIncome,
         total_asset: totalAsset,
+        all_time_income: allTimeIncome,
+        all_time_spent: allTimeExpense,
         transaction_count: transactions.length,
         categories: categoriesDetail,
       },

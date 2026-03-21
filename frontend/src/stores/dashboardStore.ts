@@ -53,6 +53,8 @@ export interface BudgetSummary {
   usedRatio: number
   totalIncome: number
   totalAsset: number
+  allTimeIncome: number
+  allTimeSpent: number
   transactionCount: number
 }
 
@@ -323,6 +325,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
           usedRatio: d.used_ratio,
           totalIncome: d.total_income ?? 0,
           totalAsset: d.total_asset ?? 0,
+          allTimeIncome: d.all_time_income ?? 0,
+          allTimeSpent: d.all_time_spent ?? 0,
           transactionCount: d.transaction_count,
         },
       })
