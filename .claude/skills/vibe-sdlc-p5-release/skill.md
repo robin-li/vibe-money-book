@@ -39,7 +39,9 @@ user_invocable: true
 | 3 | **開發者** | 收集使用者回饋與問題報告 | 回饋清單 |
 | 4 | **開發者** | 根據回饋更新 `01-1-PRD.md`（需求變更）與 `02-Dev_Plan.md`（新增任務），以及其他受影響的規格文件（SRD、API Spec 等） | 更新後的規格 |
 | 4a | **AI 助手** | 確認所有被修改的規格文件皆已更新版本修訂記錄（版本號遞進 + 最後更新日期 + 修訂說明表格新增一行） | 版本記錄同步 |
-| 5 | — | **回到 Phase 2**，啟動下一輪迭代 | — |
+| 4b | **AI 助手** | 比對規格文件與實際程式碼差異，列出需要更新的文件清單，**等待開發者確認後**執行更新 | 規格文件同步 |
+| 5 | **AI 助手** | 引導開發者進行 GitHub Release（詳見「GitHub Release 流程」章節） | GitHub Release |
+| 6 | — | **回到 Phase 2**，啟動下一輪迭代 | — |
 
 ## 里程碑完成確認報告格式
 
@@ -114,6 +116,49 @@ user_invocable: true
 |------|----------|-----------|
 ```
 
+## GitHub Release 流程
+
+當驗收通過且規格文件已同步後，AI 應主動提示開發者是否要發佈 GitHub Release。
+
+### 引導流程
+
+向開發者確認以下三個問題：
+
+```
+🚀 GitHub Release 發佈
+──────────────────────
+驗收已通過，是否要發佈 GitHub Release？
+
+請確認：
+  1️⃣  版本號：（建議 v{X.Y.Z}，目前最新 tag：{latest_tag}）
+  2️⃣  類型：正式版（Release）/ 預覽版（Pre-release）
+  3️⃣  Release Notes 風格：自動生成 / 簡要摘要 / 詳細變更日誌
+```
+
+### 執行步驟
+
+1. **查詢現有 tag**：`git tag -l` 確認版本號不衝突
+2. **建立 tag**：`git tag -a {version} -m "{version}"`
+3. **推送 tag**：`git push origin {version}`
+4. **建立 Release**：
+   ```bash
+   gh release create {version} -R {owner}/{repo} \
+     --title "{version} - {project_name}" \
+     [--prerelease] \
+     --notes "..."
+   ```
+5. **回傳 Release URL** 給開發者確認
+
+### Release Notes 生成規則
+
+依開發者選擇的風格：
+
+| 風格 | 內容 |
+|------|------|
+| **自動生成** | 使用 `gh release create --generate-notes` 自動從 PR 標題生成 |
+| **簡要摘要** | 列出功能摘要（按模組分類）與技術棧，不逐一列 PR |
+| **詳細變更日誌** | 按里程碑分組，列出每個 PR 的標題與編號 |
+
 ## 完成條件
 
 - [ ] 測試環境部署成功且可存取
@@ -121,6 +166,7 @@ user_invocable: true
 - [ ] 回饋已整理並反映至規格文件
 - [ ] 所有被修改的規格文件皆已更新版本修訂記錄（版本號 + 日期 + 修訂說明）
 - [ ] 下一輪迭代的 Dev Plan 已更新
+- [ ] GitHub Release 已發佈（若開發者選擇發佈）
 
 ## 行為指引
 
@@ -142,4 +188,6 @@ user_invocable: true
    - 根據確認結果更新 `01-1-PRD.md` 與 `02-Dev_Plan.md`，以及其他受影響的規格文件（SRD、API Spec 等）
    - 確認所有被修改的文件皆已更新版本修訂記錄（版本號遞進 + 最後更新日期 + 修訂說明表格）
    - 提交更新至 GitHub
-5. 提示開發者回到 Phase 2（`/vibe-sdlc-p2-issues`）啟動下一輪迭代
+5. 比對規格文件與程式碼差異，列出需更新的文件與具體缺漏，**等待開發者確認後**執行更新
+6. 主動提示是否發佈 GitHub Release，依開發者選擇執行發佈流程（詳見「GitHub Release 流程」章節）
+7. 提示開發者回到 Phase 2（`/vibe-sdlc-p2-issues`）啟動下一輪迭代
