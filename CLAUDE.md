@@ -18,9 +18,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 目前進度
 
-- [x] **Phase 1**：規格文件撰寫與審查 — 已完成（所有規格文件已定稿）
-- [x] **Phase 2**：任務掛載 — 已完成（19 個 Issues #1~#19 已建立，Project 看板已連結）
-- [ ] **Phase 3**：開發循環 — 待開始
+- [x] **Phase 1**：規格文件撰寫與審查 — 已完成（所有規格文件已定稿，v1.1）
+- [x] **Phase 2**：任務掛載 — 已完成（Issues 已建立，Project 看板已連結）
+- [x] **Phase 3-5**：M1~M4 開發循環 — 已完成（所有功能開發、測試、部署皆完成）
+- [x] **M5 迭代**：語音/自然語義篩選查詢（PRD-F-014）— 已完成
+  - T-501：AI 語義查詢 API（PR #131）
+  - T-502：記錄頁語義查詢 UI（PR #132）
+  - T-503：E2E 測試更新（PR #133）
+  - 驗收通過（#130 closed）
 
 ---
 
