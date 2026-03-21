@@ -35,7 +35,9 @@ function SettingsPage() {
     saving,
     error,
     keyValidationStatus,
+    hasDefaultKey,
     fetchProfile,
+    fetchAIConfig,
     updatePersona,
     updateBudget,
     updateAIEngine,
@@ -76,13 +78,13 @@ function SettingsPage() {
   // Load profile on mount and sync budget input / AI instructions
   useEffect(() => {
     const load = async () => {
-      await fetchProfile()
+      await Promise.all([fetchProfile(), fetchAIConfig()])
       const state = useSettingsStore.getState()
       if (state.monthlyBudget > 0) setBudgetInput(String(state.monthlyBudget))
       setAiInstructionsInput(state.aiInstructions)
     }
     load()
-  }, [fetchProfile])
+  }, [fetchProfile, fetchAIConfig])
 
   const handleBudgetSave = useCallback(() => {
     const val = parseInt(budgetInput, 10)
@@ -391,6 +393,11 @@ function SettingsPage() {
           {keyStatusText(keyValidationStatus) && (
             <p className={`text-caption mt-sm ${keyStatusColor(keyValidationStatus)}`} role="status">
               {keyStatusText(keyValidationStatus)}
+            </p>
+          )}
+          {!currentApiKey && hasDefaultKey[aiEngine] && (
+            <p className="text-caption mt-sm text-green-600">
+              ✅ 已配置預設金鑰，無需手動輸入即可使用 AI 功能
             </p>
           )}
         </div>

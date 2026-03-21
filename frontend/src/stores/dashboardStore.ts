@@ -3,7 +3,7 @@ import api from '../lib/api'
 import type { Transaction } from '../stores/index'
 import { useSettingsStore } from './settingsStore'
 
-/** 讀取當前引擎對應的 API Key */
+/** 讀取當前引擎對應的 API Key（空字串表示未設定） */
 function getActiveApiKey(): string {
   const engine = useSettingsStore.getState().aiEngine
   try {
@@ -15,6 +15,12 @@ function getActiveApiKey(): string {
   } catch { /* ignore */ }
   // Fallback to legacy key
   return localStorage.getItem('llm_api_key') ?? ''
+}
+
+/** 建構 LLM 請求 headers（未設定 Key 時不帶 header，由後端使用預設 Key） */
+function llmHeaders(): Record<string, string> {
+  const key = getActiveApiKey()
+  return key ? { 'X-LLM-API-Key': key } : {}
 }
 
 export type TransactionType = 'income' | 'expense'
@@ -153,11 +159,10 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   parseInput: async (rawText: string) => {
     set({ status: 'parsing', errorMessage: '', lastRawText: rawText })
     try {
-      const llmApiKey = getActiveApiKey()
       const res = await api.post(
         '/ai/parse',
         { raw_text: rawText },
-        { headers: { 'X-LLM-API-Key': llmApiKey } }
+        { headers: llmHeaders() }
       )
       const data = res.data.data
       const intent: Intent = data.intent ?? 'transaction'

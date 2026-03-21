@@ -13,6 +13,11 @@ services:
       NODE_ENV: ${NODE_ENV:-production}
       CORS_ORIGIN: ${CORS_ORIGIN:-https://moneybook.smart-codings.com}
       RATE_LIMIT_AUTH_PER_MIN: ${RATE_LIMIT_AUTH_PER_MIN:-200}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3-flash-preview}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-5.4-mini}
+      LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-30000}
+      DEFAULT_GEMINI_API_KEY: ${DEFAULT_GEMINI_API_KEY:-}
+      DEFAULT_OPENAI_API_KEY: ${DEFAULT_OPENAI_API_KEY:-}
     volumes:
       - backend_data:/app/data
     ports:

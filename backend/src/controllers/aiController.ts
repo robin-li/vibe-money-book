@@ -5,6 +5,7 @@ import * as llmService from '../services/llmService';
 import { AppError } from '../middlewares/errorHandler';
 import { ApiResponse } from '../types';
 import { ZodError } from 'zod';
+import prisma from '../config/database';
 
 function formatZodErrors(error: ZodError) {
   return error.issues.map((issue) => ({
@@ -13,12 +14,24 @@ function formatZodErrors(error: ZodError) {
   }));
 }
 
-function extractApiKey(req: AuthRequest): string {
+function getDefaultApiKey(engine: string): string | undefined {
+  if (engine === 'gemini') return process.env.DEFAULT_GEMINI_API_KEY;
+  if (engine === 'openai') return process.env.DEFAULT_OPENAI_API_KEY;
+  return undefined;
+}
+
+async function extractApiKey(req: AuthRequest): Promise<string> {
   const apiKey = req.headers['x-llm-api-key'] as string | undefined;
-  if (!apiKey) {
-    throw new AppError('請提供 LLM API Key（X-LLM-API-Key Header）', 400);
-  }
-  return apiKey;
+  if (apiKey) return apiKey;
+
+  // Fallback: 使用環境變數中的預設 API Key
+  const userId = req.userId!;
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { aiEngine: true } });
+  const engine = user?.aiEngine ?? 'gemini';
+  const defaultKey = getDefaultApiKey(engine);
+  if (defaultKey) return defaultKey;
+
+  throw new AppError('請提供 LLM API Key（X-LLM-API-Key Header）', 400);
 }
 
 export async function aiParse(
@@ -32,7 +45,7 @@ export async function aiParse(
       throw new AppError('參數驗證失敗', 400, formatZodErrors(parsed.error));
     }
 
-    const apiKey = extractApiKey(req);
+    const apiKey = await extractApiKey(req);
     const userId = req.userId!;
 
     const result = await llmService.parseTransaction(userId, parsed.data.raw_text, apiKey);
@@ -56,7 +69,7 @@ export async function validateKey(
   next: NextFunction
 ): Promise<void> {
   try {
-    const apiKey = extractApiKey(req);
+    const apiKey = await extractApiKey(req);
     const userId = req.userId!;
 
     const result = await llmService.validateApiKey(userId, apiKey);
@@ -85,7 +98,7 @@ export async function aiQuery(
       throw new AppError('參數驗證失敗', 400, formatZodErrors(parsed.error));
     }
 
-    const apiKey = extractApiKey(req);
+    const apiKey = await extractApiKey(req);
     const userId = req.userId!;
 
     const result = await llmService.queryTransactions(userId, parsed.data.query_text, apiKey);
@@ -94,6 +107,30 @@ export async function aiQuery(
       code: 200,
       message: '查詢成功',
       data: result,
+      timestamp: new Date().toISOString(),
+    };
+
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getAIConfig(
+  _req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const response: ApiResponse<{ hasDefaultKey: Record<string, boolean> }> = {
+      code: 200,
+      message: '取得 AI 配置',
+      data: {
+        hasDefaultKey: {
+          gemini: !!process.env.DEFAULT_GEMINI_API_KEY,
+          openai: !!process.env.DEFAULT_OPENAI_API_KEY,
+        },
+      },
       timestamp: new Date().toISOString(),
     };
 

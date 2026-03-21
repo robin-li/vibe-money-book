@@ -15,6 +15,7 @@ function DashboardPage() {
   const persona = useSettingsStore((s) => s.persona)
   const aiEngine = useSettingsStore((s) => s.aiEngine)
   const fetchProfile = useSettingsStore((s) => s.fetchProfile)
+  const fetchAIConfig = useSettingsStore((s) => s.fetchAIConfig)
 
   const {
     status,
@@ -38,10 +39,11 @@ function DashboardPage() {
 
   useEffect(() => {
     fetchProfile()
+    fetchAIConfig()
     fetchCategories()
     fetchBudgetSummary()
     fetchRecentTransactions()
-  }, [fetchProfile, fetchCategories, fetchBudgetSummary, fetchRecentTransactions])
+  }, [fetchProfile, fetchAIConfig, fetchCategories, fetchBudgetSummary, fetchRecentTransactions])
 
   const handleSubmit = useCallback(
     (text: string) => {
