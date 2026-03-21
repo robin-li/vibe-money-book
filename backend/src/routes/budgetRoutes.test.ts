@@ -22,6 +22,7 @@ vi.mock('../config/database', () => {
       transaction: {
         findMany: vi.fn(),
         updateMany: vi.fn(),
+        groupBy: vi.fn(),
       },
     },
   };
@@ -147,8 +148,8 @@ describe('Budget Routes', () => {
       expect(res.body.message).toContain('已存在');
     });
 
-    it('should reject when category limit of 20 reached', async () => {
-      mockedPrisma.categoryBudget.count.mockResolvedValue(20);
+    it('should reject when category limit of 50 reached', async () => {
+      mockedPrisma.categoryBudget.count.mockResolvedValue(50);
 
       const res = await request(app)
         .post('/api/v1/budget/categories')
@@ -391,6 +392,7 @@ describe('Budget Routes', () => {
           note: null,
           transactionDate: new Date(),
           createdAt: new Date(),
+          updatedAt: new Date(),
         },
       ]);
 
@@ -415,6 +417,10 @@ describe('Budget Routes', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         },
+      ]);
+
+      (mockedPrisma.transaction.groupBy as ReturnType<typeof vi.fn>).mockResolvedValue([
+        { type: 'expense', _sum: { amount: new Prisma.Decimal(8000) } },
       ]);
 
       const res = await request(app).get('/api/v1/budget/summary');
@@ -483,11 +489,17 @@ describe('Budget Routes', () => {
           id: 'cb1',
           userId: 'test-user-id',
           category: 'food',
+          type: 'expense',
           budgetLimit: new Prisma.Decimal(8000),
           isCustom: false,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
+      ]);
+
+      (mockedPrisma.transaction.groupBy as ReturnType<typeof vi.fn>).mockResolvedValue([
+        { type: 'expense', _sum: { amount: new Prisma.Decimal(5000) } },
+        { type: 'income', _sum: { amount: new Prisma.Decimal(20000) } },
       ]);
 
       const res = await request(app).get('/api/v1/budget/summary');
