@@ -13,13 +13,34 @@ function getLanguageName(lang: string): string {
 
 export function buildDataExtractorPrompt(input: DataExtractorInput): string {
   // Build categorized list if available, otherwise use flat list
-  // Category name mapping for display in prompt
-  const categoryNames: Record<string, string> = {
-    entertainment: '娛樂', food: '飲食', daily: '日用品', education: '教育',
-    medical: '醫療', transport: '交通', pets: '寵物用品', other: '其它', adjustment_expense: '帳務調整',
-    salary: '薪資收入', investment: '投資收益', pension: '退休金', insurance: '保險理賠',
-    other_income: '其它', adjustment_income: '帳務調整',
+  // Category name mapping for display in prompt (localized)
+  const categoryNamesByLang: Record<string, Record<string, string>> = {
+    'zh-TW': {
+      entertainment: '娛樂', food: '飲食', daily: '日用品', education: '教育',
+      medical: '醫療', transport: '交通', pets: '寵物用品', other: '其它', adjustment_expense: '帳務調整',
+      salary: '薪資收入', investment: '投資收益', pension: '退休金', insurance: '保險理賠',
+      other_income: '其它', adjustment_income: '帳務調整',
+    },
+    'en': {
+      entertainment: 'Entertainment', food: 'Food', daily: 'Daily Necessities', education: 'Education',
+      medical: 'Medical', transport: 'Transport', pets: 'Pets', other: 'Other', adjustment_expense: 'Adjustment',
+      salary: 'Salary', investment: 'Investment', pension: 'Pension', insurance: 'Insurance',
+      other_income: 'Other', adjustment_income: 'Adjustment',
+    },
+    'zh-CN': {
+      entertainment: '娱乐', food: '饮食', daily: '日用品', education: '教育',
+      medical: '医疗', transport: '交通', pets: '宠物用品', other: '其他', adjustment_expense: '账务调整',
+      salary: '薪资收入', investment: '投资收益', pension: '退休金', insurance: '保险理赔',
+      other_income: '其他', adjustment_income: '账务调整',
+    },
+    'vi': {
+      entertainment: 'Giải trí', food: 'Ăn uống', daily: 'Đồ dùng hàng ngày', education: 'Giáo dục',
+      medical: 'Y tế', transport: 'Giao thông', pets: 'Thú cưng', other: 'Khác', adjustment_expense: 'Điều chỉnh',
+      salary: 'Lương', investment: 'Đầu tư', pension: 'Lương hưu', insurance: 'Bảo hiểm',
+      other_income: 'Khác', adjustment_income: 'Điều chỉnh',
+    },
   };
+  const categoryNames = categoryNamesByLang[input.targetLanguage || 'zh-TW'] || categoryNamesByLang['zh-TW'];
   const formatCat = (key: string) => {
     const name = categoryNames[key];
     return name && name !== key ? `${key}(${name})` : key;
@@ -57,7 +78,7 @@ ${categorySection}
    - **第一步：優先匹配現有類別**。遍歷類別清單，若有語義上匹配的項目（包括自訂類別），直接使用該 category，設 catalogtype_confidence 為匹配程度，is_new_category = false
      例如：類別清單有「戶外運動」→ 輸入「攀岩」→ 直接選 category: "戶外運動", catalogtype_confidence: 0.9, is_new_category: false
    - **第二步：若第一步找不到匹配度 >= 0.8 的現有類別**，才評估是否建議新類別
-   - **若 catalogtype_confidence < 0.8，你必須設定 is_new_category = true，並在 suggested_category 填入建議的中文類別名稱**。這是強制規則，不可忽略。
+   - **若 catalogtype_confidence < 0.8，你必須設定 is_new_category = true，並在 suggested_category 填入建議的類別名稱（必須使用${getLanguageName(input.targetLanguage || 'zh-TW')}）**。這是強制規則，不可忽略。
    - 「other」僅用於完全無法歸類的雜項。若消費有任何明確主題，都應建議新類別
    - 範例：
      ✓ 攀岩 → 清單有「戶外運動」→ category: "戶外運動", catalogtype_confidence: 0.9, is_new_category: false（正確！優先匹配現有類別）
@@ -97,7 +118,7 @@ ${input.aiInstructions ? `\n## 使用者自訂指示（請優先遵從）\n${inp
 | confidence | number (0-1) | 解析確定性：0~1之間，越接近1代表越確定 （見規則10）|
 | catalogtype_confidence | number (0-1) | 類別匹配度：所選 category 與使用者輸入內容的語義匹配程度。1.0=完全匹配（如「拉麵」→food），0.5=勉強匹配（如「飛行傘」→entertainment），0=完全不匹配 |
 | is_new_category | boolean | **強制規則：catalogtype_confidence < 0.8 時必須為 true**（見規則5） |
-| suggested_category | string 或 null | is_new_category 為 true 時，填入建議的中文類別名稱 |
+| suggested_category | string 或 null | is_new_category 為 true 時，填入建議的類別名稱。**必須使用${getLanguageName(input.targetLanguage || 'zh-TW')}** |
 | note | string 或 null | 備註：無法歸入結構化欄位的有價值上下文（店名、地點、對象、購買原因等），不超過100字，若已完整涵蓋則為 null。**必須使用${getLanguageName(input.targetLanguage || 'zh-TW')}撰寫** |
 
 JSON 結構：
