@@ -156,7 +156,7 @@ describe('SettingsPage', () => {
     it('stores API key only in localStorage, not on server', async () => {
       renderSettings()
 
-      const input = screen.getByLabelText('gemini API Key 輸入')
+      const input = screen.getByLabelText('gemini API Key')
       await userEvent.type(input, 'test-api-key-123')
 
       const stored = JSON.parse(localStorage.getItem('llm_api_keys') ?? '{}')
@@ -168,14 +168,14 @@ describe('SettingsPage', () => {
       useSettingsStore.setState({ loading: false })
       renderSettings()
 
-      const input = screen.getByLabelText('gemini API Key 輸入') as HTMLInputElement
+      const input = screen.getByLabelText('gemini API Key') as HTMLInputElement
       expect(input.type).toBe('password')
     })
 
     it('toggles visibility of API key', async () => {
       renderSettings()
 
-      const input = screen.getByLabelText('gemini API Key 輸入') as HTMLInputElement
+      const input = screen.getByLabelText('gemini API Key') as HTMLInputElement
       expect(input.type).toBe('password')
 
       await userEvent.click(screen.getByLabelText('顯示 API Key'))
@@ -190,7 +190,7 @@ describe('SettingsPage', () => {
       useSettingsStore.setState({ validateApiKey })
       renderSettings()
 
-      const input = screen.getByLabelText('gemini API Key 輸入')
+      const input = screen.getByLabelText('gemini API Key')
       await userEvent.type(input, 'my-key')
 
       await userEvent.click(screen.getByLabelText('驗證 API Key'))
