@@ -1,10 +1,18 @@
 {
+  "title": "记录",
   "filter": {
     "category": "类别",
     "dateRange": "日期范围",
-    "type": "类型"
+    "type": "类型",
+    "startDate": "开始日期",
+    "endDate": "结束日期",
+    "categoryFilter": "类别筛选"
   },
   "aiQuery": {
-    "placeholder": "用自然语言搜索交易记录..."
-  }
+    "placeholder": "问问 AI 教练...",
+    "analyzing": "AI 正在分析您的查询...",
+    "matchCount": "共 {{count}} 笔匹配，合计 ${{total}}",
+    "noResults": "找不到符合条件的记录"
+  },
+  "empty": "还没有记账记录，开始记账吧！"
 }

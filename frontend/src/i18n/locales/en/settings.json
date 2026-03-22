@@ -1,14 +1,61 @@
 {
+  "title": "Settings",
   "language": {
-    "title": "Language"
+    "title": "Language",
+    "zhTW": "繁體中文",
+    "en": "English",
+    "zhCN": "简体中文",
+    "vi": "Tiếng Việt"
   },
   "persona": {
     "title": "AI Persona",
     "sarcastic": "Sarcastic",
     "gentle": "Gentle",
-    "guilt_trip": "Guilt Trip"
+    "guilt_trip": "Guilt Trip",
+    "selectLabel": "Select {{label}} persona"
   },
   "budget": {
-    "title": "Monthly Budget"
-  }
+    "title": "Monthly Budget",
+    "placeholder": "Enter monthly budget",
+    "label": "Monthly budget amount",
+    "currentSetting": "Current setting"
+  },
+  "aiEngine": {
+    "title": "AI Engine",
+    "default": "(Default)",
+    "selectLabel": "Select {{label}} engine",
+    "apiKeyLabel": "{{engine}} API Key",
+    "apiKeyPlaceholder": "Enter {{engine}} API Key",
+    "showApiKey": "Show API Key",
+    "hideApiKey": "Hide API Key",
+    "validate": "Validate",
+    "validateLabel": "Validate API Key",
+    "validating": "⏳ Validating...",
+    "valid": "✅ Key is valid",
+    "invalid": "❌ Key is invalid",
+    "defaultKeyConfigured": "✅ Default key configured, AI features available without manual input"
+  },
+  "aiInstructions": {
+    "title": "AI Instructions",
+    "placeholder": "e.g., Suggest new category names when no suitable category exists",
+    "label": "Custom AI Instructions",
+    "saveLabel": "Save AI Instructions"
+  },
+  "categories": {
+    "title": "Category Management",
+    "expenseCategories": "Expense Categories",
+    "incomeCategories": "Income Categories",
+    "addCustom": "Add Custom Category",
+    "newCategoryType": "New category type",
+    "categoryName": "Category name",
+    "addCategory": "Add Category",
+    "deleteCategoryLabel": "Delete category {{name}}",
+    "deleteConfirm": "Are you sure you want to delete category \"{{name}}\"? Related transactions will be moved to \"Other\"."
+  },
+  "userInfo": {
+    "title": "User Information",
+    "defaultName": "Username"
+  },
+  "loadingSettings": "Loading settings...",
+  "closeError": "Close error"
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useHistoryStore } from '../stores/historyStore'
 import { useDashboardStore } from '../stores/dashboardStore'
 import { useSettingsStore } from '../stores/settingsStore'
@@ -12,20 +13,6 @@ const CATEGORY_ICONS: Record<string, string> = {
   food: '🍽️', transport: '🚌', entertainment: '🎬',
   daily: '🧴', medical: '🏥', education: '📚', pets: '🐾', other: '📦',
   salary: '💰', investment: '📈', pension: '🏦', insurance: '🛡️', other_income: '💵',
-}
-
-function formatGroupDate(dateStr: string): string {
-  const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
-
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-  const yesterdayStr = yesterday.toISOString().split('T')[0]
-
-  const d = dateStr.split('T')[0]
-  if (d === todayStr) return `${d}（今天）`
-  if (d === yesterdayStr) return `${d}（昨天）`
-  return d
 }
 
 function groupByDate(transactions: Transaction[]): Map<string, Transaction[]> {
@@ -43,6 +30,20 @@ function groupByDate(transactions: Transaction[]): Map<string, Transaction[]> {
 }
 
 function HistoryPage() {
+  const { t } = useTranslation()
+
+  const formatGroupDate = useCallback((dateStr: string): string => {
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = yesterday.toISOString().split('T')[0]
+    const d = dateStr.split('T')[0]
+    if (d === todayStr) return `${d}（${t('common:today')}）`
+    if (d === yesterdayStr) return `${d}（${t('common:yesterday')}）`
+    return d
+  }, [t])
+
   const {
     transactions,
     filters,
@@ -84,7 +85,6 @@ function HistoryPage() {
     fetchTransactions(true)
   }, [fetchCategories, fetchTransactions])
 
-  // 手動篩選器變更 → 清除 AI 查詢（互斥）
   const handleCategoryChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       clearAIQuery()
@@ -112,12 +112,10 @@ function HistoryPage() {
     [setFilters, clearAIQuery]
   )
 
-  // 清除所有篩選（手動 + AI 查詢）
   const handleResetFilters = useCallback(() => {
     clearAllFilters()
   }, [clearAllFilters])
 
-  // AI 語義查詢
   const handleAIQuery = useCallback(
     (text: string) => {
       queryTransactions(text)
@@ -152,7 +150,7 @@ function HistoryPage() {
     <div className="p-2xl pb-32">
       <header className="h-14 flex items-center justify-between mb-lg">
         <h1 className="text-title font-semibold text-text-primary">
-          📋 記錄
+          📋 {t('history:title')}
         </h1>
       </header>
 
@@ -165,25 +163,25 @@ function HistoryPage() {
               value={filters.startDate}
               onChange={handleStartDateChange}
               className={`px-lg py-sm bg-bg rounded-xl text-caption border-0 outline-none ${filters.startDate ? 'text-text-secondary' : 'text-transparent'}`}
-              aria-label="開始日期"
+              aria-label={t('history:filter.startDate')}
               data-testid="start-date-filter"
             />
             {!filters.startDate && (
-              <span className="absolute inset-0 flex items-center px-lg text-caption text-text-tertiary pointer-events-none">開始日期</span>
+              <span className="absolute inset-0 flex items-center px-lg text-caption text-text-tertiary pointer-events-none">{t('history:filter.startDate')}</span>
             )}
           </div>
-          <span className="text-text-tertiary text-caption">至</span>
+          <span className="text-text-tertiary text-caption">{t('common:to')}</span>
           <div className="relative">
             <input
               type="date"
               value={filters.endDate}
               onChange={handleEndDateChange}
               className={`px-lg py-sm bg-bg rounded-xl text-caption border-0 outline-none ${filters.endDate ? 'text-text-secondary' : 'text-transparent'}`}
-              aria-label="結束日期"
+              aria-label={t('history:filter.endDate')}
               data-testid="end-date-filter"
             />
             {!filters.endDate && (
-              <span className="absolute inset-0 flex items-center px-lg text-caption text-text-tertiary pointer-events-none">結束日期</span>
+              <span className="absolute inset-0 flex items-center px-lg text-caption text-text-tertiary pointer-events-none">{t('history:filter.endDate')}</span>
             )}
           </div>
 
@@ -191,12 +189,12 @@ function HistoryPage() {
             value={filters.category}
             onChange={handleCategoryChange}
             className="px-lg py-sm bg-bg rounded-xl text-caption text-text-secondary border-0 outline-none cursor-pointer"
-            aria-label="類別篩選"
+            aria-label={t('history:filter.categoryFilter')}
             data-testid="category-filter"
           >
-            <option value="">全部類別</option>
+            <option value="">{t('common:allCategories')}</option>
             {expenseCategories.length > 0 && (
-              <optgroup label="支出">
+              <optgroup label={t('common:expense')}>
                 {expenseCategories.map((c) => (
                   <option key={c.category} value={c.category}>
                     {(CATEGORY_ICONS[c.category] ?? '📦') + ' ' + getCategoryName(c.category)}
@@ -205,7 +203,7 @@ function HistoryPage() {
               </optgroup>
             )}
             {incomeCategories.length > 0 && (
-              <optgroup label="收入">
+              <optgroup label={t('common:income')}>
                 {incomeCategories.map((c) => (
                   <option key={c.category} value={c.category}>
                     {(CATEGORY_ICONS[c.category] ?? '📦') + ' ' + getCategoryName(c.category)}
@@ -222,13 +220,13 @@ function HistoryPage() {
               className="px-lg py-sm bg-danger-light rounded-xl text-caption text-danger"
               data-testid="reset-filters-btn"
             >
-              清除篩選
+              {t('common:clearFilters')}
             </button>
           )}
         </div>
       </div>
 
-      {/* AI Query Feedback Card — only shown when there's a query result */}
+      {/* AI Query Feedback Card */}
       {aiQueryResult && (
         <div data-testid="ai-query-feedback">
           <AIFeedbackCard
@@ -237,7 +235,7 @@ function HistoryPage() {
             aiEngine={aiEngine}
           />
           <div className="mx-2xl mb-lg text-small text-text-tertiary">
-            共 {aiQueryResult.summary.match_count} 筆匹配，合計 ${aiQueryResult.summary.total_amount.toLocaleString()}
+            {t('history:aiQuery.matchCount', { count: aiQueryResult.summary.match_count, total: aiQueryResult.summary.total_amount.toLocaleString() })}
           </div>
         </div>
       )}
@@ -252,7 +250,7 @@ function HistoryPage() {
       {/* Querying indicator */}
       {isQuerying && (
         <div className="text-center py-3xl" data-testid="querying-state">
-          <p className="text-body text-text-secondary">AI 正在分析您的查詢...</p>
+          <p className="text-body text-text-secondary">{t('history:aiQuery.analyzing')}</p>
         </div>
       )}
 
@@ -260,7 +258,7 @@ function HistoryPage() {
       {!isQuerying && transactions.length === 0 && !isLoading ? (
         <div className="text-center py-3xl" data-testid="empty-state">
           <p className="text-body text-text-tertiary">
-            {aiQueryResult ? '找不到符合條件的記錄' : '還沒有記帳紀錄，開始記帳吧！'}
+            {aiQueryResult ? t('history:aiQuery.noResults') : t('history:empty')}
           </p>
         </div>
       ) : !isQuerying ? (
@@ -288,7 +286,6 @@ function HistoryPage() {
             </div>
           ))}
 
-          {/* Load more — hidden during AI query mode */}
           {hasMore && !aiQueryResult && (
             <div className="text-center py-lg">
               <button
@@ -298,7 +295,7 @@ function HistoryPage() {
                 className="px-xl py-sm bg-primary text-surface rounded-lg text-body font-semibold disabled:opacity-50"
                 data-testid="load-more-btn"
               >
-                {isLoading ? '載入中...' : '載入更多'}
+                {isLoading ? t('common:loading') : t('common:loadMore')}
               </button>
             </div>
           )}
@@ -308,15 +305,15 @@ function HistoryPage() {
       {/* Loading indicator for initial load */}
       {isLoading && transactions.length === 0 && !isQuerying && (
         <div className="text-center py-3xl" data-testid="loading-state">
-          <p className="text-body text-text-secondary">載入中...</p>
+          <p className="text-body text-text-secondary">{t('common:loading')}</p>
         </div>
       )}
 
-      {/* AI Query Voice Input — fixed at bottom */}
+      {/* AI Query Voice Input */}
       <VoiceInput
         onSubmit={handleAIQuery}
         disabled={isQuerying}
-        placeholder="問問 AI 教練..."
+        placeholder={t('history:aiQuery.placeholder')}
       />
     </div>
   )

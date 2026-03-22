@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { ParsedResult, TransactionType, CategoryInfo } from '../stores/dashboardStore'
 import { getCategoryName, getCategoryTypeColorClass } from '../lib/categoryUtils'
 
@@ -24,7 +25,7 @@ function ParsedResultCard({
   categories,
   categoryInfoList = [],
 }: ParsedResultCardProps) {
-  // Issue #59: default to edit mode
+  const { t } = useTranslation()
   const [type, setType] = useState<TransactionType>(result.type ?? 'expense')
   const [amount, setAmount] = useState(result.amount?.toString() ?? '')
   const [category, setCategory] = useState(result.category ?? 'other')
@@ -32,14 +33,12 @@ function ParsedResultCard({
   const [date, setDate] = useState(result.date ?? new Date().toISOString().split('T')[0])
   const [note, setNote] = useState(result.note ?? '')
 
-  // Filter categories by the selected transaction type
   const filteredCategories = categoryInfoList.length > 0
     ? categoryInfoList.filter((c) => c.type === type).map((c) => c.category)
     : categories
 
   const handleTypeChange = (newType: TransactionType) => {
     setType(newType)
-    // Reset category to first matching category of the new type
     const matchingCats = categoryInfoList.filter((c) => c.type === newType)
     if (matchingCats.length > 0 && !matchingCats.some((c) => c.category === category)) {
       setCategory(matchingCats[0].category)
@@ -65,14 +64,13 @@ function ParsedResultCard({
     <div
       className={`bg-surface rounded-lg shadow-card border-l-4 ${isIncome ? 'border-l-success' : 'border-l-primary'} p-lg mx-2xl mb-md`}
       role="region"
-      aria-label="AI 解析結果"
+      aria-label={t('dashboard:parsedResult.label')}
     >
       <h3 className="text-body font-semibold text-text-primary mb-md">
-        AI 幫你整理好了
+        {t('dashboard:parsedResult.title')}
       </h3>
 
-      {/* Issue #105: 收入/支出 頁籤 */}
-      <div className="flex border-b border-border mb-lg" role="tablist" aria-label="交易類型">
+      <div className="flex border-b border-border mb-lg" role="tablist" aria-label={t('dashboard:parsedResult.transactionType')}>
         <button
           type="button"
           onClick={() => handleTypeChange('expense')}
@@ -83,9 +81,9 @@ function ParsedResultCard({
           }`}
           role="tab"
           aria-selected={type === 'expense'}
-          aria-label="支出"
+          aria-label={t('common:expense')}
         >
-          支出
+          {t('common:expense')}
         </button>
         <button
           type="button"
@@ -97,17 +95,16 @@ function ParsedResultCard({
           }`}
           role="tab"
           aria-selected={type === 'income'}
-          aria-label="收入"
+          aria-label={t('common:income')}
         >
-          收入
+          {t('common:income')}
         </button>
       </div>
 
       <div className="space-y-sm mb-lg">
-        {/* Issue #59: always editable (default edit mode) */}
         <div className="flex items-center gap-md">
           <span className="text-caption text-text-secondary w-[60px] shrink-0">
-            金額
+            {t('common:amount')}
           </span>
           <div className="flex items-center flex-1 gap-xs">
             <span className={`text-body font-semibold ${isIncome ? 'text-success' : 'text-danger'}`}>
@@ -120,20 +117,20 @@ function ParsedResultCard({
               className={`flex-1 h-9 rounded-md border border-border px-sm text-body font-semibold ${isIncome ? 'text-success' : 'text-danger'}`}
               min="0.01"
               step="1"
-              aria-label="金額"
+              aria-label={t('common:amount')}
             />
           </div>
         </div>
 
         <div className="flex items-center gap-md">
           <span className="text-caption text-text-secondary w-[60px] shrink-0">
-            類別
+            {t('common:category')}
           </span>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className={`flex-1 h-9 rounded-md border border-border px-sm text-body ${getCategoryTypeColorClass(type)}`}
-            aria-label="類別"
+            aria-label={t('common:category')}
           >
             {filteredCategories.map((cat) => (
               <option key={cat} value={cat}>
@@ -145,60 +142,59 @@ function ParsedResultCard({
 
         <div className="flex items-center gap-md">
           <span className="text-caption text-text-secondary w-[60px] shrink-0">
-            商家
+            {t('common:merchant')}
           </span>
           <input
             type="text"
             value={merchant}
             onChange={(e) => setMerchant(e.target.value)}
             className="flex-1 h-9 rounded-md border border-border px-sm text-body"
-            aria-label="商家"
+            aria-label={t('common:merchant')}
           />
         </div>
 
         <div className="flex items-center gap-md">
           <span className="text-caption text-text-secondary w-[60px] shrink-0">
-            日期
+            {t('common:date')}
           </span>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
             className="flex-1 h-9 rounded-md border border-border px-sm text-body"
-            aria-label="日期"
+            aria-label={t('common:date')}
           />
         </div>
 
         <div className="flex items-start gap-md">
           <span className="text-caption text-text-secondary w-[60px] shrink-0 mt-xs">
-            備註
+            {t('common:note')}
           </span>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             className="flex-1 rounded-md border border-border px-sm py-xs text-body resize-none"
-            placeholder="備註"
+            placeholder={t('common:note')}
             rows={2}
-            aria-label="備註"
+            aria-label={t('common:note')}
           />
         </div>
       </div>
 
-      {/* Issue #59: buttons are "Cancel" + "Confirm" (no "Edit" button) */}
       <div className="flex gap-sm">
         <button
           type="button"
           onClick={onCancel}
           className="flex-1 h-10 rounded-sm border border-border text-text-secondary text-body transition-colors duration-[var(--transition-fast)] hover:bg-bg"
         >
-          取消
+          {t('common:cancel')}
         </button>
         <button
           type="button"
           onClick={handleConfirm}
           className="flex-1 h-10 rounded-sm bg-primary text-surface font-semibold text-body transition-opacity duration-[var(--transition-fast)] hover:opacity-90"
         >
-          確認新增
+          {t('common:confirmAdd')}
         </button>
       </div>
     </div>

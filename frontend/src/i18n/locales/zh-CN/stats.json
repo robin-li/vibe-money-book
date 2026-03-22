@@ -1,12 +1,29 @@
 {
+  "title": "统计",
   "distribution": {
-    "title": "支出分布"
+    "title": "支出分布",
+    "incomeDistribution": "收入分布",
+    "expenseDistribution": "支出分布"
   },
   "period": {
+    "thisWeek": "本周",
     "thisMonth": "本月",
     "lastMonth": "上月",
     "custom": "自定义"
   },
   "totalIncome": "总收入",
-  "totalExpense": "总支出"
+  "totalExpense": "总支出",
+  "weeklyExpense": "本周总支出",
+  "weeklyIncome": "本周总收入",
+  "monthlyExpense": "本月总支出",
+  "monthlyIncome": "本月总收入",
+  "customExpense": "区间总支出",
+  "customIncome": "区间总收入",
+  "target": "目标",
+  "categoryRanking": "类别排行",
+  "noExpenseRecords": "本月暂无支出记录",
+  "noIncomeRecords": "本月暂无收入记录",
+  "noRecords": "本月暂无消费记录",
+  "startDate": "开始日期",
+  "endDate": "结束日期"
 }

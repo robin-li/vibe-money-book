@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../stores/authStore.ts'
 
-/** Email 格式驗證 */
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 function RegisterPage() {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -24,24 +25,24 @@ function RegisterPage() {
   function validate(): boolean {
     const errors: Record<string, string> = {}
     if (!name.trim()) {
-      errors.name = '請輸入使用者名稱'
+      errors.name = t('auth:validation.nameRequired')
     } else if (name.trim().length < 2) {
-      errors.name = '使用者名稱至少 2 個字元'
+      errors.name = t('auth:validation.nameTooShort')
     }
     if (!email.trim()) {
-      errors.email = '請輸入 Email'
+      errors.email = t('auth:validation.emailRequired')
     } else if (!isValidEmail(email)) {
-      errors.email = 'Email 格式不正確'
+      errors.email = t('auth:validation.emailInvalid')
     }
     if (!password) {
-      errors.password = '請輸入密碼'
+      errors.password = t('auth:validation.passwordRequired')
     } else if (password.length < 8) {
-      errors.password = '密碼長度至少 8 個字元'
+      errors.password = t('auth:validation.passwordTooShort')
     }
     if (!confirmPassword) {
-      errors.confirmPassword = '請再次輸入密碼'
+      errors.confirmPassword = t('auth:validation.confirmPasswordRequired')
     } else if (password !== confirmPassword) {
-      errors.confirmPassword = '兩次輸入的密碼不一致'
+      errors.confirmPassword = t('auth:validation.passwordMismatch')
     }
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
@@ -76,134 +77,60 @@ function RegisterPage() {
         💰
       </div>
       <h1 className="text-title font-semibold text-text-primary mb-xs">
-        Vibe Money Book
+        {t('common:appName')}
       </h1>
       <p className="text-small text-text-secondary tracking-[2px] mb-3xl">
-        語音記帳教練
+        {t('common:appSlogan')}
       </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-[384px]" noValidate>
         {error && (
-          <div
-            className="mb-lg p-md rounded-md bg-danger-light text-danger text-caption text-center"
-            role="alert"
-          >
+          <div className="mb-lg p-md rounded-md bg-danger-light text-danger text-caption text-center" role="alert">
             {error}
           </div>
         )}
 
         <div className="mb-md">
-          <input
-            type="text"
-            placeholder="使用者名稱"
-            value={name}
-            onChange={(e) => {
-              setName(e.target.value)
-              clearFieldError('name')
-            }}
-            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${
-              validationErrors.name
-                ? 'border-danger focus:border-danger'
-                : 'border-border focus:border-primary'
-            }`}
-            aria-label="使用者名稱"
-            aria-invalid={!!validationErrors.name}
-            autoComplete="name"
-          />
-          {validationErrors.name && (
-            <p className="mt-xs text-small text-danger" role="alert">
-              {validationErrors.name}
-            </p>
-          )}
+          <input type="text" placeholder={t('auth:namePlaceholder')} value={name}
+            onChange={(e) => { setName(e.target.value); clearFieldError('name') }}
+            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${validationErrors.name ? 'border-danger focus:border-danger' : 'border-border focus:border-primary'}`}
+            aria-label={t('auth:name')} aria-invalid={!!validationErrors.name} autoComplete="name" />
+          {validationErrors.name && <p className="mt-xs text-small text-danger" role="alert">{validationErrors.name}</p>}
         </div>
 
         <div className="mb-md">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              clearFieldError('email')
-            }}
-            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${
-              validationErrors.email
-                ? 'border-danger focus:border-danger'
-                : 'border-border focus:border-primary'
-            }`}
-            aria-label="Email"
-            aria-invalid={!!validationErrors.email}
-            autoComplete="email"
-          />
-          {validationErrors.email && (
-            <p className="mt-xs text-small text-danger" role="alert">
-              {validationErrors.email}
-            </p>
-          )}
+          <input type="email" placeholder={t('auth:emailPlaceholder')} value={email}
+            onChange={(e) => { setEmail(e.target.value); clearFieldError('email') }}
+            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${validationErrors.email ? 'border-danger focus:border-danger' : 'border-border focus:border-primary'}`}
+            aria-label={t('auth:email')} aria-invalid={!!validationErrors.email} autoComplete="email" />
+          {validationErrors.email && <p className="mt-xs text-small text-danger" role="alert">{validationErrors.email}</p>}
         </div>
 
         <div className="mb-md">
-          <input
-            type="password"
-            placeholder="密碼"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value)
-              clearFieldError('password')
-            }}
-            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${
-              validationErrors.password
-                ? 'border-danger focus:border-danger'
-                : 'border-border focus:border-primary'
-            }`}
-            aria-label="密碼"
-            aria-invalid={!!validationErrors.password}
-            autoComplete="new-password"
-          />
-          {validationErrors.password && (
-            <p className="mt-xs text-small text-danger" role="alert">
-              {validationErrors.password}
-            </p>
-          )}
+          <input type="password" placeholder={t('auth:passwordPlaceholder')} value={password}
+            onChange={(e) => { setPassword(e.target.value); clearFieldError('password') }}
+            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${validationErrors.password ? 'border-danger focus:border-danger' : 'border-border focus:border-primary'}`}
+            aria-label={t('auth:password')} aria-invalid={!!validationErrors.password} autoComplete="new-password" />
+          {validationErrors.password && <p className="mt-xs text-small text-danger" role="alert">{validationErrors.password}</p>}
         </div>
 
         <div className="mb-xl">
-          <input
-            type="password"
-            placeholder="確認密碼"
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value)
-              clearFieldError('confirmPassword')
-            }}
-            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${
-              validationErrors.confirmPassword
-                ? 'border-danger focus:border-danger'
-                : 'border-border focus:border-primary'
-            }`}
-            aria-label="確認密碼"
-            aria-invalid={!!validationErrors.confirmPassword}
-            autoComplete="new-password"
-          />
-          {validationErrors.confirmPassword && (
-            <p className="mt-xs text-small text-danger" role="alert">
-              {validationErrors.confirmPassword}
-            </p>
-          )}
+          <input type="password" placeholder={t('auth:confirmPasswordPlaceholder')} value={confirmPassword}
+            onChange={(e) => { setConfirmPassword(e.target.value); clearFieldError('confirmPassword') }}
+            className={`w-full h-12 rounded-md border bg-surface px-lg text-body outline-none transition-colors ${validationErrors.confirmPassword ? 'border-danger focus:border-danger' : 'border-border focus:border-primary'}`}
+            aria-label={t('auth:confirmPassword')} aria-invalid={!!validationErrors.confirmPassword} autoComplete="new-password" />
+          {validationErrors.confirmPassword && <p className="mt-xs text-small text-danger" role="alert">{validationErrors.confirmPassword}</p>}
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full h-12 bg-primary text-surface rounded-md font-semibold text-body hover:bg-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {loading ? '註冊中...' : '註冊'}
+        <button type="submit" disabled={loading}
+          className="w-full h-12 bg-primary text-surface rounded-md font-semibold text-body hover:bg-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+          {loading ? t('auth:register.submitting') : t('auth:register.submit')}
         </button>
 
         <p className="text-center mt-xl text-caption">
-          <span className="text-text-secondary">已有帳號？</span>
+          <span className="text-text-secondary">{t('auth:register.hasAccount')}</span>
           <Link to="/login" className="text-primary underline ml-xs">
-            返回登入
+            {t('common:backToLogin')}
           </Link>
         </p>
       </form>

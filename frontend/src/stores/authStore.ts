@@ -1,38 +1,29 @@
 import { create } from 'zustand'
 import type { User } from '../types/index.ts'
 import api from '../lib/api.ts'
+import i18n from '../i18n/index'
+import type { SupportedLanguage } from '../i18n/index'
 
 /** Auth API 回應資料結構 */
 interface AuthResponseData {
-  user: User
+  user: User & { language?: string }
   token: string
 }
 
 interface AuthState {
-  /** 當前使用者 */
   user: User | null
-  /** JWT Token */
   token: string | null
-  /** 是否正在載入（登入/註冊中） */
   loading: boolean
-  /** 錯誤訊息 */
   error: string | null
-  /** Session 是否已初始化（從 localStorage 恢復完成） */
   isInitialized: boolean
 
-  /** 登入 */
   login: (email: string, password: string) => Promise<void>
-  /** 註冊 */
   register: (name: string, email: string, password: string) => Promise<void>
-  /** 登出 */
   logout: () => void
-  /** 從 localStorage 恢復登入狀態 */
   restoreSession: () => void
-  /** 清除錯誤訊息 */
   clearError: () => void
 }
 
-/** 同步從 localStorage 恢復 session，用於 store 初始化 */
 function restoreFromLocalStorage(): { user: User | null; token: string | null } {
   const token = localStorage.getItem('auth_token')
   const userJson = localStorage.getItem('auth_user')
@@ -68,8 +59,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('auth_token', token)
       localStorage.setItem('auth_user', JSON.stringify(user))
       set({ user, token, loading: false, error: null })
+
+      // Sync language from user profile (DB > localStorage > browser)
+      const userLang = (response.data.data.user as { language?: string }).language
+      if (userLang && ['zh-TW', 'en', 'zh-CN', 'vi'].includes(userLang)) {
+        await i18n.changeLanguage(userLang as SupportedLanguage)
+        localStorage.setItem('i18nextLng', userLang)
+      }
     } catch (err: unknown) {
-      const message = extractErrorMessage(err, '登入失敗，請檢查帳號密碼')
+      const message = extractErrorMessage(err, i18n.t('auth:login.failed'))
       set({ loading: false, error: message })
       throw new Error(message)
     }
@@ -88,7 +86,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('auth_user', JSON.stringify(user))
       set({ user, token, loading: false, error: null })
     } catch (err: unknown) {
-      const message = extractErrorMessage(err, '註冊失敗，請稍後再試')
+      const message = extractErrorMessage(err, i18n.t('auth:register.failed'))
       set({ loading: false, error: message })
       throw new Error(message)
     }
@@ -110,7 +108,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 }))
 
-/** 從 axios error 中提取錯誤訊息 */
 function extractErrorMessage(err: unknown, fallback: string): string {
   if (err && typeof err === 'object' && 'response' in err) {
     const response = (err as { response?: { data?: { message?: string }; status?: number } })
@@ -119,10 +116,10 @@ function extractErrorMessage(err: unknown, fallback: string): string {
       return response.data.message
     }
     if (response?.status === 409) {
-      return 'Email 已被註冊'
+      return i18n.t('auth:emailTaken')
     }
     if (response?.status === 401) {
-      return '帳號或密碼錯誤'
+      return i18n.t('auth:wrongCredentials')
     }
   }
   return fallback

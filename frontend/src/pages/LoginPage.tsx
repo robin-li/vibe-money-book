@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../stores/authStore.ts'
 
-/** Email 格式驗證 */
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 function LoginPage() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
@@ -24,14 +25,14 @@ function LoginPage() {
   function validate(): boolean {
     const errors: Record<string, string> = {}
     if (!email.trim()) {
-      errors.email = '請輸入 Email'
+      errors.email = t('auth:validation.emailRequired')
     } else if (!isValidEmail(email)) {
-      errors.email = 'Email 格式不正確'
+      errors.email = t('auth:validation.emailInvalid')
     }
     if (!password) {
-      errors.password = '請輸入密碼'
+      errors.password = t('auth:validation.passwordRequired')
     } else if (password.length < 8) {
-      errors.password = '密碼長度至少 8 個字元'
+      errors.password = t('auth:validation.passwordTooShort')
     }
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
@@ -56,10 +57,10 @@ function LoginPage() {
         💰
       </div>
       <h1 className="text-title font-semibold text-text-primary mb-xs">
-        Vibe Money Book
+        {t('common:appName')}
       </h1>
       <p className="text-small text-text-secondary tracking-[2px] mb-3xl">
-        語音記帳教練
+        {t('common:appSlogan')}
       </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-[384px]" noValidate>
@@ -75,7 +76,7 @@ function LoginPage() {
         <div className="mb-md">
           <input
             type="email"
-            placeholder="Email"
+            placeholder={t('auth:emailPlaceholder')}
             value={email}
             onChange={(e) => {
               setEmail(e.target.value)
@@ -92,7 +93,7 @@ function LoginPage() {
                 ? 'border-danger focus:border-danger'
                 : 'border-border focus:border-primary'
             }`}
-            aria-label="Email"
+            aria-label={t('auth:email')}
             aria-invalid={!!validationErrors.email}
             autoComplete="email"
           />
@@ -106,7 +107,7 @@ function LoginPage() {
         <div className="mb-xl">
           <input
             type="password"
-            placeholder="密碼"
+            placeholder={t('auth:passwordPlaceholder')}
             value={password}
             onChange={(e) => {
               setPassword(e.target.value)
@@ -123,7 +124,7 @@ function LoginPage() {
                 ? 'border-danger focus:border-danger'
                 : 'border-border focus:border-primary'
             }`}
-            aria-label="密碼"
+            aria-label={t('auth:password')}
             aria-invalid={!!validationErrors.password}
             autoComplete="current-password"
           />
@@ -139,13 +140,13 @@ function LoginPage() {
           disabled={loading}
           className="w-full h-12 bg-primary text-surface rounded-md font-semibold text-body hover:bg-primary-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {loading ? '登入中...' : '登入'}
+          {loading ? t('auth:login.submitting') : t('auth:login.submit')}
         </button>
 
         <p className="text-center mt-xl text-caption">
-          <span className="text-text-secondary">還沒有帳號？</span>
+          <span className="text-text-secondary">{t('auth:login.noAccount')}</span>
           <Link to="/register" className="text-primary underline ml-xs">
-            立即註冊
+            {t('common:register')}
           </Link>
         </p>
       </form>

@@ -1,10 +1,18 @@
 {
+  "title": "記錄",
   "filter": {
     "category": "類別",
     "dateRange": "日期範圍",
-    "type": "類型"
+    "type": "類型",
+    "startDate": "開始日期",
+    "endDate": "結束日期",
+    "categoryFilter": "類別篩選"
   },
   "aiQuery": {
-    "placeholder": "用自然語言搜尋交易記錄..."
-  }
+    "placeholder": "問問 AI 教練...",
+    "analyzing": "AI 正在分析您的查詢...",
+    "matchCount": "共 {{count}} 筆匹配，合計 ${{total}}",
+    "noResults": "找不到符合條件的記錄"
+  },
+  "empty": "還沒有記帳紀錄，開始記帳吧！"
 }

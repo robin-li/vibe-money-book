@@ -1,3 +1,5 @@
+import i18n from '../i18n/index'
+
 /** Category color mapping per UI spec */
 export const CATEGORY_COLORS: Record<string, string> = {
   entertainment: '#45B7D1',
@@ -21,26 +23,6 @@ export const CATEGORY_COLORS: Record<string, string> = {
 /** Fallback colors for custom categories */
 const CUSTOM_COLORS = ['#E17055', '#00B894', '#FDCB6E', '#E84393', '#0984E3']
 
-/** Category display name mapping */
-export const CATEGORY_NAMES: Record<string, string> = {
-  entertainment: '娛樂',
-  food: '飲食',
-  daily: '日用品',
-  education: '教育',
-  medical: '醫療',
-  transport: '交通',
-  pets: '寵物用品',
-  other: '其它',
-  adjustment_expense: '帳務調整',
-  // 收入類別
-  salary: '薪資收入',
-  investment: '投資收益',
-  pension: '退休金',
-  insurance: '保險理賠',
-  other_income: '其它',
-  adjustment_income: '帳務調整',
-}
-
 /** 收入類別集合 */
 export const INCOME_CATEGORIES = new Set(['salary', 'investment', 'pension', 'insurance', 'other_income', 'adjustment_income'])
 
@@ -61,5 +43,11 @@ export function getCategoryColor(category: string, index: number): string {
 }
 
 export function getCategoryName(category: string): string {
-  return CATEGORY_NAMES[category] ?? category
+  const key = `categories:${category}`
+  const translated = i18n.t(key)
+  // If translation key is not found, i18n returns the key itself — fallback to raw category name
+  if (translated === key || translated === category) {
+    return category
+  }
+  return translated
 }

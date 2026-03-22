@@ -1,12 +1,29 @@
 {
+  "title": "Thống kê",
   "distribution": {
-    "title": "Phân bổ chi tiêu"
+    "title": "Phân bổ chi tiêu",
+    "incomeDistribution": "Phân bổ thu nhập",
+    "expenseDistribution": "Phân bổ chi tiêu"
   },
   "period": {
+    "thisWeek": "Tuần này",
     "thisMonth": "Tháng này",
     "lastMonth": "Tháng trước",
     "custom": "Tùy chỉnh"
   },
   "totalIncome": "Tổng thu nhập",
-  "totalExpense": "Tổng chi tiêu"
+  "totalExpense": "Tổng chi tiêu",
+  "weeklyExpense": "Chi tiêu tuần",
+  "weeklyIncome": "Thu nhập tuần",
+  "monthlyExpense": "Chi tiêu tháng",
+  "monthlyIncome": "Thu nhập tháng",
+  "customExpense": "Chi tiêu kỳ",
+  "customIncome": "Thu nhập kỳ",
+  "target": "Mục tiêu",
+  "categoryRanking": "Xếp hạng danh mục",
+  "noExpenseRecords": "Chưa có chi tiêu tháng này",
+  "noIncomeRecords": "Chưa có thu nhập tháng này",
+  "noRecords": "Chưa có giao dịch tháng này",
+  "startDate": "Ngày bắt đầu",
+  "endDate": "Ngày kết thúc"
 }

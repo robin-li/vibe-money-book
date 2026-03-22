@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Persona } from '../stores/index'
 import { getCategoryName } from '../lib/categoryUtils'
 
@@ -50,11 +51,11 @@ function NewCategoryDialog({
   onConfirm,
   onSelectExisting,
 }: NewCategoryDialogProps) {
+  const { t } = useTranslation()
   const [mode, setMode] = useState<DialogMode>('main')
   const [customName, setCustomName] = useState(suggestedCategory)
   const config = personaConfig[persona]
 
-  // Filter categories by transaction type
   const filteredCategories = categoryInfoList.filter((c) => c.type === transactionType)
 
   const isNameValid = customName.trim().length >= 2 && customName.trim().length <= 50
@@ -65,10 +66,10 @@ function NewCategoryDialog({
         <div
           className="w-full max-w-[512px] bg-surface rounded-t-xl p-lg pb-[120px] animate-slide-up"
           role="dialog"
-          aria-label="修改類別名稱"
+          aria-label={t('dashboard:newCategory.renameTitle')}
         >
           <h3 className="text-title font-semibold text-text-primary mb-md">
-            修改類別名稱
+            {t('dashboard:newCategory.renameTitle')}
           </h3>
           <input
             type="text"
@@ -77,10 +78,10 @@ function NewCategoryDialog({
             className="w-full h-[44px] rounded-md border border-border px-lg text-body mb-xs"
             maxLength={50}
             autoFocus
-            aria-label="類別名稱"
+            aria-label={t('dashboard:newCategory.categoryNameLabel')}
           />
           <p className="text-small text-text-tertiary mb-lg">
-            ⚠️ 類別名稱 2–50 字元
+            {t('dashboard:newCategory.nameHint')}
           </p>
           <div className="flex gap-sm">
             <button
@@ -88,7 +89,7 @@ function NewCategoryDialog({
               onClick={() => setMode('main')}
               className="flex-1 h-10 rounded-sm border border-border text-text-secondary"
             >
-              取消
+              {t('common:cancel')}
             </button>
             <button
               type="button"
@@ -98,7 +99,7 @@ function NewCategoryDialog({
               disabled={!isNameValid}
               className="flex-1 h-10 rounded-sm bg-primary text-surface font-semibold disabled:opacity-40"
             >
-              確認新增
+              {t('common:confirmAdd')}
             </button>
           </div>
         </div>
@@ -107,15 +108,16 @@ function NewCategoryDialog({
   }
 
   if (mode === 'select') {
+    const typeLabel = transactionType === 'income' ? t('common:income') : t('common:expense')
     return (
       <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30">
         <div
           className="w-full max-w-[512px] bg-surface rounded-t-xl p-lg pb-[120px] animate-slide-up"
           role="dialog"
-          aria-label="選擇類別"
+          aria-label={t('dashboard:newCategory.selectCategoryTitle', { type: typeLabel })}
         >
           <h3 className="text-title font-semibold text-text-primary mb-md">
-            選擇{transactionType === 'income' ? '收入' : '支出'}類別
+            {t('dashboard:newCategory.selectCategoryTitle', { type: typeLabel })}
           </h3>
           <div className="flex flex-wrap gap-sm mb-lg">
             {filteredCategories.map((c) => (
@@ -135,7 +137,7 @@ function NewCategoryDialog({
             onClick={() => setMode('main')}
             className="w-full h-10 rounded-sm border border-border text-text-secondary"
           >
-            取消
+            {t('common:cancel')}
           </button>
         </div>
       </div>
@@ -148,21 +150,17 @@ function NewCategoryDialog({
       <div
         className="max-w-[85%] bg-primary-light rounded-xl p-lg"
         role="dialog"
-        aria-label="新類別建議"
+        aria-label={t('dashboard:newCategory.renameTitle')}
       >
         <div className="flex items-start gap-sm mb-md">
           <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-surface text-sm shrink-0">
             {config.emoji}
           </div>
           <p className="text-body text-text-primary">
-            我覺得這筆消費屬於「
-            <span className="font-semibold bg-primary/20 rounded-sm px-1.5 py-0.5">
-              {suggestedCategory}
-            </span>
-            」，但你的類別中沒有這項。
+            {t('dashboard:newCategory.suggestion', { category: suggestedCategory })}
             <br />
             <br />
-            要新增「{suggestedCategory}」類別嗎？
+            {t('dashboard:newCategory.askAdd', { category: suggestedCategory })}
           </p>
         </div>
 
@@ -172,21 +170,21 @@ function NewCategoryDialog({
             onClick={() => onConfirm(suggestedCategory)}
             className="h-9 px-lg rounded-sm bg-primary text-surface text-body font-medium"
           >
-            確認
+            {t('common:confirm')}
           </button>
           <button
             type="button"
             onClick={() => setMode('rename')}
             className="h-9 px-lg rounded-sm border border-primary text-primary text-body"
           >
-            修改名稱
+            {t('common:modifyName')}
           </button>
           <button
             type="button"
             onClick={() => setMode('select')}
             className="h-9 px-lg rounded-sm border border-border text-text-secondary text-body"
           >
-            選現有
+            {t('common:selectExisting')}
           </button>
         </div>
       </div>

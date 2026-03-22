@@ -1,5 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useLocaleFormatter } from '../hooks/useLocaleFormatter'
 import { useAuthStore } from '../stores/authStore.ts'
 import { useSettingsStore } from '../stores/settingsStore.ts'
 import { useDashboardStore } from '../stores/dashboardStore.ts'
@@ -7,20 +9,32 @@ import type { CategoryInfo } from '../stores/dashboardStore.ts'
 import type { Persona, AIEngine, KeyValidationStatus } from '../stores/settingsStore.ts'
 import { getCategoryName, getCategoryTypeColorClass } from '../lib/categoryUtils.ts'
 
+import type { SupportedLanguage } from '../i18n/index'
+
 /** 人設選項定義 */
-const PERSONA_OPTIONS: { value: Persona; label: string; emoji: string }[] = [
-  { value: 'sarcastic', label: '毒舌', emoji: '🔥' },
-  { value: 'gentle', label: '溫柔', emoji: '💖' },
-  { value: 'guilt_trip', label: '情勒', emoji: '🥺' },
+const PERSONA_OPTIONS: { value: Persona; emoji: string }[] = [
+  { value: 'sarcastic', emoji: '🔥' },
+  { value: 'gentle', emoji: '💖' },
+  { value: 'guilt_trip', emoji: '🥺' },
 ]
 
 /** AI 引擎選項定義 */
-const ENGINE_OPTIONS: { value: AIEngine; label: string; emoji: string; sub: string }[] = [
-  { value: 'gemini', label: 'Gemini', emoji: '✨', sub: '(預設)' },
-  { value: 'openai', label: 'OpenAI', emoji: '🤖', sub: '(GPT-4o-mini)' },
+const ENGINE_OPTIONS: { value: AIEngine; label: string; emoji: string }[] = [
+  { value: 'gemini', label: 'Gemini', emoji: '✨' },
+  { value: 'openai', label: 'OpenAI', emoji: '🤖' },
+]
+
+/** 語言選項 */
+const LANGUAGE_OPTIONS: { value: SupportedLanguage; labelKey: string }[] = [
+  { value: 'zh-TW', labelKey: 'language.zhTW' },
+  { value: 'en', labelKey: 'language.en' },
+  { value: 'zh-CN', labelKey: 'language.zhCN' },
+  { value: 'vi', labelKey: 'language.vi' },
 ]
 
 function SettingsPage() {
+  const { t } = useTranslation('settings')
+  const { formatCurrency } = useLocaleFormatter()
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
 
@@ -31,6 +45,7 @@ function SettingsPage() {
     userName,
     userEmail,
     aiInstructions,
+    language,
     loading,
     saving,
     error,
@@ -42,27 +57,24 @@ function SettingsPage() {
     updateBudget,
     updateAIEngine,
     updateAIInstructions,
+    setLanguage,
     validateApiKey,
     clearError,
   } = useSettingsStore()
 
-  // Local state for AI instructions
   const [aiInstructionsInput, setAiInstructionsInput] = useState(aiInstructions)
   const [aiInstructionsEditing, setAiInstructionsEditing] = useState(false)
 
-  // Local state for budget input (so user can type freely)
   const [budgetInput, setBudgetInput] = useState(() =>
     monthlyBudget > 0 ? String(monthlyBudget) : ''
   )
   const [budgetEditing, setBudgetEditing] = useState(false)
 
-  // Local state for API key — per engine
   const [apiKeys, setApiKeys] = useState<Record<string, string>>(() => {
     try {
       const stored = localStorage.getItem('llm_api_keys')
       if (stored) return JSON.parse(stored)
     } catch { /* ignore */ }
-    // Migrate legacy single key
     const legacy = localStorage.getItem('llm_api_key')
     if (legacy) {
       const migrated = { gemini: legacy, openai: '' }
@@ -75,7 +87,6 @@ function SettingsPage() {
   const [showApiKey, setShowApiKey] = useState(false)
   const currentApiKey = apiKeys[aiEngine] ?? ''
 
-  // Load profile on mount and sync budget input / AI instructions
   useEffect(() => {
     const load = async () => {
       await Promise.all([fetchProfile(), fetchAIConfig()])
@@ -91,7 +102,6 @@ function SettingsPage() {
     if (!isNaN(val) && val >= 0) {
       updateBudget(val)
     } else {
-      // Reset to store value if invalid
       setBudgetInput(monthlyBudget > 0 ? String(monthlyBudget) : '')
     }
     setBudgetEditing(false)
@@ -113,7 +123,11 @@ function SettingsPage() {
     await validateApiKey(currentApiKey)
   }, [currentApiKey, apiKeys, saveApiKeys, validateApiKey])
 
-  // Category management state (#64)
+  const handleLanguageChange = useCallback(async (lang: SupportedLanguage) => {
+    await setLanguage(lang)
+  }, [setLanguage])
+
+  // Category management
   const categoryInfoList = useDashboardStore((s) => s.categoryInfoList)
   const fetchCategories = useDashboardStore((s) => s.fetchCategories)
   const createCategoryAction = useDashboardStore((s) => s.createCategory)
@@ -144,13 +158,14 @@ function SettingsPage() {
   }, [newCategoryName, newCategoryType, createCategoryAction])
 
   const handleDeleteCategory = useCallback(async (category: string) => {
-    if (!window.confirm(`確定要刪除類別「${getCategoryName(category)}」嗎？相關交易將歸類為「其它」。`)) return
+    const name = getCategoryName(category)
+    if (!window.confirm(t('categories.deleteConfirm', { name }))) return
     try {
       await deleteCategoryAction(category)
     } catch {
       // Error handled by store
     }
-  }, [deleteCategoryAction])
+  }, [deleteCategoryAction, t])
 
   const handleLogout = useCallback(() => {
     logout()
@@ -159,9 +174,9 @@ function SettingsPage() {
 
   const keyStatusText = (status: KeyValidationStatus) => {
     switch (status) {
-      case 'validating': return '⏳ 驗證中...'
-      case 'valid': return '✅ 金鑰有效'
-      case 'invalid': return '❌ 金鑰無效'
+      case 'validating': return t('aiEngine.validating')
+      case 'valid': return t('aiEngine.valid')
+      case 'invalid': return t('aiEngine.invalid')
       default: return null
     }
   }
@@ -177,7 +192,7 @@ function SettingsPage() {
   if (loading) {
     return (
       <div className="p-2xl flex items-center justify-center min-h-[50vh]">
-        <p className="text-body text-text-secondary">載入設定中...</p>
+        <p className="text-body text-text-secondary">{t('loadingSettings')}</p>
       </div>
     )
   }
@@ -187,39 +202,32 @@ function SettingsPage() {
       {/* Header */}
       <header className="h-14 flex items-center mb-lg">
         <h1 className="text-title font-semibold text-text-primary">
-          ⚙️ 設定
+          ⚙️ {t('title')}
         </h1>
         {saving && (
-          <span className="ml-auto text-small text-text-secondary">儲存中...</span>
+          <span className="ml-auto text-small text-text-secondary">{t('common:saving')}</span>
         )}
       </header>
 
       {/* Error banner */}
       {error && (
-        <div
-          className="bg-danger-light rounded-lg p-md mb-lg flex items-center justify-between"
-          role="alert"
-        >
+        <div className="bg-danger-light rounded-lg p-md mb-lg flex items-center justify-between" role="alert">
           <span className="text-caption text-danger">{error}</span>
-          <button
-            onClick={clearError}
-            className="text-danger text-caption font-semibold ml-md"
-            aria-label="關閉錯誤"
-          >
+          <button onClick={clearError} className="text-danger text-caption font-semibold ml-md" aria-label={t('closeError')}>
             ✕
           </button>
         </div>
       )}
 
       {/* 使用者資訊區 */}
-      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label="使用者資訊">
+      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label={t('userInfo.title')}>
         <div className="flex items-center gap-md">
           <div className="w-10 h-10 bg-bg rounded-full flex items-center justify-center text-xl">
             👤
           </div>
           <div>
             <p className="text-body font-semibold text-text-primary">
-              {userName || '使用者名稱'}
+              {userName || t('userInfo.defaultName')}
             </p>
             <p className="text-small text-text-secondary">
               {userEmail || 'user@email.com'}
@@ -228,14 +236,42 @@ function SettingsPage() {
         </div>
       </section>
 
-      {/* AI 人設選擇 */}
-      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label="AI 人設選擇">
+      {/* 語言設定 (T-606) */}
+      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label={t('language.title')}>
         <h2 className="text-caption text-text-secondary mb-md">
-          AI 人設選擇
+          {t('language.title')}
+        </h2>
+        <div className="flex flex-wrap gap-md">
+          {LANGUAGE_OPTIONS.map((opt) => {
+            const selected = language === opt.value
+            return (
+              <button
+                key={opt.value}
+                onClick={() => handleLanguageChange(opt.value)}
+                className={`px-lg py-sm rounded-lg text-body transition-all ${
+                  selected
+                    ? 'bg-primary-light border-2 border-primary font-semibold'
+                    : 'bg-surface shadow-card hover:shadow-card-hover border border-transparent'
+                }`}
+                aria-pressed={selected}
+                aria-label={t(opt.labelKey)}
+              >
+                {t(opt.labelKey)}
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* AI 人設選擇 */}
+      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label={t('persona.title')}>
+        <h2 className="text-caption text-text-secondary mb-md">
+          {t('persona.title')}
         </h2>
         <div className="flex gap-md">
           {PERSONA_OPTIONS.map((opt) => {
             const selected = persona === opt.value
+            const label = t(`persona.${opt.value}`)
             return (
               <button
                 key={opt.value}
@@ -247,10 +283,10 @@ function SettingsPage() {
                     : 'bg-surface shadow-card hover:shadow-card-hover'
                 }`}
                 aria-pressed={selected}
-                aria-label={`選擇${opt.label}人設`}
+                aria-label={t('persona.selectLabel', { label })}
               >
                 <span className="text-2xl">{opt.emoji}</span>
-                <span className="text-caption mt-xs">{opt.label}</span>
+                <span className="text-caption mt-xs">{label}</span>
               </button>
             )
           })}
@@ -258,136 +294,95 @@ function SettingsPage() {
       </section>
 
       {/* AI 指示 */}
-      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label="AI 指示">
+      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label={t('aiInstructions.title')}>
         <h2 className="text-caption text-text-secondary mb-md">
-          AI 指示
+          {t('aiInstructions.title')}
         </h2>
         <textarea
           value={aiInstructionsInput}
-          onChange={(e) => {
-            setAiInstructionsInput(e.target.value)
-            setAiInstructionsEditing(true)
-          }}
+          onChange={(e) => { setAiInstructionsInput(e.target.value); setAiInstructionsEditing(true) }}
           onBlur={handleAiInstructionsSave}
-          placeholder="例如：若無適當分類，請建議新的類別名稱"
+          placeholder={t('aiInstructions.placeholder')}
           maxLength={1000}
           rows={5}
           className="w-full rounded-md border border-border bg-bg px-lg py-md text-body text-text-primary resize-none focus:outline-none focus:border-primary"
-          aria-label="自訂 AI 指示"
+          aria-label={t('aiInstructions.label')}
         />
         <div className="flex justify-between items-center mt-sm">
-          <p className="text-small text-text-secondary">
-            {aiInstructionsInput.length}/1000
-          </p>
+          <p className="text-small text-text-secondary">{aiInstructionsInput.length}/1000</p>
           {aiInstructionsEditing && (
-            <button
-              onClick={handleAiInstructionsSave}
-              disabled={saving}
+            <button onClick={handleAiInstructionsSave} disabled={saving}
               className="h-9 px-lg rounded-md bg-primary text-white text-caption font-semibold disabled:opacity-50 transition-all hover:bg-primary-dark"
-              aria-label="儲存 AI 指示"
-            >
-              儲存
+              aria-label={t('aiInstructions.saveLabel')}>
+              {t('common:save')}
             </button>
           )}
         </div>
       </section>
 
       {/* 月預算設定 */}
-      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label="月預算設定">
-        <h2 className="text-caption text-text-secondary mb-md">
-          月預算設定
-        </h2>
+      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label={t('budget.title')}>
+        <h2 className="text-caption text-text-secondary mb-md">{t('budget.title')}</h2>
         <div className="flex items-center gap-sm">
           <span className="text-body text-text-primary font-semibold">$</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min="0"
-            value={budgetInput}
-            placeholder="輸入每月預算"
-            onChange={(e) => {
-              setBudgetInput(e.target.value)
-              setBudgetEditing(true)
-            }}
+          <input type="number" inputMode="numeric" min="0" value={budgetInput} placeholder={t('budget.placeholder')}
+            onChange={(e) => { setBudgetInput(e.target.value); setBudgetEditing(true) }}
             onBlur={handleBudgetSave}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleBudgetSave()
-            }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleBudgetSave() }}
             className="flex-1 h-12 rounded-md border border-border bg-bg px-lg text-body text-text-primary text-right focus:outline-none focus:border-primary"
-            aria-label="每月預算金額"
-          />
+            aria-label={t('budget.label')} />
         </div>
         {monthlyBudget > 0 && !budgetEditing && (
           <p className="text-small text-text-secondary mt-sm">
-            目前設定：${monthlyBudget.toLocaleString()}
+            {t('budget.currentSetting')}：{formatCurrency(monthlyBudget)}
           </p>
         )}
       </section>
 
       {/* AI 引擎設定 */}
-      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label="AI 引擎設定">
-        <h2 className="text-caption text-text-secondary mb-md">
-          AI 引擎設定
-        </h2>
+      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label={t('aiEngine.title')}>
+        <h2 className="text-caption text-text-secondary mb-md">{t('aiEngine.title')}</h2>
         <div className="flex gap-md mb-lg">
           {ENGINE_OPTIONS.map((opt) => {
             const selected = aiEngine === opt.value
             return (
-              <button
-                key={opt.value}
+              <button key={opt.value}
                 onClick={() => { updateAIEngine(opt.value); useSettingsStore.setState({ keyValidationStatus: 'idle' }) }}
                 disabled={saving}
                 className={`flex-1 h-20 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all ${
-                  selected
-                    ? 'bg-primary-light border-2 border-primary'
-                    : 'bg-surface shadow-card hover:shadow-card-hover'
+                  selected ? 'bg-primary-light border-2 border-primary' : 'bg-surface shadow-card hover:shadow-card-hover'
                 }`}
                 aria-pressed={selected}
-                aria-label={`選擇 ${opt.label} 引擎`}
-              >
+                aria-label={t('aiEngine.selectLabel', { label: opt.label })}>
                 <span className="text-lg">{opt.emoji}</span>
                 <span className="text-body font-semibold">{opt.label}</span>
-                <span className="text-small text-text-secondary">{opt.sub}</span>
+                <span className="text-small text-text-secondary">{opt.value === 'gemini' ? t('aiEngine.default') : '(GPT-4o-mini)'}</span>
               </button>
             )
           })}
         </div>
 
-        {/* API Key 輸入 — 依引擎分開 */}
         <div className="mt-md">
           <label className="text-caption text-text-secondary mb-sm block">
-            {ENGINE_OPTIONS.find((e) => e.value === aiEngine)?.label} API Key
+            {t('aiEngine.apiKeyLabel', { engine: ENGINE_OPTIONS.find((e) => e.value === aiEngine)?.label })}
           </label>
           <div className="flex items-center gap-sm">
             <div className="relative flex-1">
-              <input
-                type={showApiKey ? 'text' : 'password'}
-                value={currentApiKey}
-                onChange={(e) => {
-                  const updated = { ...apiKeys, [aiEngine]: e.target.value }
-                  setApiKeys(updated)
-                  saveApiKeys(updated)
-                }}
-                placeholder={`輸入 ${ENGINE_OPTIONS.find((e) => e.value === aiEngine)?.label} API Key`}
+              <input type={showApiKey ? 'text' : 'password'} value={currentApiKey}
+                onChange={(e) => { const updated = { ...apiKeys, [aiEngine]: e.target.value }; setApiKeys(updated); saveApiKeys(updated) }}
+                placeholder={t('aiEngine.apiKeyPlaceholder', { engine: ENGINE_OPTIONS.find((e) => e.value === aiEngine)?.label })}
                 className="w-full h-12 rounded-md border border-border bg-bg px-lg pr-12 text-body text-text-primary focus:outline-none focus:border-primary"
-                aria-label={`${aiEngine} API Key 輸入`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowApiKey(!showApiKey)}
+                aria-label={t('aiEngine.apiKeyLabel', { engine: aiEngine })} />
+              <button type="button" onClick={() => setShowApiKey(!showApiKey)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary"
-                aria-label={showApiKey ? '隱藏 API Key' : '顯示 API Key'}
-              >
+                aria-label={showApiKey ? t('aiEngine.hideApiKey') : t('aiEngine.showApiKey')}>
                 {showApiKey ? '🙈' : '👁️'}
               </button>
             </div>
-            <button
-              onClick={handleValidateKey}
-              disabled={!currentApiKey || keyValidationStatus === 'validating'}
+            <button onClick={handleValidateKey} disabled={!currentApiKey || keyValidationStatus === 'validating'}
               className="h-12 px-lg rounded-md bg-primary text-white text-caption font-semibold disabled:opacity-50 transition-all hover:bg-primary-dark"
-              aria-label="驗證 API Key"
-            >
-              驗證
+              aria-label={t('aiEngine.validateLabel')}>
+              {t('aiEngine.validate')}
             </button>
           </div>
           {keyStatusText(keyValidationStatus) && (
@@ -397,35 +392,26 @@ function SettingsPage() {
           )}
           {!currentApiKey && hasDefaultKey[aiEngine] && (
             <p className="text-caption mt-sm text-green-600">
-              ✅ 已配置預設金鑰，無需手動輸入即可使用 AI 功能
+              {t('aiEngine.defaultKeyConfigured')}
             </p>
           )}
         </div>
       </section>
 
-      {/* 類別管理 (#64) */}
-      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label="類別管理">
-        <h2 className="text-caption text-text-secondary mb-md">
-          類別管理
-        </h2>
+      {/* 類別管理 */}
+      <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label={t('categories.title')}>
+        <h2 className="text-caption text-text-secondary mb-md">{t('categories.title')}</h2>
 
-        {/* 支出類別 */}
         <div className="mb-lg">
-          <h3 className="text-body font-semibold text-danger mb-sm">支出類別</h3>
+          <h3 className="text-body font-semibold text-danger mb-sm">{t('categories.expenseCategories')}</h3>
           <div className="flex flex-wrap gap-sm">
             {expenseCategories.map((c: CategoryInfo) => (
-              <span
-                key={c.category}
-                className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('expense')} bg-[#FFF0F0] inline-flex items-center gap-xs`}
-              >
+              <span key={c.category} className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('expense')} bg-[#FFF0F0] inline-flex items-center gap-xs`}>
                 {getCategoryName(c.category)}
                 {c.isCustom && (
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCategory(c.category)}
+                  <button type="button" onClick={() => handleDeleteCategory(c.category)}
                     className="ml-xs text-danger hover:text-red-700 font-bold leading-none"
-                    aria-label={`刪除類別 ${getCategoryName(c.category)}`}
-                  >
+                    aria-label={t('categories.deleteCategoryLabel', { name: getCategoryName(c.category) })}>
                     ✕
                   </button>
                 )}
@@ -434,23 +420,16 @@ function SettingsPage() {
           </div>
         </div>
 
-        {/* 收入類別 */}
         <div className="mb-lg">
-          <h3 className="text-body font-semibold text-success mb-sm">收入類別</h3>
+          <h3 className="text-body font-semibold text-success mb-sm">{t('categories.incomeCategories')}</h3>
           <div className="flex flex-wrap gap-sm">
             {incomeCategories.map((c: CategoryInfo) => (
-              <span
-                key={c.category}
-                className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('income')} bg-[#F0FFF0] inline-flex items-center gap-xs`}
-              >
+              <span key={c.category} className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('income')} bg-[#F0FFF0] inline-flex items-center gap-xs`}>
                 {getCategoryName(c.category)}
                 {c.isCustom && (
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteCategory(c.category)}
+                  <button type="button" onClick={() => handleDeleteCategory(c.category)}
                     className="ml-xs text-danger hover:text-red-700 font-bold leading-none"
-                    aria-label={`刪除類別 ${getCategoryName(c.category)}`}
-                  >
+                    aria-label={t('categories.deleteCategoryLabel', { name: getCategoryName(c.category) })}>
                     ✕
                   </button>
                 )}
@@ -459,50 +438,33 @@ function SettingsPage() {
           </div>
         </div>
 
-        {/* 新增自訂類別 */}
         <div className="border-t border-border pt-md">
-          <p className="text-caption text-text-secondary mb-sm">新增自訂類別</p>
+          <p className="text-caption text-text-secondary mb-sm">{t('categories.addCustom')}</p>
           <div className="flex gap-sm items-center overflow-hidden">
-            <select
-              value={newCategoryType}
-              onChange={(e) => setNewCategoryType(e.target.value as 'income' | 'expense')}
+            <select value={newCategoryType} onChange={(e) => setNewCategoryType(e.target.value as 'income' | 'expense')}
               className="h-9 flex-shrink-0 rounded-md border border-border px-sm text-caption"
-              aria-label="新類別類型"
-            >
-              <option value="expense">支出</option>
-              <option value="income">收入</option>
+              aria-label={t('categories.newCategoryType')}>
+              <option value="expense">{t('common:expense')}</option>
+              <option value="income">{t('common:income')}</option>
             </select>
-            <input
-              type="text"
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              placeholder="類別名稱"
-              className="flex-1 min-w-0 h-9 rounded-md border border-border px-sm text-body"
-              aria-label="新類別名稱"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddCategory()
-              }}
-            />
-            <button
-              type="button"
-              onClick={handleAddCategory}
-              disabled={categoryAdding || !newCategoryName.trim()}
+            <input type="text" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)}
+              placeholder={t('categories.categoryName')} className="flex-1 min-w-0 h-9 rounded-md border border-border px-sm text-body"
+              aria-label={t('categories.categoryName')}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategory() }} />
+            <button type="button" onClick={handleAddCategory} disabled={categoryAdding || !newCategoryName.trim()}
               className="h-9 px-lg flex-shrink-0 min-w-[80px] whitespace-nowrap rounded-md bg-primary text-white text-caption font-semibold disabled:opacity-50"
-              aria-label="新增類別"
-            >
-              {categoryAdding ? '新增中...' : '新增'}
+              aria-label={t('categories.addCategory')}>
+              {categoryAdding ? t('common:adding') : t('common:add')}
             </button>
           </div>
         </div>
       </section>
 
       {/* 登出按鈕 */}
-      <button
-        onClick={handleLogout}
+      <button onClick={handleLogout}
         className="w-full h-12 bg-surface rounded-md text-danger font-semibold text-body shadow-card hover:shadow-card-hover transition-all"
-        aria-label="登出"
-      >
-        登出
+        aria-label={t('common:logout')}>
+        {t('common:logout')}
       </button>
     </div>
   )

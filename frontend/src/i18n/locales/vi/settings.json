@@ -1,14 +1,61 @@
 {
+  "title": "Cài đặt",
   "language": {
-    "title": "Ngôn ngữ"
+    "title": "Ngôn ngữ",
+    "zhTW": "繁體中文",
+    "en": "English",
+    "zhCN": "简体中文",
+    "vi": "Tiếng Việt"
   },
   "persona": {
     "title": "Nhân cách AI",
     "sarcastic": "Châm biếm",
     "gentle": "Nhẹ nhàng",
-    "guilt_trip": "Cảm giác tội lỗi"
+    "guilt_trip": "Cảm giác tội lỗi",
+    "selectLabel": "Chọn nhân cách {{label}}"
   },
   "budget": {
-    "title": "Ngân sách tháng"
-  }
+    "title": "Ngân sách tháng",
+    "placeholder": "Nhập ngân sách hàng tháng",
+    "label": "Số tiền ngân sách hàng tháng",
+    "currentSetting": "Cài đặt hiện tại"
+  },
+  "aiEngine": {
+    "title": "Công cụ AI",
+    "default": "(Mặc định)",
+    "selectLabel": "Chọn công cụ {{label}}",
+    "apiKeyLabel": "{{engine}} API Key",
+    "apiKeyPlaceholder": "Nhập {{engine}} API Key",
+    "showApiKey": "Hiện API Key",
+    "hideApiKey": "Ẩn API Key",
+    "validate": "Xác thực",
+    "validateLabel": "Xác thực API Key",
+    "validating": "⏳ Đang xác thực...",
+    "valid": "✅ Khóa hợp lệ",
+    "invalid": "❌ Khóa không hợp lệ",
+    "defaultKeyConfigured": "✅ Đã cấu hình khóa mặc định, có thể sử dụng AI mà không cần nhập thủ công"
+  },
+  "aiInstructions": {
+    "title": "Hướng dẫn AI",
+    "placeholder": "VD: Đề xuất tên danh mục mới khi không có danh mục phù hợp",
+    "label": "Hướng dẫn AI tùy chỉnh",
+    "saveLabel": "Lưu hướng dẫn AI"
+  },
+  "categories": {
+    "title": "Quản lý danh mục",
+    "expenseCategories": "Danh mục chi tiêu",
+    "incomeCategories": "Danh mục thu nhập",
+    "addCustom": "Thêm danh mục tùy chỉnh",
+    "newCategoryType": "Loại danh mục mới",
+    "categoryName": "Tên danh mục",
+    "addCategory": "Thêm danh mục",
+    "deleteCategoryLabel": "Xóa danh mục {{name}}",
+    "deleteConfirm": "Bạn có chắc muốn xóa danh mục \"{{name}}\"? Giao dịch liên quan sẽ chuyển sang \"Khác\"."
+  },
+  "userInfo": {
+    "title": "Thông tin người dùng",
+    "defaultName": "Tên người dùng"
+  },
+  "loadingSettings": "Đang tải cài đặt...",
+  "closeError": "Đóng lỗi"
 }
