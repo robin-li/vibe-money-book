@@ -42,6 +42,7 @@ export interface DataExtractorInput {
   categoriesWithType?: CategoryWithType[];
   currentDateTime: string;
   aiInstructions?: string | null;
+  targetLanguage?: string;
 }
 
 export interface RecentTransaction {
