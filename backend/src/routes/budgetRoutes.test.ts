@@ -307,14 +307,14 @@ describe('Budget Routes', () => {
       });
 
       const res = await request(app)
-        .delete('/api/v1/budget/categories/snacks');
+        .delete('/api/v1/budget/categories/snacks?type=expense');
 
       expect(res.status).toBe(200);
       expect(res.body.message).toContain('刪除成功');
 
       // Verify transactions were reassigned to "other"
       expect(mockedPrisma.transaction.updateMany).toHaveBeenCalledWith({
-        where: { userId: 'test-user-id', category: 'snacks' },
+        where: { userId: 'test-user-id', category: 'snacks', type: 'expense' },
         data: { category: 'other' },
       });
     });
@@ -332,7 +332,7 @@ describe('Budget Routes', () => {
       });
 
       const res = await request(app)
-        .delete('/api/v1/budget/categories/food');
+        .delete('/api/v1/budget/categories/food?type=expense');
 
       expect(res.status).toBe(400);
       expect(res.body.message).toContain('系統預設');
@@ -342,7 +342,7 @@ describe('Budget Routes', () => {
       mockedPrisma.categoryBudget.findUnique.mockResolvedValue(null);
 
       const res = await request(app)
-        .delete('/api/v1/budget/categories/nonexistent');
+        .delete('/api/v1/budget/categories/nonexistent?type=expense');
 
       expect(res.status).toBe(404);
     });

@@ -55,7 +55,7 @@ async function main() {
 
   for (const cat of categories) {
     await p.categoryBudget.upsert({
-      where: { userId_category: { userId, category: cat.category } },
+      where: { userId_type_category: { userId, type: cat.type, category: cat.category } },
       update: {},
       create: {
         userId,

@@ -43,7 +43,7 @@ model CategoryBudget {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, category])
+  @@unique([userId, type, category])
   @@index([userId])
   @@map("category_budgets")
 }

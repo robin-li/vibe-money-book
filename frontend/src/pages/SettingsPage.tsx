@@ -160,11 +160,11 @@ function SettingsPage() {
     }
   }, [newCategoryName, newCategoryType, createCategoryAction])
 
-  const handleDeleteCategory = useCallback(async (category: string) => {
+  const handleDeleteCategory = useCallback(async (category: string, type: 'income' | 'expense') => {
     const name = getCategoryName(category)
     if (!window.confirm(t('categories.deleteConfirm', { name }))) return
     try {
-      await deleteCategoryAction(category)
+      await deleteCategoryAction(category, type)
     } catch {
       // Error handled by store
     }
@@ -412,7 +412,7 @@ function SettingsPage() {
               <span key={c.category} className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('expense')} bg-[#FFF0F0] inline-flex items-center gap-xs`}>
                 {getCategoryName(c.category)}
                 {c.isCustom && (
-                  <button type="button" onClick={() => handleDeleteCategory(c.category)}
+                  <button type="button" onClick={() => handleDeleteCategory(c.category, 'expense')}
                     className="ml-xs text-danger hover:text-red-700 font-bold leading-none"
                     aria-label={t('categories.deleteCategoryLabel', { name: getCategoryName(c.category) })}>
                     ✕
@@ -430,7 +430,7 @@ function SettingsPage() {
               <span key={c.category} className={`px-md py-xs rounded-md text-caption ${getCategoryTypeColorClass('income')} bg-[#F0FFF0] inline-flex items-center gap-xs`}>
                 {getCategoryName(c.category)}
                 {c.isCustom && (
-                  <button type="button" onClick={() => handleDeleteCategory(c.category)}
+                  <button type="button" onClick={() => handleDeleteCategory(c.category, 'income')}
                     className="ml-xs text-danger hover:text-red-700 font-bold leading-none"
                     aria-label={t('categories.deleteCategoryLabel', { name: getCategoryName(c.category) })}>
                     ✕
