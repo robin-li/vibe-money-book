@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useSettingsStore } from '../stores/settingsStore'
 import { useDashboardStore } from '../stores/dashboardStore'
 import VoiceInput from '../components/VoiceInput'
@@ -11,6 +12,7 @@ import ParsedResultCard from '../components/ParsedResultCard'
 import NewCategoryDialog from '../components/NewCategoryDialog'
 
 function DashboardPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const persona = useSettingsStore((s) => s.persona)
   const aiEngine = useSettingsStore((s) => s.aiEngine)
@@ -77,8 +79,6 @@ function DashboardPage() {
       try {
         const categoryType = parsedResult?.type ?? 'expense'
         await createCategory(categoryName, categoryType)
-        // After creating the category, update parsedResult to use the new category
-        // and stay on the edit card (don't auto-confirm)
         if (parsedResult) {
           useDashboardStore.setState({
             parsedResult: {
@@ -89,7 +89,6 @@ function DashboardPage() {
             },
           })
         }
-        // Refresh category list
         fetchCategories()
       } catch {
         // Error handled by store
@@ -127,7 +126,7 @@ function DashboardPage() {
 
   const feedbackText =
     (isChatReply && aiFeedback?.text) || lastFeedbackText ||
-    '歡迎使用 Vibe Money Book！開始記錄你的第一筆消費吧～'
+    t('dashboard:aiFeedback.defaultMessage')
 
   return (
     <>
@@ -140,10 +139,10 @@ function DashboardPage() {
             </div>
             <div>
               <h1 className="text-title font-semibold text-text-primary leading-tight">
-                Vibe Money Book
+                {t('common:appName')}
               </h1>
               <p className="text-small text-text-secondary tracking-[2px]">
-                語音記帳教練
+                {t('common:appSlogan')}
               </p>
             </div>
           </div>
@@ -151,7 +150,7 @@ function DashboardPage() {
             type="button"
             onClick={() => navigate('/settings')}
             className="w-6 h-6 text-text-secondary"
-            aria-label="設定"
+            aria-label={t('nav.settings')}
           >
             ⚙️
           </button>
@@ -166,7 +165,7 @@ function DashboardPage() {
         {/* AI Feedback Card */}
         <AIFeedbackCard
           feedbackText={
-            isParsing ? 'AI 正在分析...' : feedbackText
+            isParsing ? t('dashboard:aiFeedback.analyzing') : feedbackText
           }
           persona={persona}
           aiEngine={aiEngine}
@@ -222,7 +221,7 @@ function DashboardPage() {
         {/* Footer */}
         <div className="text-center py-sm mt-xl">
           <p className="text-small text-text-tertiary tracking-[1px]">
-            POWERED BY AI · 精準記帳 · 情緒滿分
+            {t('common:poweredBy')}
           </p>
         </div>
       </div>

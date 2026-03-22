@@ -1,10 +1,52 @@
 {
   "budgetCard": {
-    "title": "Ngân sách tháng"
+    "title": "Ngân sách tháng",
+    "budgetRemaining": "Ngân sách còn lại",
+    "overBudget": "Vượt ngân sách",
+    "noBudgetSet": "Chưa thiết lập ngân sách",
+    "monthlySpent": "Chi tiêu tháng",
+    "target": "Mục tiêu"
+  },
+  "assetCard": {
+    "title": "Tổng tài sản",
+    "noTransactions": "Chưa có giao dịch",
+    "income": "Thu nhập",
+    "expense": "Chi tiêu"
   },
   "recentTransactions": "Giao dịch gần đây",
+  "noTransactions": "Chưa có giao dịch nào. Bắt đầu ghi chép!",
+  "deleteConfirm": "Bạn có chắc muốn xóa giao dịch này?",
   "voiceInput": {
-    "placeholder": "Nói cho tôi biết bạn đã chi gì...",
-    "recording": "Đang ghi âm..."
+    "placeholder": "VD: Ăn trưa phở 50k",
+    "recording": "Đang nghe...",
+    "recognizing": "Đang nhận dạng...",
+    "inputLabel": "Nhập mô tả chi tiêu",
+    "startVoice": "Bắt đầu nhập giọng nói",
+    "stopVoice": "Dừng nhập giọng nói",
+    "send": "Gửi"
+  },
+  "aiFeedback": {
+    "label": "Phản hồi AI",
+    "analyzing": "AI đang phân tích...",
+    "defaultMessage": "Chào mừng đến Vibe Money Book! Bắt đầu ghi chép chi tiêu đầu tiên~",
+    "realtimeFeedback": " phản hồi trực tiếp"
+  },
+  "parsedResult": {
+    "label": "Kết quả phân tích AI",
+    "title": "AI đã sắp xếp cho bạn",
+    "transactionType": "Loại giao dịch"
+  },
+  "newCategory": {
+    "suggestion": "Tôi nghĩ chi tiêu này thuộc \"{{category}}\", nhưng bạn chưa có danh mục này.",
+    "askAdd": "Bạn có muốn thêm danh mục \"{{category}}\" không?",
+    "renameTitle": "Đổi tên danh mục",
+    "categoryNameLabel": "Tên danh mục",
+    "nameHint": "⚠️ Tên danh mục 2–50 ký tự",
+    "selectCategoryTitle": "Chọn danh mục {{type}}"
+  },
+  "persona": {
+    "gentle": "Quản gia dịu dàng",
+    "sarcastic": "Huấn luyện viên cay độc",
+    "guilt_trip": "Thiên thần lo lắng"
   }
 }

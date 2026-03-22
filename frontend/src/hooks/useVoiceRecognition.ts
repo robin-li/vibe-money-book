@@ -1,4 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { getVoiceLang } from '../i18n/index'
 
 // #99: 偵測 Android 平台，用於語音辨識重複 workaround
 const isAndroid =
@@ -39,7 +41,10 @@ export function isSpeechRecognitionSupported(): boolean {
 export function useVoiceRecognition(
   options: UseVoiceRecognitionOptions = {}
 ): UseVoiceRecognitionReturn {
-  const { lang = 'zh-TW', silenceTimeout = 5000, onResult, onInterimResult, onError } = options
+  const { i18n } = useTranslation()
+  // Use i18n current language to determine voice recognition language
+  const effectiveLang = options.lang ?? getVoiceLang(i18n.language)
+  const { silenceTimeout = 5000, onResult, onInterimResult, onError } = options
 
   const [isSupported] = useState(() => isSpeechRecognitionSupported())
   const [status, setStatus] = useState<VoiceStatus>('idle')
@@ -84,7 +89,7 @@ export function useVoiceRecognition(
     isRecordingRef.current = true
 
     const recognition = new SpeechRecognitionClass()
-    recognition.lang = lang
+    recognition.lang = effectiveLang
     recognition.interimResults = true
     // #99: Android Chrome continuous:true 會導致重複詞句（Chromium 已知 Bug）
     // 改用 continuous:false，停頓後自動重啟
@@ -107,10 +112,6 @@ export function useVoiceRecognition(
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       // Fix #87: Rebuild transcript from event.results on EVERY onresult call.
-      // In continuous mode, event.results is the COMPLETE history of all
-      // recognition results. We iterate from index 0 each time and never
-      // accumulate via external refs or state — the loop below is the single
-      // source of truth.
       let finalTranscript = ''
       let interimTranscript = ''
 
@@ -129,7 +130,6 @@ export function useVoiceRecognition(
         : finalTranscript
 
       // Cache computed values for synchronous read in stopRecording.
-      // These refs are OVERWRITTEN (not appended) on every call.
       latestFinalRef.current = fullFinalTranscript
       latestInterimRef.current = interimTranscript
 
@@ -141,7 +141,7 @@ export function useVoiceRecognition(
         callbacksRef.current.onInterimResult?.(displayText)
       }
 
-      // #94: Reset silence timer — auto-stop after silenceTimeout ms of no new results
+      // #94: Reset silence timer
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
       if (silenceTimeout > 0) {
         silenceTimerRef.current = setTimeout(() => {
@@ -153,7 +153,7 @@ export function useVoiceRecognition(
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       // Ignore 'no-speech' errors during continuous recording — they are harmless
       if (event.error === 'no-speech') return
-      const message = getErrorMessage(event.error)
+      const message = getErrorMessage(event.error, i18n.t)
       setErrorMessage(message)
       setStatus('error')
       callbacksRef.current.onError?.(message)
@@ -162,9 +162,7 @@ export function useVoiceRecognition(
     recognition.onend = () => {
       // #99: Android continuous:false — 停頓觸發 onend，若仍在錄音狀態則自動重啟
       if (isAndroid && isRecordingRef.current) {
-        // 保存當前 session 的 final transcript 至累積區
         accumulatedTranscriptRef.current = latestFinalRef.current
-        // 重啟前重置 silence timer（#94）
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
         if (silenceTimeout > 0) {
           silenceTimerRef.current = setTimeout(() => {
@@ -174,7 +172,6 @@ export function useVoiceRecognition(
         try {
           recognition.start()
         } catch {
-          // 若重啟失敗（如瀏覽器拒絕），回退至 idle
           isRecordingRef.current = false
           setStatus('idle')
           recognitionRef.current = null
@@ -187,21 +184,16 @@ export function useVoiceRecognition(
 
     recognitionRef.current = recognition
     recognition.start()
-  }, [lang, silenceTimeout])
+  }, [effectiveLang, silenceTimeout, i18n.t])
 
   const stopRecording = useCallback(() => {
-    // #99: 標記停止錄音，防止 Android onend 自動重啟
     isRecordingRef.current = false
-    // #94: Clear silence timer
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current)
       silenceTimerRef.current = null
     }
     if (recognitionRef.current) {
       recognitionRef.current.stop()
-      // Deliver the latest computed transcript (final + interim).
-      // Include interim so nothing is lost if user stops before the engine
-      // finalises the last segment (e.g. short or mid-utterance stops).
       const deliverText = latestFinalRef.current + latestInterimRef.current
       if (deliverText) {
         setTranscript(deliverText)
@@ -210,17 +202,16 @@ export function useVoiceRecognition(
       setInterimTranscript('')
       latestFinalRef.current = ''
       latestInterimRef.current = ''
-      // #99: 清除 Android 累積 transcript
       accumulatedTranscriptRef.current = ''
     }
   }, [])
 
-  // Keep stopRecordingRef in sync so silence timer always calls the latest version
+  // Keep stopRecordingRef in sync
   useEffect(() => {
     stopRecordingRef.current = stopRecording
   }, [stopRecording])
 
-  // Toggle recording: start if idle, stop if active (#70)
+  // Toggle recording
   const toggleRecording = useCallback(() => {
     if (recognitionRef.current) {
       stopRecording()
@@ -253,7 +244,7 @@ export function useVoiceRecognition(
   }
 }
 
-function getErrorMessage(error: string): string {
+function getErrorMessage(error: string, _t?: (key: string) => string): string {
   switch (error) {
     case 'not-allowed':
       return '麥克風權限被拒絕，請在瀏覽器設定中允許麥克風存取'

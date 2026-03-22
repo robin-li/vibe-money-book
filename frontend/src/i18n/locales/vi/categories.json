@@ -8,5 +8,14 @@
   "education": "Giáo dục",
   "other": "Khác",
   "salary": "Lương",
-  "investment": "Đầu tư"
+  "investment": "Đầu tư",
+  "daily": "Nhu yếu phẩm",
+  "pets": "Thú cưng",
+  "adjustment_expense": "Điều chỉnh",
+  "salary_income": "Lương",
+  "investment_income": "Đầu tư",
+  "pension": "Lương hưu",
+  "insurance": "Bảo hiểm",
+  "other_income": "Khác",
+  "adjustment_income": "Điều chỉnh"
 }

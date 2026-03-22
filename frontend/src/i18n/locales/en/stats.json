@@ -1,12 +1,29 @@
 {
+  "title": "Statistics",
   "distribution": {
-    "title": "Expense Distribution"
+    "title": "Expense Distribution",
+    "incomeDistribution": "Income Distribution",
+    "expenseDistribution": "Expense Distribution"
   },
   "period": {
+    "thisWeek": "This Week",
     "thisMonth": "This Month",
     "lastMonth": "Last Month",
     "custom": "Custom"
   },
   "totalIncome": "Total Income",
-  "totalExpense": "Total Expense"
+  "totalExpense": "Total Expense",
+  "weeklyExpense": "Weekly Expense",
+  "weeklyIncome": "Weekly Income",
+  "monthlyExpense": "Monthly Expense",
+  "monthlyIncome": "Monthly Income",
+  "customExpense": "Period Expense",
+  "customIncome": "Period Income",
+  "target": "Target",
+  "categoryRanking": "Category Ranking",
+  "noExpenseRecords": "No expense records this month",
+  "noIncomeRecords": "No income records this month",
+  "noRecords": "No records this month",
+  "startDate": "Start Date",
+  "endDate": "End Date"
 }

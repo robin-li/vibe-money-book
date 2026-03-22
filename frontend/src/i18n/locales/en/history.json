@@ -1,10 +1,18 @@
 {
+  "title": "History",
   "filter": {
     "category": "Category",
     "dateRange": "Date Range",
-    "type": "Type"
+    "type": "Type",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "categoryFilter": "Category Filter"
   },
   "aiQuery": {
-    "placeholder": "Search transactions with natural language..."
-  }
+    "placeholder": "Ask AI coach...",
+    "analyzing": "AI is analyzing your query...",
+    "matchCount": "{{count}} matches, total ${{total}}",
+    "noResults": "No matching records found"
+  },
+  "empty": "No transactions yet. Start tracking!"
 }

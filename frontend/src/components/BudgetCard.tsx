@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+import { useLocaleFormatter } from '../hooks/useLocaleFormatter'
 import type { BudgetSummary } from '../stores/dashboardStore'
 import BudgetBar from './BudgetBar'
 
@@ -7,6 +9,11 @@ interface BudgetCardProps {
 }
 
 function BudgetCard({ summary, compact }: BudgetCardProps) {
+  const { t } = useTranslation('dashboard')
+  const { formatCurrency } = useLocaleFormatter()
+
+  const formatMoney = (n: number) => formatCurrency(n)
+
   const baseClass = compact
     ? 'bg-surface rounded-lg shadow-card p-lg flex-1 min-w-0'
     : 'bg-surface rounded-lg shadow-card p-lg mx-2xl mb-xl'
@@ -15,16 +22,16 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
     return (
       <section
         className={baseClass}
-        aria-label="預算概覽"
+        aria-label={t('budgetCard.budgetRemaining')}
       >
         <h2 className="text-caption text-text-secondary mb-sm">
-          預算剩餘
+          {t('budgetCard.budgetRemaining')}
         </h2>
         <p className="text-headline font-bold text-text-primary truncate">
           --
         </p>
         <p className="text-caption text-text-secondary mt-sm">
-          尚未設定預算
+          {t('budgetCard.noBudgetSet')}
         </p>
       </section>
     )
@@ -44,23 +51,20 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
     return 'text-text-primary'
   }
 
-  const formatMoney = (n: number) =>
-    `$${n.toLocaleString('zh-TW', { maximumFractionDigits: 0 })}`
-
   if (compact) {
     return (
       <section
         className={baseClass}
-        aria-label="預算概覽"
+        aria-label={t('budgetCard.budgetRemaining')}
       >
         <p className="text-caption text-text-secondary mb-xs">
-          預算剩餘
+          {t('budgetCard.budgetRemaining')}
         </p>
         <p
           className={`text-headline font-bold truncate ${getPercentColor()}`}
           aria-live="polite"
         >
-          {isOverBudget ? '超支' : `${remainingPercent}%`}
+          {isOverBudget ? t('budgetCard.overBudget') : `${remainingPercent}%`}
         </p>
 
         {/* Progress bar */}
@@ -70,11 +74,11 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
 
         <div className="space-y-xs text-caption">
           <div className="flex justify-between">
-            <span className="text-text-secondary">支出</span>
+            <span className="text-text-secondary">{t('common:expense')}</span>
             <span className="text-danger">-{formatMoney(totalSpent)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-text-secondary">目標</span>
+            <span className="text-text-secondary">{t('budgetCard.target')}</span>
             <span className="text-text-primary">{formatMoney(monthlyBudget)}</span>
           </div>
         </div>
@@ -85,23 +89,23 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
   return (
     <section
       className={baseClass}
-      aria-label="預算概覽"
+      aria-label={t('budgetCard.budgetRemaining')}
     >
       <div className="flex justify-between items-start mb-sm">
         <div>
           <p className="text-caption text-text-secondary">
-            預算剩餘
+            {t('budgetCard.budgetRemaining')}
           </p>
           <p
             className={`text-headline font-bold truncate ${getPercentColor()}`}
             aria-live="polite"
           >
-            {isOverBudget ? '超支' : `${remainingPercent}%`}
+            {isOverBudget ? t('budgetCard.overBudget') : `${remainingPercent}%`}
           </p>
         </div>
         <div className="text-right">
           <p className="text-caption text-text-secondary">
-            本月支出
+            {t('budgetCard.monthlySpent')}
           </p>
           <p
             className="text-headline font-bold text-danger truncate"
@@ -122,7 +126,7 @@ function BudgetCard({ summary, compact }: BudgetCardProps) {
           $0
         </span>
         <span className="text-small text-text-secondary truncate min-w-0 text-right">
-          目標：{formatMoney(monthlyBudget)}
+          {t('budgetCard.target')}：{formatMoney(monthlyBudget)}
         </span>
       </div>
     </section>

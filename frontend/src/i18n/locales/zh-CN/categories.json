@@ -8,5 +8,14 @@
   "education": "教育",
   "other": "其他",
   "salary": "薪资",
-  "investment": "投资"
+  "investment": "投资",
+  "daily": "日用品",
+  "pets": "宠物用品",
+  "adjustment_expense": "账务调整",
+  "salary_income": "薪资收入",
+  "investment_income": "投资收益",
+  "pension": "退休金",
+  "insurance": "保险理赔",
+  "other_income": "其他",
+  "adjustment_income": "账务调整"
 }

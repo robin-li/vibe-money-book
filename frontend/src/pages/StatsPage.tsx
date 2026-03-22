@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useLocaleFormatter } from '../hooks/useLocaleFormatter'
 import api from '../lib/api'
 import BudgetBar from '../components/BudgetBar'
 import DistributionChart from '../components/DistributionChart'
@@ -17,6 +19,8 @@ type TimeFilter = 'week' | 'month' | 'custom'
 type TypeTab = 'expense' | 'income'
 
 function StatsPage() {
+  const { t } = useTranslation('stats')
+  const { formatCurrency } = useLocaleFormatter()
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('month')
   const [typeTab, setTypeTab] = useState<TypeTab>('expense')
   const [budgetSummary, setBudgetSummary] = useState<BudgetSummaryData | null>(null)
@@ -24,7 +28,6 @@ function StatsPage() {
   const [totalAmount, setTotalAmount] = useState(0)
   const [loading, setLoading] = useState(true)
 
-  // Custom date range
   const today = new Date().toISOString().slice(0, 10)
   const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
   const [customStart, setCustomStart] = useState(firstOfMonth)
@@ -42,7 +45,6 @@ function StatsPage() {
         api.get('/stats/distribution', { params }),
       ]
 
-      // Only fetch budget summary for expense tab
       if (typeTab === 'expense') {
         requests.push(api.get('/budget/summary'))
       }
@@ -81,7 +83,7 @@ function StatsPage() {
         setBudgetSummary(null)
       }
     } catch {
-      // Silently fail - show empty state
+      // Silently fail
     } finally {
       setLoading(false)
     }
@@ -91,29 +93,33 @@ function StatsPage() {
     void fetchData()
   }, [fetchData])
 
-  const formatMoney = (n: number) =>
-    `$${n.toLocaleString('zh-TW', { maximumFractionDigits: 0 })}`
+  const formatMoney = (n: number) => formatCurrency(n)
 
-  // Sort distribution by amount descending for ranking
   const ranked = [...distribution].sort((a, b) => b.amount - a.amount)
   const maxAmount = ranked.length > 0 ? ranked[0].amount : 0
 
   const isExpense = typeTab === 'expense'
+
+  const getTotalLabel = () => {
+    if (timeFilter === 'week') return isExpense ? t('weeklyExpense') : t('weeklyIncome')
+    if (timeFilter === 'custom') return isExpense ? t('customExpense') : t('customIncome')
+    return isExpense ? t('monthlyExpense') : t('monthlyIncome')
+  }
 
   return (
     <div className="p-2xl pb-[100px]">
       {/* Header */}
       <header className="h-14 flex items-center mb-lg">
         <h1 className="text-title font-semibold text-text-primary">
-          📊 統計
+          📊 {t('title')}
         </h1>
       </header>
 
       {/* Income / Expense Tab */}
       <div className="flex mb-xl bg-surface rounded-lg shadow-card overflow-hidden" role="tablist">
         {([
-          { key: 'expense' as const, label: '支出' },
-          { key: 'income' as const, label: '收入' },
+          { key: 'expense' as const, label: t('common:expense') },
+          { key: 'income' as const, label: t('common:income') },
         ]).map(({ key, label }) => (
           <button
             key={key}
@@ -138,9 +144,9 @@ function StatsPage() {
       {/* Time filter */}
       <div className="flex gap-sm mb-xl">
         {([
-          { key: 'week' as const, label: '本週' },
-          { key: 'month' as const, label: '本月' },
-          { key: 'custom' as const, label: '自訂' },
+          { key: 'week' as const, label: t('period.thisWeek') },
+          { key: 'month' as const, label: t('period.thisMonth') },
+          { key: 'custom' as const, label: t('period.custom') },
         ]).map(({ key, label }) => (
           <button
             key={key}
@@ -166,7 +172,7 @@ function StatsPage() {
             onChange={(e) => setCustomStart(e.target.value)}
             max={customEnd}
             className="flex-1 h-10 rounded-md border border-border bg-surface px-md text-caption text-text-primary focus:outline-none focus:border-primary"
-            aria-label="開始日期"
+            aria-label={t('startDate')}
           />
           <span className="text-caption text-text-secondary">～</span>
           <input
@@ -176,7 +182,7 @@ function StatsPage() {
             min={customStart}
             max={today}
             className="flex-1 h-10 rounded-md border border-border bg-surface px-md text-caption text-text-primary focus:outline-none focus:border-primary"
-            aria-label="結束日期"
+            aria-label={t('endDate')}
           />
         </div>
       )}
@@ -193,19 +199,15 @@ function StatsPage() {
           {/* Total amount card */}
           <section
             className="bg-surface rounded-lg shadow-card p-lg mb-xl"
-            aria-label={isExpense ? '總支出' : '總收入'}
+            aria-label={isExpense ? t('totalExpense') : t('totalIncome')}
           >
             <div className="flex justify-between items-baseline mb-sm">
               <p className="text-caption text-text-secondary">
-                {timeFilter === 'week'
-                  ? (isExpense ? '本週總支出' : '本週總收入')
-                  : timeFilter === 'custom'
-                    ? (isExpense ? '區間總支出' : '區間總收入')
-                    : (isExpense ? '本月總支出' : '本月總收入')}
+                {getTotalLabel()}
               </p>
               {isExpense && budgetSummary && budgetSummary.monthlyBudget > 0 && (
                 <p className="text-small text-text-secondary">
-                  目標：{formatMoney(budgetSummary.monthlyBudget)}
+                  {t('target')}：{formatMoney(budgetSummary.monthlyBudget)}
                 </p>
               )}
             </div>
@@ -220,19 +222,19 @@ function StatsPage() {
           </section>
 
           {/* Distribution chart */}
-          <section aria-label={isExpense ? '支出分佈' : '收入分佈'} className="mb-xl">
+          <section aria-label={isExpense ? t('distribution.expenseDistribution') : t('distribution.incomeDistribution')} className="mb-xl">
             <DistributionChart
               data={distribution}
               totalSpent={isExpense ? (budgetSummary?.totalSpent ?? totalAmount) : totalAmount}
-              emptyMessage={isExpense ? '本月尚無支出記錄' : '本月尚無收入記錄'}
+              emptyMessage={isExpense ? t('noExpenseRecords') : t('noIncomeRecords')}
             />
           </section>
 
           {/* Category ranking */}
           {ranked.length > 0 && (
-            <section aria-label="類別排行">
+            <section aria-label={t('categoryRanking')}>
               <h2 className="text-title font-semibold text-text-primary mb-md">
-                類別排行
+                {t('categoryRanking')}
               </h2>
               <div className="space-y-md">
                 {ranked.map((item, index) => (

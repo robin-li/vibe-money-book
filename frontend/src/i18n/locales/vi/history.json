@@ -1,10 +1,18 @@
 {
+  "title": "Lịch sử",
   "filter": {
     "category": "Danh mục",
     "dateRange": "Khoảng thời gian",
-    "type": "Loại"
+    "type": "Loại",
+    "startDate": "Ngày bắt đầu",
+    "endDate": "Ngày kết thúc",
+    "categoryFilter": "Lọc danh mục"
   },
   "aiQuery": {
-    "placeholder": "Tìm kiếm giao dịch bằng ngôn ngữ tự nhiên..."
-  }
+    "placeholder": "Hỏi AI huấn luyện viên...",
+    "analyzing": "AI đang phân tích truy vấn...",
+    "matchCount": "{{count}} kết quả, tổng ${{total}}",
+    "noResults": "Không tìm thấy giao dịch phù hợp"
+  },
+  "empty": "Chưa có giao dịch nào. Bắt đầu ghi chép!"
 }

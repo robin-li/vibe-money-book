@@ -1,4 +1,6 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import { useTranslation } from 'react-i18next'
+import { useLocaleFormatter } from '../hooks/useLocaleFormatter'
 import { getCategoryColor, getCategoryName } from '../lib/categoryUtils'
 
 export interface DistributionItem {
@@ -13,13 +15,19 @@ interface DistributionChartProps {
   emptyMessage?: string
 }
 
-function DistributionChart({ data, totalSpent, emptyMessage = '本月尚無消費記錄' }: DistributionChartProps) {
+function DistributionChart({ data, totalSpent, emptyMessage }: DistributionChartProps) {
+  const { t } = useTranslation('stats')
+  const { formatCurrency } = useLocaleFormatter()
+
+  const formatMoney = (n: number) => formatCurrency(n)
+  const defaultEmptyMessage = emptyMessage ?? t('noRecords')
+
   if (data.length === 0) {
     return (
       <div className="text-center py-3xl" data-testid="distribution-chart-empty">
         <div className="w-[200px] h-[200px] mx-auto border-2 border-dashed border-text-tertiary rounded-full flex items-center justify-center mb-lg">
           <p className="text-body text-text-tertiary">
-            {emptyMessage}
+            {defaultEmptyMessage}
           </p>
         </div>
       </div>
@@ -32,9 +40,6 @@ function DistributionChart({ data, totalSpent, emptyMessage = '本月尚無消�
     percentage: item.percentage,
     category: item.category,
   }))
-
-  const formatMoney = (n: number) =>
-    `$${n.toLocaleString('zh-TW', { maximumFractionDigits: 0 })}`
 
   return (
     <div data-testid="distribution-chart">

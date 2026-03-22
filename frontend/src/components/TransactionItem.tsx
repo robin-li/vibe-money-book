@@ -1,4 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useLocaleFormatter } from '../hooks/useLocaleFormatter'
 import type { Transaction } from '../stores/index'
 import { getCategoryName, getCategoryTypeColorClass } from '../lib/categoryUtils'
 import type { UpdateTransactionInput } from '../stores/historyStore'
@@ -33,16 +35,7 @@ const categoryIcons: Record<string, string> = {
   adjustment_income: '🔧',
 }
 
-function formatTime(dateStr: string): string {
-  const date = new Date(dateStr)
-  const hours = date.getHours()
-  const minutes = date.getMinutes().toString().padStart(2, '0')
-  const period = hours < 12 ? '上午' : '下午'
-  const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
-  return `${period}${displayHour.toString().padStart(2, '0')}:${minutes}`
-}
-
-function formatDate(dateStr: string): string {
+function formatDateStr(dateStr: string): string {
   if (!dateStr) return '--'
   return dateStr.split('T')[0]
 }
@@ -57,6 +50,9 @@ function TransactionItem({
   isUpdating,
   categoryInfoList = [],
 }: TransactionItemProps) {
+  const { t } = useTranslation()
+  const { formatCurrency, formatDate: fmtDate } = useLocaleFormatter()
+
   const expenseCategoryList = useMemo(
     () => categoryInfoList.filter((c) => c.type === 'expense').map((c) => c.category),
     [categoryInfoList]
@@ -73,7 +69,7 @@ function TransactionItem({
     amount: tx.amount,
     category: tx.category,
     merchant: tx.merchant,
-    transactionDate: formatDate(tx.transactionDate),
+    transactionDate: formatDateStr(tx.transactionDate),
     note: tx.note ?? '',
   })
 
@@ -100,7 +96,7 @@ function TransactionItem({
       amount: tx.amount,
       category: tx.category,
       merchant: tx.merchant,
-      transactionDate: formatDate(tx.transactionDate),
+      transactionDate: formatDateStr(tx.transactionDate),
       note: tx.note ?? '',
     })
     setIsEditing(true)
@@ -141,6 +137,11 @@ function TransactionItem({
 
   const txType = tx.type ?? 'expense'
 
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return fmtDate(date, { hour: '2-digit', minute: '2-digit' })
+  }
+
   return (
     <div className="border-b border-border last:border-b-0" data-testid={`transaction-item-${tx.id}`}>
       {/* Summary row */}
@@ -167,7 +168,7 @@ function TransactionItem({
           </div>
         </div>
         <p className={`text-title font-semibold shrink-0 ${txType === 'income' ? 'text-success' : 'text-danger'}`}>
-          {txType === 'income' ? '+' : '-'}${tx.amount.toLocaleString()}
+          {txType === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
         </p>
         <span className={`text-text-tertiary text-sm transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
           ▼
@@ -180,28 +181,19 @@ function TransactionItem({
           {showDeleteConfirm ? (
             <div className="bg-danger-light rounded-md p-lg text-center" data-testid="delete-confirm-dialog">
               <p className="text-body text-danger font-semibold mb-md">
-                確定要刪除這筆帳目嗎？
+                {t('dashboard:deleteConfirm')}
               </p>
               <p className="text-caption text-text-secondary mb-lg">
-                {tx.merchant} {txType === 'income' ? '+' : '-'}${tx.amount.toLocaleString()}
+                {tx.merchant} {txType === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
               </p>
               <div className="flex gap-sm">
-                <button
-                  type="button"
-                  onClick={handleCancelDelete}
-                  className="flex-1 h-9 rounded-sm border border-border text-text-secondary text-body"
-                  disabled={isDeleting}
-                >
-                  取消
+                <button type="button" onClick={handleCancelDelete}
+                  className="flex-1 h-9 rounded-sm border border-border text-text-secondary text-body" disabled={isDeleting}>
+                  {t('common:cancel')}
                 </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmDelete}
-                  className="flex-1 h-9 rounded-sm bg-danger text-surface font-semibold text-body"
-                  disabled={isDeleting}
-                  data-testid="confirm-delete-btn"
-                >
-                  {isDeleting ? '刪除中...' : '確認刪除'}
+                <button type="button" onClick={handleConfirmDelete}
+                  className="flex-1 h-9 rounded-sm bg-danger text-surface font-semibold text-body" disabled={isDeleting} data-testid="confirm-delete-btn">
+                  {isDeleting ? t('common:deleting') : t('common:confirmDelete')}
                 </button>
               </div>
             </div>
@@ -209,103 +201,52 @@ function TransactionItem({
             <div data-testid="edit-form">
               <div className="space-y-sm mb-lg">
                 <div className="flex items-center gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0">類型</span>
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:type')}</span>
                   <div className="flex gap-sm">
-                    <button
-                      type="button"
-                      onClick={() => handleTypeChange('expense')}
-                      className={`px-lg py-xs rounded-sm text-small font-semibold ${editForm.type === 'expense' ? 'bg-danger text-surface' : 'border border-border text-text-secondary'}`}
-                      data-testid="edit-type-expense"
-                    >
-                      支出
+                    <button type="button" onClick={() => handleTypeChange('expense')}
+                      className={`px-lg py-xs rounded-sm text-small font-semibold ${editForm.type === 'expense' ? 'bg-danger text-surface' : 'border border-border text-text-secondary'}`} data-testid="edit-type-expense">
+                      {t('common:expense')}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleTypeChange('income')}
-                      className={`px-lg py-xs rounded-sm text-small font-semibold ${editForm.type === 'income' ? 'bg-success text-surface' : 'border border-border text-text-secondary'}`}
-                      data-testid="edit-type-income"
-                    >
-                      收入
+                    <button type="button" onClick={() => handleTypeChange('income')}
+                      className={`px-lg py-xs rounded-sm text-small font-semibold ${editForm.type === 'income' ? 'bg-success text-surface' : 'border border-border text-text-secondary'}`} data-testid="edit-type-income">
+                      {t('common:income')}
                     </button>
                   </div>
                 </div>
                 <div className="flex items-center gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0">金額</span>
-                  <input
-                    type="number"
-                    value={editForm.amount}
-                    onChange={(e) => setEditForm((f) => ({ ...f, amount: Number(e.target.value) }))}
-                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none"
-                    min="0"
-                    step="1"
-                    data-testid="edit-amount"
-                  />
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:amount')}</span>
+                  <input type="number" value={editForm.amount} onChange={(e) => setEditForm((f) => ({ ...f, amount: Number(e.target.value) }))}
+                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none" min="0" step="1" data-testid="edit-amount" />
                 </div>
                 <div className="flex items-center gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0">類別</span>
-                  <select
-                    value={editForm.category}
-                    onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
-                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none"
-                    data-testid="edit-category"
-                  >
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:category')}</span>
+                  <select value={editForm.category} onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
+                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none" data-testid="edit-category">
                     {(editForm.type === 'income' ? incomeCategoryList : expenseCategoryList).map((cat) => (
-                      <option key={cat} value={cat}>
-                        {categoryIcons[cat] ?? '📦'} {getCategoryName(cat)}
-                      </option>
+                      <option key={cat} value={cat}>{categoryIcons[cat] ?? '📦'} {getCategoryName(cat)}</option>
                     ))}
                   </select>
                 </div>
                 <div className="flex items-center gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0">商家</span>
-                  <input
-                    type="text"
-                    value={editForm.merchant}
-                    onChange={(e) => setEditForm((f) => ({ ...f, merchant: e.target.value }))}
-                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none"
-                    placeholder="商家名稱"
-                    data-testid="edit-merchant"
-                  />
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:merchant')}</span>
+                  <input type="text" value={editForm.merchant} onChange={(e) => setEditForm((f) => ({ ...f, merchant: e.target.value }))}
+                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none" placeholder={t('common:merchant')} data-testid="edit-merchant" />
                 </div>
                 <div className="flex items-center gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0">日期</span>
-                  <input
-                    type="date"
-                    value={editForm.transactionDate}
-                    onChange={(e) => setEditForm((f) => ({ ...f, transactionDate: e.target.value }))}
-                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none"
-                    data-testid="edit-date"
-                  />
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:date')}</span>
+                  <input type="date" value={editForm.transactionDate} onChange={(e) => setEditForm((f) => ({ ...f, transactionDate: e.target.value }))}
+                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none" data-testid="edit-date" />
                 </div>
                 <div className="flex items-start gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0 mt-xs">備註</span>
-                  <textarea
-                    value={editForm.note}
-                    onChange={(e) => setEditForm((f) => ({ ...f, note: e.target.value }))}
-                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none resize-none"
-                    placeholder="備註"
-                    rows={2}
-                    data-testid="edit-note"
-                  />
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0 mt-xs">{t('common:note')}</span>
+                  <textarea value={editForm.note} onChange={(e) => setEditForm((f) => ({ ...f, note: e.target.value }))}
+                    className="flex-1 px-lg py-xs bg-bg rounded-sm text-body border border-border outline-none resize-none" placeholder={t('common:note')} rows={2} data-testid="edit-note" />
                 </div>
               </div>
               <div className="flex gap-sm">
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  className="flex-1 h-9 rounded-sm border border-border text-text-secondary text-body"
-                  disabled={isUpdating}
-                >
-                  取消
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveEdit}
-                  className="flex-1 h-9 rounded-sm bg-primary text-surface font-semibold text-body"
-                  disabled={isUpdating}
-                  data-testid="save-edit-btn"
-                >
-                  {isUpdating ? '儲存中...' : '儲存'}
+                <button type="button" onClick={handleCancelEdit} className="flex-1 h-9 rounded-sm border border-border text-text-secondary text-body" disabled={isUpdating}>{t('common:cancel')}</button>
+                <button type="button" onClick={handleSaveEdit} className="flex-1 h-9 rounded-sm bg-primary text-surface font-semibold text-body" disabled={isUpdating} data-testid="save-edit-btn">
+                  {isUpdating ? t('common:saving') : t('common:save')}
                 </button>
               </div>
             </div>
@@ -313,60 +254,40 @@ function TransactionItem({
             <>
               <div className="space-y-sm mb-lg">
                 <div className="flex items-center gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0">金額</span>
-                  <span className={`text-body font-semibold ${txType === 'income' ? 'text-success' : 'text-danger'}`}>{txType === 'income' ? '+' : '-'}${tx.amount.toLocaleString()}</span>
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:amount')}</span>
+                  <span className={`text-body font-semibold ${txType === 'income' ? 'text-success' : 'text-danger'}`}>{txType === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</span>
                 </div>
                 <div className="flex items-center gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0">類別</span>
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:category')}</span>
                   <span className={`text-body ${getCategoryTypeColorClass(txType)}`}>
                     {categoryIcons[tx.category] ?? '📦'} {getCategoryName(tx.category)}
                   </span>
                 </div>
                 <div className="flex items-center gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0">商家</span>
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:merchant')}</span>
                   <span className="text-body text-text-primary">{tx.merchant || '--'}</span>
                 </div>
                 <div className="flex items-center gap-md">
-                  <span className="text-caption text-text-secondary w-[50px] shrink-0">日期</span>
-                  <span className="text-body text-text-primary">{formatDate(tx.transactionDate)}</span>
+                  <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:date')}</span>
+                  <span className="text-body text-text-primary">{formatDateStr(tx.transactionDate)}</span>
                 </div>
                 {tx.note && (
                   <div className="flex items-start gap-md">
-                    <span className="text-caption text-text-secondary w-[50px] shrink-0">備註</span>
+                    <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:note')}</span>
                     <span className="text-caption text-text-secondary">{tx.note}</span>
                   </div>
                 )}
                 {tx.rawText && (
                   <div className="flex items-start gap-md">
-                    <span className="text-caption text-text-secondary w-[50px] shrink-0">原始輸入</span>
+                    <span className="text-caption text-text-secondary w-[50px] shrink-0">{t('common:rawInput')}</span>
                     <span className="text-caption text-text-secondary">{tx.rawText}</span>
                   </div>
                 )}
               </div>
               <div className="flex gap-sm">
-                <button
-                  type="button"
-                  onClick={onToggle}
-                  className="flex-1 h-9 rounded-sm border border-border text-text-secondary text-body"
-                >
-                  收合
-                </button>
-                <button
-                  type="button"
-                  onClick={handleEditClick}
-                  className="flex-1 h-9 rounded-sm border border-primary text-primary text-body"
-                  data-testid="edit-btn"
-                >
-                  修改
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeleteClick}
-                  className="flex-1 h-9 rounded-sm border border-danger text-danger text-body"
-                  data-testid="delete-btn"
-                >
-                  刪除
-                </button>
+                <button type="button" onClick={onToggle} className="flex-1 h-9 rounded-sm border border-border text-text-secondary text-body">{t('common:collapse')}</button>
+                <button type="button" onClick={handleEditClick} className="flex-1 h-9 rounded-sm border border-primary text-primary text-body" data-testid="edit-btn">{t('common:modify')}</button>
+                <button type="button" onClick={handleDeleteClick} className="flex-1 h-9 rounded-sm border border-danger text-danger text-body" data-testid="delete-btn">{t('common:delete')}</button>
               </div>
             </>
           )}

@@ -1,10 +1,52 @@
 {
   "budgetCard": {
-    "title": "本月預算"
+    "title": "本月預算",
+    "budgetRemaining": "預算剩餘",
+    "overBudget": "超支",
+    "noBudgetSet": "尚未設定預算",
+    "monthlySpent": "本月支出",
+    "target": "目標"
   },
-  "recentTransactions": "最近交易",
+  "assetCard": {
+    "title": "總資產",
+    "noTransactions": "尚無交易紀錄",
+    "income": "收入",
+    "expense": "支出"
+  },
+  "recentTransactions": "最近帳目",
+  "noTransactions": "還沒有記帳紀錄，開始記帳吧！",
+  "deleteConfirm": "確定要刪除這筆帳目嗎？",
   "voiceInput": {
-    "placeholder": "說說你花了什麼...",
-    "recording": "錄音中..."
+    "placeholder": "例如：中午吃拉麵 280 元",
+    "recording": "正在聆聽...",
+    "recognizing": "辨識中...",
+    "inputLabel": "消費描述輸入",
+    "startVoice": "開始語音輸入",
+    "stopVoice": "停止語音輸入",
+    "send": "送出"
+  },
+  "aiFeedback": {
+    "label": "AI 回饋",
+    "analyzing": "AI 正在分析...",
+    "defaultMessage": "歡迎使用 Vibe Money Book！開始記錄你的第一筆消費吧～",
+    "realtimeFeedback": "的即時回饋"
+  },
+  "parsedResult": {
+    "label": "AI 解析結果",
+    "title": "AI 幫你整理好了",
+    "transactionType": "交易類型"
+  },
+  "newCategory": {
+    "suggestion": "我覺得這筆消費屬於「{{category}}」，但你的類別中沒有這項。",
+    "askAdd": "要新增「{{category}}」類別嗎？",
+    "renameTitle": "修改類別名稱",
+    "categoryNameLabel": "類別名稱",
+    "nameHint": "⚠️ 類別名稱 2–50 字元",
+    "selectCategoryTitle": "選擇{{type}}類別"
+  },
+  "persona": {
+    "gentle": "溫柔管家",
+    "sarcastic": "毒舌教練",
+    "guilt_trip": "心疼天使"
   }
 }

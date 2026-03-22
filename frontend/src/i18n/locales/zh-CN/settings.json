@@ -1,14 +1,61 @@
 {
+  "title": "设定",
   "language": {
-    "title": "语言设置"
+    "title": "语言设置",
+    "zhTW": "繁體中文",
+    "en": "English",
+    "zhCN": "简体中文",
+    "vi": "Tiếng Việt"
   },
   "persona": {
-    "title": "AI 人设",
+    "title": "AI 人设选择",
     "sarcastic": "毒舌",
     "gentle": "温柔",
-    "guilt_trip": "情勒"
+    "guilt_trip": "情勒",
+    "selectLabel": "选择{{label}}人设"
   },
   "budget": {
-    "title": "月预算"
-  }
+    "title": "月预算设置",
+    "placeholder": "输入每月预算",
+    "label": "每月预算金额",
+    "currentSetting": "当前设置"
+  },
+  "aiEngine": {
+    "title": "AI 引擎设置",
+    "default": "(默认)",
+    "selectLabel": "选择 {{label}} 引擎",
+    "apiKeyLabel": "{{engine}} API Key",
+    "apiKeyPlaceholder": "输入 {{engine}} API Key",
+    "showApiKey": "显示 API Key",
+    "hideApiKey": "隐藏 API Key",
+    "validate": "验证",
+    "validateLabel": "验证 API Key",
+    "validating": "⏳ 验证中...",
+    "valid": "✅ 密钥有效",
+    "invalid": "❌ 密钥无效",
+    "defaultKeyConfigured": "✅ 已配置默认密钥，无需手动输入即可使用 AI 功能"
+  },
+  "aiInstructions": {
+    "title": "AI 指示",
+    "placeholder": "例如：若无适当分类，请建议新的类别名称",
+    "label": "自定义 AI 指示",
+    "saveLabel": "保存 AI 指示"
+  },
+  "categories": {
+    "title": "类别管理",
+    "expenseCategories": "支出类别",
+    "incomeCategories": "收入类别",
+    "addCustom": "添加自定义类别",
+    "newCategoryType": "新类别类型",
+    "categoryName": "类别名称",
+    "addCategory": "添加类别",
+    "deleteCategoryLabel": "删除类别 {{name}}",
+    "deleteConfirm": "确定要删除类别「{{name}}」吗？相关交易将归类为「其他」。"
+  },
+  "userInfo": {
+    "title": "用户信息",
+    "defaultName": "用户名"
+  },
+  "loadingSettings": "加载设置中...",
+  "closeError": "关闭错误"
 }

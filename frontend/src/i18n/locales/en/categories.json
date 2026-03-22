@@ -8,5 +8,14 @@
   "education": "Education",
   "other": "Other",
   "salary": "Salary",
-  "investment": "Investment"
+  "investment": "Investment",
+  "daily": "Daily Necessities",
+  "pets": "Pets",
+  "adjustment_expense": "Adjustment",
+  "salary_income": "Salary",
+  "investment_income": "Investment",
+  "pension": "Pension",
+  "insurance": "Insurance",
+  "other_income": "Other",
+  "adjustment_income": "Adjustment"
 }

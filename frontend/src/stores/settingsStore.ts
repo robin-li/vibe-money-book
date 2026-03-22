@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import i18n from '../i18n/index'
+import type { SupportedLanguage } from '../i18n/index'
 import api from '../lib/api.ts'
 
 export type Persona = 'sarcastic' | 'gentle' | 'guilt_trip'
@@ -14,6 +16,7 @@ interface SettingsState {
   userName: string
   userEmail: string
   aiInstructions: string
+  language: SupportedLanguage
 
   /** 載入/更新狀態 */
   loading: boolean
@@ -40,6 +43,8 @@ interface SettingsState {
   updateAIInstructions: (aiInstructions: string) => Promise<void>
   /** 驗證 API Key */
   validateApiKey: (apiKey: string) => Promise<boolean>
+  /** 設定語言 */
+  setLanguage: (language: SupportedLanguage) => Promise<void>
   /** 清除錯誤 */
   clearError: () => void
 }
@@ -51,6 +56,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   userName: '',
   userEmail: '',
   aiInstructions: '',
+  language: (i18n.language as SupportedLanguage) || 'zh-TW',
   loading: false,
   saving: false,
   error: null,
@@ -70,6 +76,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     try {
       const res = await api.get('/users/profile')
       const d = res.data.data
+      const language = d.language as SupportedLanguage | undefined
       set({
         persona: d.persona ?? 'gentle',
         aiEngine: d.ai_engine ?? d.aiEngine ?? 'gemini',
@@ -79,6 +86,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         aiInstructions: d.ai_instructions ?? '',
         loading: false,
       })
+      // If DB has language preference, apply it (DB > localStorage > browser)
+      if (language && language !== i18n.language) {
+        await i18n.changeLanguage(language)
+        set({ language })
+      }
     } catch (err: unknown) {
       const message = extractErrorMessage(err, '載入設定失敗')
       set({ loading: false, error: message })
@@ -130,6 +142,24 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     } catch (err: unknown) {
       const message = extractErrorMessage(err, '更新 AI 指示失敗')
       set({ aiInstructions: prev, saving: false, error: message })
+    }
+  },
+
+  setLanguage: async (language: SupportedLanguage) => {
+
+    set({ language })
+    // Immediately switch UI language
+    await i18n.changeLanguage(language)
+    // Persist to localStorage (handled by i18next detection)
+    localStorage.setItem('i18nextLng', language)
+    // If logged in, sync to DB
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (token) {
+        await api.put('/users/profile', { language })
+      }
+    } catch {
+      // Don't revert language on API failure - local change is still valid
     }
   },
 

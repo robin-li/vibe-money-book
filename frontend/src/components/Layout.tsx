@@ -1,13 +1,16 @@
 import { Outlet, NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 const tabs = [
-  { to: '/', label: '首頁', icon: '🏠' },
-  { to: '/stats', label: '統計', icon: '📊' },
-  { to: '/history', label: '記錄', icon: '📋' },
-  { to: '/settings', label: '設定', icon: '⚙️' },
+  { to: '/', key: 'nav.home', icon: '🏠' },
+  { to: '/stats', key: 'nav.stats', icon: '📊' },
+  { to: '/history', key: 'nav.history', icon: '📋' },
+  { to: '/settings', key: 'nav.settings', icon: '⚙️' },
 ] as const
 
 function Layout() {
+  const { t } = useTranslation()
+
   return (
     <div className="flex flex-col min-h-svh bg-bg">
       <main className="flex-1 pb-[72px]">
@@ -17,7 +20,7 @@ function Layout() {
       <nav
         className="fixed bottom-0 left-0 right-0 h-14 bg-surface border-t border-border flex items-center z-50"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-        aria-label="主選單"
+        aria-label={t('nav.mainMenu')}
       >
         {tabs.map((tab) => (
           <NavLink
@@ -31,7 +34,7 @@ function Layout() {
                   : 'text-text-secondary hover:text-text-primary'
               }`
             }
-            aria-label={tab.label}
+            aria-label={t(tab.key)}
           >
             {({ isActive }) => (
               <>
@@ -42,7 +45,7 @@ function Layout() {
                   {tab.icon}
                 </span>
                 <span className="text-small mt-0.5">
-                  {tab.label}
+                  {t(tab.key)}
                 </span>
               </>
             )}

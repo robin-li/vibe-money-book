@@ -1,10 +1,52 @@
 {
   "budgetCard": {
-    "title": "本月预算"
+    "title": "本月预算",
+    "budgetRemaining": "预算剩余",
+    "overBudget": "超支",
+    "noBudgetSet": "尚未设定预算",
+    "monthlySpent": "本月支出",
+    "target": "目标"
   },
-  "recentTransactions": "最近交易",
+  "assetCard": {
+    "title": "总资产",
+    "noTransactions": "暂无交易记录",
+    "income": "收入",
+    "expense": "支出"
+  },
+  "recentTransactions": "最近账目",
+  "noTransactions": "还没有记账记录，开始记账吧！",
+  "deleteConfirm": "确定要删除这笔账目吗？",
   "voiceInput": {
-    "placeholder": "说说你花了什么...",
-    "recording": "录音中..."
+    "placeholder": "例如：中午吃拉面 280 元",
+    "recording": "正在聆听...",
+    "recognizing": "识别中...",
+    "inputLabel": "消费描述输入",
+    "startVoice": "开始语音输入",
+    "stopVoice": "停止语音输入",
+    "send": "发送"
+  },
+  "aiFeedback": {
+    "label": "AI 反馈",
+    "analyzing": "AI 正在分析...",
+    "defaultMessage": "欢迎使用 Vibe Money Book！开始记录你的第一笔消费吧～",
+    "realtimeFeedback": "的实时反馈"
+  },
+  "parsedResult": {
+    "label": "AI 解析结果",
+    "title": "AI 帮你整理好了",
+    "transactionType": "交易类型"
+  },
+  "newCategory": {
+    "suggestion": "我觉得这笔消费属于「{{category}}」，但你的类别中没有这项。",
+    "askAdd": "要添加「{{category}}」类别吗？",
+    "renameTitle": "修改类别名称",
+    "categoryNameLabel": "类别名称",
+    "nameHint": "⚠️ 类别名称 2–50 字符",
+    "selectCategoryTitle": "选择{{type}}类别"
+  },
+  "persona": {
+    "gentle": "温柔管家",
+    "sarcastic": "毒舌教练",
+    "guilt_trip": "心疼天使"
   }
 }

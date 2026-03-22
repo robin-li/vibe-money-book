@@ -1,10 +1,52 @@
 {
   "budgetCard": {
-    "title": "Monthly Budget"
+    "title": "Monthly Budget",
+    "budgetRemaining": "Budget Remaining",
+    "overBudget": "Over Budget",
+    "noBudgetSet": "No budget set",
+    "monthlySpent": "Monthly Spent",
+    "target": "Target"
+  },
+  "assetCard": {
+    "title": "Total Assets",
+    "noTransactions": "No transactions yet",
+    "income": "Income",
+    "expense": "Expense"
   },
   "recentTransactions": "Recent Transactions",
+  "noTransactions": "No transactions yet. Start tracking!",
+  "deleteConfirm": "Are you sure you want to delete this transaction?",
   "voiceInput": {
-    "placeholder": "Tell me what you spent...",
-    "recording": "Recording..."
+    "placeholder": "e.g., Lunch ramen $280",
+    "recording": "Listening...",
+    "recognizing": "Recognizing...",
+    "inputLabel": "Expense description input",
+    "startVoice": "Start voice input",
+    "stopVoice": "Stop voice input",
+    "send": "Send"
+  },
+  "aiFeedback": {
+    "label": "AI Feedback",
+    "analyzing": "AI is analyzing...",
+    "defaultMessage": "Welcome to Vibe Money Book! Start recording your first expense~",
+    "realtimeFeedback": "'s real-time feedback"
+  },
+  "parsedResult": {
+    "label": "AI Parsed Result",
+    "title": "AI organized for you",
+    "transactionType": "Transaction Type"
+  },
+  "newCategory": {
+    "suggestion": "I think this expense belongs to \"{{category}}\", but you don't have this category yet.",
+    "askAdd": "Would you like to add \"{{category}}\" category?",
+    "renameTitle": "Rename Category",
+    "categoryNameLabel": "Category Name",
+    "nameHint": "⚠️ Category name: 2-50 characters",
+    "selectCategoryTitle": "Select {{type}} Category"
+  },
+  "persona": {
+    "gentle": "Gentle Butler",
+    "sarcastic": "Sarcastic Coach",
+    "guilt_trip": "Caring Angel"
   }
 }
