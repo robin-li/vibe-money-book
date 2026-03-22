@@ -443,7 +443,8 @@ async function matchTransactions(
       summary_text: result.summary_text || '查詢完成。',
       emotion_tag: result.emotion_tag || 'neutral',
     };
-  } catch {
+  } catch (err) {
+    console.error('[matchTransactions] Error:', err instanceof Error ? err.message : err);
     return {
       matched_ids: [],
       total_amount: 0,
