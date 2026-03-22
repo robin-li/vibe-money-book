@@ -68,6 +68,7 @@ function HistoryPage() {
   const fetchCategories = useDashboardStore((s) => s.fetchCategories)
   const persona = useSettingsStore((s) => s.persona)
   const aiEngine = useSettingsStore((s) => s.aiEngine)
+  const fetchAIConfig = useSettingsStore((s) => s.fetchAIConfig)
 
   const expenseCategories = useMemo(
     () => categoryInfoList.filter((c) => c.type === 'expense'),
@@ -82,8 +83,9 @@ function HistoryPage() {
 
   useEffect(() => {
     fetchCategories()
+    fetchAIConfig()
     fetchTransactions(true)
-  }, [fetchCategories, fetchTransactions])
+  }, [fetchCategories, fetchAIConfig, fetchTransactions])
 
   const handleCategoryChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
