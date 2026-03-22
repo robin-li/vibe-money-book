@@ -153,7 +153,7 @@ export function useVoiceRecognition(
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       // Ignore 'no-speech' errors during continuous recording — they are harmless
       if (event.error === 'no-speech') return
-      const message = getErrorMessage(event.error, i18n.t)
+      const message = getErrorMessage(event.error)
       setErrorMessage(message)
       setStatus('error')
       callbacksRef.current.onError?.(message)
@@ -244,7 +244,7 @@ export function useVoiceRecognition(
   }
 }
 
-function getErrorMessage(error: string, _t?: (key: string) => string): string {
+function getErrorMessage(error: string): string {
   switch (error) {
     case 'not-allowed':
       return '麥克風權限被拒絕，請在瀏覽器設定中允許麥克風存取'
