@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../stores/authStore.ts'
 import LanguageSelector from '../components/LanguageSelector.tsx'
@@ -20,8 +20,6 @@ function LoginPage() {
   const clearError = useAuthStore((state) => state.clearError)
 
   const navigate = useNavigate()
-  const location = useLocation()
-  const from = (location.state as { from?: string })?.from ?? '/'
 
   function validate(): boolean {
     const errors: Record<string, string> = {}
@@ -46,7 +44,7 @@ function LoginPage() {
 
     try {
       await login(email, password)
-      navigate(from, { replace: true })
+      navigate('/', { replace: true })
     } catch {
       // error is already set in store
     }
