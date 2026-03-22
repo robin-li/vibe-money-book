@@ -22,6 +22,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     actionTimeout: 10000,
     navigationTimeout: 15000,
+    locale: 'zh-TW',
   },
 
   projects: [
