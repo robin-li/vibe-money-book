@@ -5,6 +5,7 @@ import { useSettingsStore } from './settingsStore'
 
 export interface HistoryFilters {
   category: string
+  type: string
   startDate: string
   endDate: string
 }
@@ -64,6 +65,7 @@ const PAGE_SIZE = 20
 
 const defaultFilters: HistoryFilters = {
   category: '',
+  type: '',
   startDate: '',
   endDate: '',
 }
@@ -116,6 +118,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
         sort: 'desc',
       }
       if (state.filters.category) params.category = state.filters.category
+      if (state.filters.type) params.type = state.filters.type
       if (state.filters.startDate) params.start_date = state.filters.startDate
       if (state.filters.endDate) params.end_date = state.filters.endDate
 

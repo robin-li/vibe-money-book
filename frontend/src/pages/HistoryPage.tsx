@@ -90,7 +90,14 @@ function HistoryPage() {
   const handleCategoryChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       clearAIQuery()
-      setFilters({ category: e.target.value })
+      const value = e.target.value
+      if (value && value.includes(':')) {
+        const [type, ...categoryParts] = value.split(':')
+        const category = categoryParts.join(':')
+        setFilters({ category, type })
+      } else {
+        setFilters({ category: '', type: '' })
+      }
       setTimeout(() => useHistoryStore.getState().fetchTransactions(true), 0)
     },
     [setFilters, clearAIQuery]
@@ -146,7 +153,7 @@ function HistoryPage() {
 
   const grouped = useMemo(() => groupByDate(transactions), [transactions])
 
-  const hasActiveFilters = filters.category || filters.startDate || filters.endDate || aiQueryResult
+  const hasActiveFilters = filters.category || filters.type || filters.startDate || filters.endDate || aiQueryResult
 
   return (
     <div className="p-2xl pb-32">
@@ -188,7 +195,7 @@ function HistoryPage() {
           </div>
 
           <select
-            value={filters.category}
+            value={filters.type && filters.category ? `${filters.type}:${filters.category}` : ''}
             onChange={handleCategoryChange}
             className="px-lg py-sm bg-bg rounded-xl text-caption text-text-secondary border-0 outline-none cursor-pointer"
             aria-label={t('history:filter.categoryFilter')}
@@ -198,7 +205,7 @@ function HistoryPage() {
             {expenseCategories.length > 0 && (
               <optgroup label={t('common:expense')}>
                 {expenseCategories.map((c) => (
-                  <option key={c.category} value={c.category}>
+                  <option key={`expense:${c.category}`} value={`expense:${c.category}`}>
                     {(CATEGORY_ICONS[c.category] ?? '📦') + ' ' + getCategoryName(c.category)}
                   </option>
                 ))}
@@ -207,7 +214,7 @@ function HistoryPage() {
             {incomeCategories.length > 0 && (
               <optgroup label={t('common:income')}>
                 {incomeCategories.map((c) => (
-                  <option key={c.category} value={c.category}>
+                  <option key={`income:${c.category}`} value={`income:${c.category}`}>
                     {(CATEGORY_ICONS[c.category] ?? '📦') + ' ' + getCategoryName(c.category)}
                   </option>
                 ))}
