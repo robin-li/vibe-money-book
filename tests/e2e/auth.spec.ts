@@ -17,8 +17,8 @@ test.describe('註冊流程', () => {
     await expect(page.getByRole('heading', { name: 'Vibe Money Book' })).toBeVisible();
 
     // 填寫註冊表單
-    await page.getByLabel('使用者名稱').fill(TEST_NAME);
-    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('姓名').fill(TEST_NAME);
+    await page.getByLabel('電子郵件').fill(email);
     await page.getByLabel('密碼', { exact: false }).first().fill(TEST_PASSWORD);
     await page.getByLabel('確認密碼').fill(TEST_PASSWORD);
 
@@ -35,8 +35,8 @@ test.describe('註冊流程', () => {
 
     // 先註冊一次
     await page.goto('/register');
-    await page.getByLabel('使用者名稱').fill(TEST_NAME);
-    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('姓名').fill(TEST_NAME);
+    await page.getByLabel('電子郵件').fill(email);
     await page.getByLabel('密碼', { exact: false }).first().fill(TEST_PASSWORD);
     await page.getByLabel('確認密碼').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: '註冊' }).click();
@@ -50,8 +50,8 @@ test.describe('註冊流程', () => {
 
     // 再次用相同 email 註冊
     await page.goto('/register');
-    await page.getByLabel('使用者名稱').fill('Another User');
-    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('姓名').fill('Another User');
+    await page.getByLabel('電子郵件').fill(email);
     await page.getByLabel('密碼', { exact: false }).first().fill(TEST_PASSWORD);
     await page.getByLabel('確認密碼').fill(TEST_PASSWORD);
     await page.getByRole('button', { name: '註冊' }).click();
@@ -75,8 +75,8 @@ test.describe('註冊流程', () => {
   test('前端表單驗證 — 密碼不一致', async ({ page }) => {
     await page.goto('/register');
 
-    await page.getByLabel('使用者名稱').fill(TEST_NAME);
-    await page.getByLabel('Email').fill(uniqueEmail());
+    await page.getByLabel('姓名').fill(TEST_NAME);
+    await page.getByLabel('電子郵件').fill(uniqueEmail());
     await page.getByLabel('密碼', { exact: false }).first().fill(TEST_PASSWORD);
     await page.getByLabel('確認密碼').fill('DifferentPassword1!');
     await page.getByRole('button', { name: '註冊' }).click();
@@ -111,7 +111,7 @@ test.describe('登入流程', () => {
 
   test.fixme('錯誤密碼顯示錯誤訊息', async ({ page }) => {
     await page.goto('/login');
-    await page.getByLabel('Email').fill(testEmail);
+    await page.getByLabel('電子郵件').fill(testEmail);
     await page.getByLabel('密碼').fill('WrongPassword!');
     await page.getByRole('button', { name: '登入' }).click();
 

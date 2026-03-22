@@ -94,7 +94,7 @@ export async function loginViaUI(
   password: string = TEST_PASSWORD
 ): Promise<void> {
   await page.goto('/login');
-  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('電子郵件').fill(email);
   await page.getByLabel('密碼').fill(password);
   await page.getByRole('button', { name: '登入' }).click();
   // 等待導航離開登入頁
