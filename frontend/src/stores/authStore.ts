@@ -60,11 +60,24 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('auth_user', JSON.stringify(user))
       set({ user, token, loading: false, error: null })
 
-      // Sync language from user profile (DB > localStorage > browser)
+      // Sync language: DB value wins if present; otherwise keep current i18n language and save it to DB
+      const supportedLanguages = ['zh-TW', 'en', 'zh-CN', 'vi']
       const userLang = (response.data.data.user as { language?: string }).language
-      if (userLang && ['zh-TW', 'en', 'zh-CN', 'vi'].includes(userLang)) {
+      if (userLang && supportedLanguages.includes(userLang)) {
+        // DB has a valid language preference — apply it
         await i18n.changeLanguage(userLang as SupportedLanguage)
         localStorage.setItem('i18nextLng', userLang)
+      } else {
+        // DB has no language preference — keep current i18n language (set by LanguageSelector)
+        // and sync it to DB so future logins remember it
+        const currentLang = i18n.language as SupportedLanguage
+        if (currentLang && supportedLanguages.includes(currentLang)) {
+          try {
+            await api.put('/users/profile', { language: currentLang })
+          } catch {
+            // Non-critical: don't block login if language sync fails
+          }
+        }
       }
     } catch (err: unknown) {
       const message = extractErrorMessage(err, i18n.t('auth:login.failed'))
@@ -85,6 +98,17 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('auth_token', token)
       localStorage.setItem('auth_user', JSON.stringify(user))
       set({ user, token, loading: false, error: null })
+
+      // After registration, sync current i18n language (set by LanguageSelector) to DB
+      const supportedLanguages = ['zh-TW', 'en', 'zh-CN', 'vi']
+      const currentLang = i18n.language as SupportedLanguage
+      if (currentLang && supportedLanguages.includes(currentLang)) {
+        try {
+          await api.put('/users/profile', { language: currentLang })
+        } catch {
+          // Non-critical: don't block registration if language sync fails
+        }
+      }
     } catch (err: unknown) {
       const message = extractErrorMessage(err, i18n.t('auth:register.failed'))
       set({ loading: false, error: message })
