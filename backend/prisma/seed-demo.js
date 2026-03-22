@@ -51,6 +51,8 @@ async function main() {
     { category: "adjustment_income", type: "income", budgetLimit: 0 },
     // 自訂類別
     { category: "戶外運動",      type: "expense", budgetLimit: 3000, isCustom: true },
+    { category: "還款",          type: "expense", budgetLimit: 0,    isCustom: true },
+    { category: "還款",          type: "income",  budgetLimit: 0,    isCustom: true },
   ];
 
   for (const cat of categories) {
@@ -161,9 +163,18 @@ async function main() {
     { amount:   600, cat: "pets", merchant: "阿貓阿狗",  note: "買了寵物洗毛精和梳子",       date: "2026-03-17T14:00:00Z" },
     { amount:   950, cat: "pets", merchant: "阿貓阿狗",  note: "貓咪罐頭和營養膏補貨",       date: "2026-03-19T10:00:00Z" },
     { amount:   350, cat: "pets", merchant: "阿貓阿狗",  note: "買了小貓的玩具球和跳台配件", date: "2026-03-22T09:00:00Z" },
+    // 還款（支出）2 筆
+    { amount:  3800, cat: "還款", merchant: "小李",     note: "還錢給小李",                 date: "2026-03-20T12:00:00Z" },
+    { amount:  1500, cat: "還款", merchant: "小王",     note: "還上次聚餐借的錢",           date: "2026-03-10T18:00:00Z" },
   ];
 
-  for (const inc of incomes) {
+  // ===== 還款收入 2 筆 =====
+  const repaymentIncome = [
+    { amount: 2000, cat: "還款", merchant: "小張", note: "小張還上個月借的錢", date: "2026-02-25T14:00:00Z" },
+    { amount: 1000, cat: "還款", merchant: "小陳", note: "小陳還飯錢",         date: "2026-03-12T11:00:00Z" },
+  ];
+
+  for (const inc of [...incomes, ...repaymentIncome]) {
     txs.push({ userId, type: "income",  amount: inc.amount, category: inc.cat, merchant: inc.merchant, note: inc.note, rawText: inc.merchant, transactionDate: new Date(inc.date) });
   }
   for (const exp of [...dec, ...jan, ...feb, ...mar]) {
