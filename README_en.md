@@ -53,24 +53,40 @@
 
 ## ✨ Features
 
-### Voice & Text Bookkeeping
+### 🎙️ One-Liner Accounting — Just Say It
 
-- Integrated Web Speech API with Push-to-Talk support
-- Natural language input, e.g.: "午餐吃拉麵 180 元" (Ramen for lunch, 180 TWD), "在阿貓阿狗幫狗子買狗糧 1500" (Bought dog food at pet store for 1500)
-- LLM automatically extracts amount, category, merchant, and date; parsed results displayed as a card
-- Automatically detects new spending categories and interactively asks whether to add them
+> "Ramen for lunch, 180 TWD" "Bought dog food at the pet store for 1500" "Split dinner with coworkers last Friday, I paid 650"
 
-### Personalized AI Coach
+Stop manually entering amounts, picking categories, and selecting dates. **Hold to speak, AI handles the rest.**
+
+- 🗣️ **Voice + Text dual input**: Integrated Web Speech API — hold to speak or just type
+- 🧠 **AI Smart Parsing**: LLM auto-extracts amount, category, merchant, and date — all in one card
+- 📂 **Auto-Categorization**: New category detected? AI suggests it, one tap to add
+- 📅 **Semantic Date Recognition**: Say "last Friday", "White Day", or "Women's Day" — AI nails it
+
+### 🔍 Ask Your Expenses — Voice / Semantic Search
+
+> "How much did I spend at the pet store this month?" "Recent pet expenses" "How much on food?"
+
+No need to remember category names. No manual filtering. **Just ask, and get answers.**
+
+- 🎯 **Two-stage AI Analysis**: Time range parsing → smart transaction matching
+- 💬 **Persona-styled Feedback**: AI coach summarizes your spending in your chosen style (Roast / Gentle / Guilt-Trip)
+- 🔗 **Query & Filter are mutually exclusive**: Manual filters (date/category) and AI search auto-switch; "Clear Filters" resets everything at once
+
+### 🤖 Personalized AI Coach — Your Financial Commentator
+
+Every expense gets an instant review from your AI coach. Three personas — pick your favorite:
 
 | Persona | Style | Example |
 |---------|-------|---------|
-| 🔥 Roast Mode | Sharp & biting | "650 元買壽司？你準備靠光合作用過活嗎？" (650 TWD on sushi? Planning to survive on photosynthesis?) |
-| 💖 Gentle Mode | Warm & encouraging | "辛苦了～偶爾犒賞自己也很重要呢" (You've worked hard~ treating yourself once in a while matters too) |
-| 🥺 Guilt-Trip Mode | Well-meaning guilt | "這個月已經超支了...我好擔心你啊..." (You've already overspent this month... I'm so worried about you...) |
+| 🔥 Roast Mode | Sharp & biting | "650 TWD on sushi? Planning to survive on photosynthesis?" |
+| 💖 Gentle Mode | Warm & encouraging | "You've worked hard~ treating yourself once in a while matters too" |
+| 🥺 Guilt-Trip Mode | Well-meaning guilt | "You've already overspent this month... I'm so worried about you..." |
 
-### AI Instructions — Custom Classification Rules
+### 📝 AI Instructions — Your Rules, AI Follows
 
-With "AI Instructions", you can teach the AI to categorize expenses according to your preferences:
+With "AI Instructions", define your own classification logic — AI will prioritize your rules:
 
 > **Example instructions:**
 > - Paying someone back → Expense / Repayment
@@ -78,43 +94,26 @@ With "AI Instructions", you can teach the AI to categorize expenses according to
 > - Lending money → Expense / Loan
 > - Borrowing money → Income / Loan
 
-Combined with "Custom Categories", you can build your own classification system. The AI will prioritize your instructions when categorizing.
+Combined with "Custom Categories", build your own classification system. Same category name can exist under both income and expense!
 
-### AI Semantic Search
+### 🌍 Four Languages, Fully Supported
 
-Query transactions in natural language — no need to remember category names. AI auto-matches and summarizes:
+🇹🇼 繁體中文 · 🇺🇸 English · 🇨🇳 简体中文 · 🇻🇳 Tiếng Việt
 
-> "阿貓阿狗這家店花了多少" (How much did I spend at that pet store), "最近一個月毛小孩的開銷" (Pet expenses in the last month), "吃的方面花了多少" (How much on food)
+- UI, error messages, and AI feedback all follow the language setting
+- Switch language before login — voice recognition auto-follows
+- Three-layer persistence: DB → localStorage → browser detection
 
-- Two-stage AI processing: time range parsing → transaction matching analysis
-- AI generates a summary in the selected persona style and filters matching entries
-- Manual filters (date/category) and AI search are mutually exclusive; "Clear Filters" resets everything at once
-
-### 🌍 Multilingual Support (i18n)
-
-| Language | Coverage |
-|----------|----------|
-| 🇹🇼 繁體中文 | Full support (default language) |
-| 🇺🇸 English | Full support |
-| 🇨🇳 简体中文 | Full support |
-| 🇻🇳 Tiếng Việt | Full support |
-
-- Frontend UI, backend error messages, and AI feedback all follow the language setting
-- Language can be switched on the login/registration page without needing to log in
-- Language preference three-layer persistence: DB (logged in) → localStorage → browser detection
-- AI Prompt multilingual: persona feedback, chat replies, and semantic search summaries are generated in the user's language
-- Voice recognition language automatically follows the UI language setting
-
-### More Features
+### ⚡ More Highlights
 
 | Feature | Description |
 |---------|-------------|
-| 📊 Budget Health Bar | Visualize monthly budget consumption with automatic overspending alerts |
-| 🥧 Spending Analysis | Pie chart overview of spending by category (income/expenses tracked separately) |
-| 🔄 Dual AI Engine | Supports Gemini / OpenAI, switch freely |
-| 📱 PWA Support | Add to your phone's home screen, track expenses anytime, anywhere |
-| 🏷️ Custom Categories | Default + custom spending categories (up to 50), with individual budgets per category |
-| 📅 Smart Date | Automatically recognizes semantic dates like "last Friday", "White Day", "Women's Day" |
+| 📊 Budget Health Bar | Visualize budget consumption — overspending alerts turn red so you think twice |
+| 🥧 Spending Analysis | Pie chart + category ranking, income/expenses tracked separately — see where your money goes at a glance |
+| 🔄 Dual AI Engine | Gemini / OpenAI, switch freely — use your own Key or the system default |
+| 📱 PWA Support | Add to home screen, instant launch, works offline too |
+| 🏷️ Custom Categories | Up to 50 custom categories, same name for income/expense, each with its own budget |
+| 🛡️ Privacy First | API Key stays in your browser only — backend uses it and forgets it, zero trace |
 
 ---
 

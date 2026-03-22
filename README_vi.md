@@ -53,24 +53,40 @@
 
 ## ✨ Tính năng
 
-### Ghi sổ bằng giọng nói và văn bản
+### 🎙️ Ghi sổ bằng một câu — Nói xong là xong
 
-- Tích hợp Web Speech API, hỗ trợ "Nhấn giữ để nói" (Push-to-Talk)
-- Nhập bằng ngôn ngữ tự nhiên, ví dụ: 「午餐吃拉麵 180 元」(Ăn trưa mì ramen 180 đồng), 「在阿貓阿狗幫狗子買狗糧 1500」(Mua thức ăn cho chó ở cửa hàng thú cưng 1500)
-- LLM tự động trích xuất số tiền, danh mục, cửa hàng, ngày tháng, kết quả phân tích hiển thị dạng thẻ
-- Tự động phát hiện danh mục chi tiêu mới, hỏi tương tác có thêm không
+> "Ăn trưa mì ramen 180 đồng" "Mua thức ăn cho chó ở cửa hàng thú cưng 1500" "Thứ Sáu tuần trước ăn tối AA với đồng nghiệp, tôi trả 650"
 
-### Huấn luyện viên AI cá nhân hóa
+Không cần nhập số tiền, chọn danh mục, chọn ngày nữa. **Nhấn giữ nói, AI lo hết.**
+
+- 🗣️ **Giọng nói + Văn bản**: Tích hợp Web Speech API, nhấn giữ để nói hoặc gõ trực tiếp
+- 🧠 **AI Phân tích thông minh**: LLM tự động trích xuất số tiền, danh mục, cửa hàng, ngày — một thẻ là xong
+- 📂 **Tự động phân loại**: Danh mục mới? AI chủ động đề xuất, một chạm để thêm
+- 📅 **Nhận diện ngày ngữ nghĩa**: Nói "thứ Sáu tuần trước", "Valentine Trắng", "Ngày Phụ nữ" — AI hiểu chính xác
+
+### 🔍 Hỏi chi tiêu bằng giọng nói — Tìm kiếm ngữ nghĩa
+
+> "Tháng này tiêu ở cửa hàng thú cưng bao nhiêu?" "Chi phí thú cưng gần đây" "Ăn uống tốn bao nhiêu"
+
+Không cần nhớ tên danh mục, không cần lọc thủ công, **hỏi là có đáp án.**
+
+- 🎯 **Phân tích AI hai giai đoạn**: Phân tích phạm vi thời gian → Khớp giao dịch thông minh
+- 💬 **Phản hồi theo tính cách**: Huấn luyện viên AI tổng kết chi tiêu theo phong cách bạn chọn (Cay độc / Dịu dàng / Tội lỗi)
+- 🔗 **Truy vấn & Bộ lọc loại trừ nhau**: Bộ lọc thủ công (ngày/danh mục) và truy vấn AI tự động chuyển đổi, "Xóa bộ lọc" đặt lại tất cả
+
+### 🤖 Huấn luyện viên AI cá nhân hóa — Bình luận viên tài chính riêng
+
+Mỗi khoản chi tiêu, huấn luyện viên AI đều nhận xét ngay. Ba tính cách, chọn cái bạn thích:
 
 | Tính cách | Phong cách | Ví dụ |
 |------|------|------|
-| 🔥 Chế độ Cay độc | Sắc bén châm biếm | 「650 元買壽司？你準備靠光合作用過活嗎？」(650 đồng mua sushi? Bạn định sống bằng quang hợp à?) |
-| 💖 Chế độ Dịu dàng | Ấm áp khích lệ | 「辛苦了～偶爾犒賞自己也很重要呢」(Vất vả rồi~ thỉnh thoảng thưởng cho bản thân cũng quan trọng lắm) |
-| 🥺 Chế độ Tội lỗi | Áy náy thiện chí | 「這個月已經超支了...我好擔心你啊...」(Tháng này đã vượt ngân sách rồi... tôi lo cho bạn quá...) |
+| 🔥 Chế độ Cay độc | Sắc bén châm biếm | "650 đồng mua sushi? Bạn định sống bằng quang hợp à?" |
+| 💖 Chế độ Dịu dàng | Ấm áp khích lệ | "Vất vả rồi~ thỉnh thoảng thưởng cho bản thân cũng quan trọng lắm" |
+| 🥺 Chế độ Tội lỗi | Áy náy thiện chí | "Tháng này đã vượt ngân sách rồi... tôi lo cho bạn quá..." |
 
-### Chỉ dẫn AI — Quy tắc phân loại tùy chỉnh
+### 📝 Chỉ dẫn AI — Quy tắc của bạn, AI tuân theo
 
-Với tính năng "Chỉ dẫn AI", bạn có thể dạy AI phân loại theo thói quen của mình:
+Thông qua tính năng "Chỉ dẫn AI", tùy chỉnh logic phân loại riêng, AI sẽ ưu tiên tuân theo quy tắc của bạn:
 
 > **Ví dụ chỉ dẫn:**
 > - Trả tiền cho người khác → Chi tiêu / Trả nợ
@@ -78,43 +94,26 @@ Với tính năng "Chỉ dẫn AI", bạn có thể dạy AI phân loại theo t
 > - Cho người khác vay → Chi tiêu / Cho vay
 > - Vay tiền từ người khác → Thu nhập / Cho vay
 
-Kết hợp với "Danh mục tùy chỉnh", bạn có thể xây dựng hệ thống phân loại riêng. AI sẽ ưu tiên tuân theo chỉ dẫn của bạn khi phân loại.
+Kết hợp với "Danh mục tùy chỉnh", xây dựng hệ thống phân loại riêng. Danh mục cùng tên có thể tồn tại đồng thời ở cả thu nhập và chi tiêu!
 
-### Tìm kiếm ngữ nghĩa AI
+### 🌍 Hỗ trợ đầy đủ bốn ngôn ngữ
 
-Tra cứu chi tiêu bằng ngôn ngữ tự nhiên, không cần nhớ tên danh mục, AI tự động khớp và tổng kết:
+🇹🇼 繁體中文 · 🇺🇸 English · 🇨🇳 简体中文 · 🇻🇳 Tiếng Việt
 
-> 「阿貓阿狗這家店花了多少」(cửa hàng thú cưng tiêu bao nhiêu) 「最近一個月毛小孩的開銷」(chi phí thú cưng tháng vừa rồi) 「吃的方面花了多少」(ăn uống tốn bao nhiêu)
+- Giao diện, thông báo lỗi, phản hồi AI đều theo cài đặt ngôn ngữ
+- Chuyển đổi ngôn ngữ trước khi đăng nhập, nhận dạng giọng nói tự động theo
+- Ba tầng lưu trữ: DB → localStorage → phát hiện trình duyệt
 
-- Xử lý AI hai giai đoạn: Phân tích phạm vi thời gian → Phân tích khớp giao dịch
-- AI tạo nhận xét tổng kết theo phong cách tính cách, đồng thời lọc ra các khoản khớp
-- Bộ lọc thủ công (ngày/danh mục) và truy vấn AI loại trừ lẫn nhau, "Xóa bộ lọc" xóa tất cả cùng lúc
-
-### 🌍 Hỗ trợ đa ngôn ngữ (i18n)
-
-| Ngôn ngữ | Phạm vi hỗ trợ |
-|----------|----------------|
-| 🇹🇼 繁體中文 | Hỗ trợ đầy đủ (ngôn ngữ mặc định) |
-| 🇺🇸 English | Hỗ trợ đầy đủ |
-| 🇨🇳 简体中文 | Hỗ trợ đầy đủ |
-| 🇻🇳 Tiếng Việt | Hỗ trợ đầy đủ |
-
-- Giao diện frontend, thông báo lỗi backend, phản hồi AI đều theo cài đặt ngôn ngữ
-- Có thể chuyển đổi ngôn ngữ ngay tại trang đăng nhập/đăng ký, không cần đăng nhập
-- Lưu trữ tùy chọn ngôn ngữ ba tầng: DB (đã đăng nhập) → localStorage → phát hiện trình duyệt
-- AI Prompt đa ngôn ngữ: phản hồi tính cách, trả lời chat, tổng kết tìm kiếm ngữ nghĩa được tạo theo ngôn ngữ người dùng
-- Ngôn ngữ nhận dạng giọng nói tự động theo cài đặt ngôn ngữ giao diện
-
-### Thêm tính năng
+### ⚡ Thêm điểm nổi bật
 
 | Tính năng | Mô tả |
 |------|------|
-| 📊 Thanh máu ngân sách | Trực quan hóa mức tiêu dùng ngân sách tháng, tự động cảnh báo khi vượt mức |
-| 🥧 Phân tích chi tiêu | Biểu đồ tròn tổng quan tỷ lệ chi tiêu theo từng danh mục (thu nhập/chi tiêu thống kê riêng) |
-| 🔄 Dual AI Engine | Hỗ trợ Gemini / OpenAI, tự do chuyển đổi |
-| 📱 Hỗ trợ PWA | Thêm vào màn hình chính điện thoại, ghi sổ mọi lúc mọi nơi |
-| 🏷️ Danh mục tùy chỉnh | Danh mục mặc định + tùy chỉnh (tối đa 50), mỗi danh mục có ngân sách riêng |
-| 📅 Ngày thông minh | Tự động nhận diện ngày ngữ nghĩa như 「上週五」(thứ Sáu tuần trước), 「白色情人節」(Valentine Trắng), 「38 節」(Ngày Quốc tế Phụ nữ) |
+| 📊 Thanh máu ngân sách | Trực quan hóa mức tiêu ngân sách, cảnh báo vượt mức ngay, đỏ đến mức bạn không dám tiêu thêm |
+| 🥧 Phân tích chi tiêu | Biểu đồ tròn + xếp hạng danh mục, thu nhập chi tiêu thống kê riêng, tiền đi đâu nhìn là biết |
+| 🔄 Dual AI Engine | Gemini / OpenAI tự do chuyển đổi, dùng Key của bạn hoặc mặc định hệ thống |
+| 📱 Hỗ trợ PWA | Thêm vào màn hình chính, mở tức thì, offline cũng dùng được |
+| 🏷️ Danh mục tùy chỉnh | Tối đa 50 danh mục tùy chỉnh, cùng tên phân thu nhập/chi tiêu, ngân sách độc lập |
+| 🛡️ Ưu tiên quyền riêng tư | API Key chỉ lưu trình duyệt, backend dùng xong là xóa, không để lại dấu vết |
 
 ---
 
