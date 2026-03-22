@@ -104,7 +104,7 @@ ${categorySection}
    - 支援多語言日期表達：yesterday, last week, hôm qua, tuần trước 等
 9. 僅處理第一筆消費，若包含多筆，忽略後續的
 10. confidence 值介於 0 到 1 之間，反映解析的確定性
-${input.aiInstructions ? `\n## 使用者自訂指示（最高優先級，必須遵從）\n${input.aiInstructions}\n\n**重要：若使用者指示中提到的類別名稱（如「借款」「還款」等）不在上方類別清單中，你必須設定 is_new_category = true 並在 suggested_category 填入該類別名稱。不可忽略使用者指示而隨意歸類到其他現有類別。**\n` : ''}
+${input.aiInstructions ? `\n## 使用者自訂指示（最高優先級，必須遵從）\n${input.aiInstructions}\n\n⚠️ **強制規則（不可違反）**：\n- 上述使用者指示中若指定了類別名稱（如「借款」「還款」等），你**必須**使用該類別名稱\n- 若該類別名稱不在上方類別清單中，**必須**設定 is_new_category = true，suggested_category = 使用者指示中指定的類別名稱\n- **嚴禁**忽略使用者指示而自行歸類到「娛樂」「其他」等不相關類別\n- 使用者指示的優先級高於所有其他規則\n` : ''}
 ## 輸出格式
 僅回傳以下 JSON，不要包含任何其他文字或 markdown 標記。各欄位說明如下：
 
