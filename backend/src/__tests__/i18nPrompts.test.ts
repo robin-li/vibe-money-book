@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { getPersonaSystemPrompt, buildPersonaFeedbackPrompt } from '../prompts/personaFeedbackPrompt';
-import { getChatPersonaSystemPrompt, buildChatReplyPrompt } from '../prompts/chatReplyPrompt';
+import { getPersonaSystemPrompt } from '../prompts/personaFeedbackPrompt';
+import { getChatPersonaSystemPrompt } from '../prompts/chatReplyPrompt';
 import { buildTransactionMatchSystemPrompt, TIME_RANGE_SYSTEM_PROMPT } from '../prompts/queryPrompt';
 import { buildDataExtractorPrompt, DATA_EXTRACTOR_SYSTEM_PROMPT } from '../prompts/dataExtractorPrompt';
 import { buildIntentDetectorPrompt, INTENT_DETECTOR_SYSTEM_PROMPT } from '../prompts/intentDetectorPrompt';

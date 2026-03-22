@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
-import app from '../app';
 import { AppError, createI18nError, errorHandler } from '../middlewares/errorHandler';
 import { t } from '../i18n';
 import express, { Request, Response, NextFunction } from 'express';
