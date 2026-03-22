@@ -58,6 +58,10 @@ export async function listTransactions(userId: string, input: ListTransactionsIn
     where.category = input.category;
   }
 
+  if (input.type) {
+    where.type = input.type;
+  }
+
   if (input.start_date || input.end_date) {
     const dateFilter: Record<string, Date> = {};
     if (input.start_date) dateFilter.gte = new Date(input.start_date);

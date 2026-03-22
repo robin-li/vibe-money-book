@@ -62,7 +62,7 @@ describe('HistoryPage', () => {
   beforeEach(() => {
     setStoreState({
       transactions: [],
-      filters: { category: '', startDate: '', endDate: '' },
+      filters: { category: '', type: '', startDate: '', endDate: '' },
       page: 1,
       hasMore: true,
       isLoading: false,
@@ -163,7 +163,7 @@ describe('HistoryPage', () => {
       transactions: [],
       hasMore: false,
       isLoading: false,
-      filters: { category: 'food', startDate: '', endDate: '' },
+      filters: { category: 'food', type: 'expense', startDate: '', endDate: '' },
     })
     render(<HistoryPage />)
     expect(screen.getByTestId('reset-filters-btn')).toBeInTheDocument()
@@ -174,7 +174,7 @@ describe('HistoryPage', () => {
       transactions: [],
       hasMore: false,
       isLoading: false,
-      filters: { category: '', startDate: '', endDate: '' },
+      filters: { category: '', type: '', startDate: '', endDate: '' },
     })
     render(<HistoryPage />)
     expect(screen.queryByTestId('reset-filters-btn')).not.toBeInTheDocument()
@@ -185,7 +185,7 @@ describe('TransactionItem interactions', () => {
   beforeEach(() => {
     setStoreState({
       transactions: mockTransactions,
-      filters: { category: '', startDate: '', endDate: '' },
+      filters: { category: '', type: '', startDate: '', endDate: '' },
       page: 1,
       hasMore: false,
       isLoading: false,
