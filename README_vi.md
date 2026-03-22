@@ -21,6 +21,12 @@
   <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License" />
 </p>
 
+<div align="center">
+
+[**Live Demo**](#-demo-trực-tuyến) · [Tính năng](#-tính-năng) · [Bắt đầu nhanh](#-bắt-đầu-nhanh) · [Ảnh chụp màn hình](#-ảnh-chụp-màn-hình)
+
+</div>
+
 <p align="center">
   <img src="docs/screenshots/01-home-dashboard.jpg" alt="Bảng điều khiển trang chủ Vibe Money Book" width="300" />
 </p>

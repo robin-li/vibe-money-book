@@ -21,6 +21,12 @@
   <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License" />
 </p>
 
+<div align="center">
+
+[**Live Demo**](#-live-demo) · [功能特色](#-功能特色) · [快速开始](#-快速开始) · [截图展示](#-截图展示)
+
+</div>
+
 <p align="center">
   <img src="docs/screenshots/01-home-dashboard.jpg" alt="Vibe Money Book 首页仪表盘" width="300" />
 </p>
