@@ -213,7 +213,7 @@ Combined with "Custom Categories", build your own classification system. Same ca
 | **Backend** | Node.js · Express 5 · TypeScript · Prisma 6 · Zod 4 · JWT · bcrypt · express-rate-limit · i18next |
 | **AI / LLM** | Google Gemini (default) · OpenAI — dual engine, switch freely |
 | **Testing** | Vitest · Testing Library · Supertest · Playwright |
-| **Deployment** | Docker · Docker Compose · Cloudflare Tunnel · PostgreSQL / SQLite |
+| **Deployment** | Docker · Docker Compose · Cloudflare Tunnel · PostgreSQL |
 
 <details>
 <summary><strong>Available AI Model List</strong></summary>
@@ -329,7 +329,7 @@ Set in `backend/.env` (copy from `.env.example`):
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DATABASE_URL` | Database connection string | `file:./data/dev.db` (SQLite) |
+| `DATABASE_URL` | Database connection string | `postgresql://vibe:vibe_password@postgres:5432/vibe_money_book` (PostgreSQL) |
 | `JWT_SECRET` | JWT signing secret | — (required) |
 | `JWT_EXPIRE` | Token expiration time | `7d` |
 | `GEMINI_MODEL` | Gemini model name | `gemini-3-flash-preview` |

@@ -213,7 +213,7 @@
 | **后端** | Node.js · Express 5 · TypeScript · Prisma 6 · Zod 4 · JWT · bcrypt · express-rate-limit · i18next |
 | **AI / LLM** | Google Gemini（预设）· OpenAI — 双引擎自由切换 |
 | **测试** | Vitest · Testing Library · Supertest · Playwright |
-| **部署** | Docker · Docker Compose · Cloudflare Tunnel · PostgreSQL / SQLite |
+| **部署** | Docker · Docker Compose · Cloudflare Tunnel · PostgreSQL |
 
 <details>
 <summary><strong>可用 AI 模型列表</strong></summary>
@@ -329,7 +329,7 @@ vibe-money-book/
 
 | 变量 | 说明 | 预设值 |
 |------|------|--------|
-| `DATABASE_URL` | 数据库连接字符串 | `file:./data/dev.db` (SQLite) |
+| `DATABASE_URL` | 数据库连接字符串 | `postgresql://vibe:vibe_password@postgres:5432/vibe_money_book` (PostgreSQL) |
 | `JWT_SECRET` | JWT 签名密钥 | — (必填) |
 | `JWT_EXPIRE` | Token 过期时间 | `7d` |
 | `GEMINI_MODEL` | Gemini 模型名称 | `gemini-3-flash-preview` |
