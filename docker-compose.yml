@@ -1,13 +1,32 @@
 name: vibe-money-book
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vibe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vibe_password}
+      POSTGRES_DB: ${POSTGRES_DB:-vibe_money_book}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vibe}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      DATABASE_URL: ${DATABASE_URL:-file:/app/data/dev.db}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://vibe:vibe_password@postgres:5432/vibe_money_book}
       JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-here}
       PORT: ${PORT:-3000}
       NODE_ENV: ${NODE_ENV:-production}
@@ -18,10 +37,11 @@ services:
       LLM_TIMEOUT_MS: ${LLM_TIMEOUT_MS:-30000}
       DEFAULT_GEMINI_API_KEY: ${DEFAULT_GEMINI_API_KEY:-}
       DEFAULT_OPENAI_API_KEY: ${DEFAULT_OPENAI_API_KEY:-}
-    volumes:
-      - backend_data:/app/data
     ports:
       - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -40,7 +60,7 @@ services:
       - app-network
 
 volumes:
-  backend_data:
+  postgres_data:
 
 networks:
   app-network:
