@@ -79,6 +79,21 @@ Tra cứu chi tiêu bằng ngôn ngữ tự nhiên, không cần nhớ tên danh
 - AI tạo nhận xét tổng kết theo phong cách tính cách, đồng thời lọc ra các khoản khớp
 - Bộ lọc thủ công (ngày/danh mục) và truy vấn AI loại trừ lẫn nhau, "Xóa bộ lọc" xóa tất cả cùng lúc
 
+### 🌍 Hỗ trợ đa ngôn ngữ (i18n)
+
+| Ngôn ngữ | Phạm vi hỗ trợ |
+|----------|----------------|
+| 🇹🇼 繁體中文 | Hỗ trợ đầy đủ (ngôn ngữ mặc định) |
+| 🇺🇸 English | Hỗ trợ đầy đủ |
+| 🇨🇳 简体中文 | Hỗ trợ đầy đủ |
+| 🇻🇳 Tiếng Việt | Hỗ trợ đầy đủ |
+
+- Giao diện frontend, thông báo lỗi backend, phản hồi AI đều theo cài đặt ngôn ngữ
+- Có thể chuyển đổi ngôn ngữ ngay tại trang đăng nhập/đăng ký, không cần đăng nhập
+- Lưu trữ tùy chọn ngôn ngữ ba tầng: DB (đã đăng nhập) → localStorage → phát hiện trình duyệt
+- AI Prompt đa ngôn ngữ: phản hồi tính cách, trả lời chat, tổng kết tìm kiếm ngữ nghĩa được tạo theo ngôn ngữ người dùng
+- Ngôn ngữ nhận dạng giọng nói tự động theo cài đặt ngôn ngữ giao diện
+
 ### Thêm tính năng
 
 | Tính năng | Mô tả |
@@ -184,8 +199,8 @@ Tra cứu chi tiêu bằng ngôn ngữ tự nhiên, không cần nhớ tên danh
 
 | Tầng | Công nghệ |
 |------|------|
-| **Frontend** | React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · Zustand · React Router 7 · Recharts · Web Speech API · PWA |
-| **Backend** | Node.js · Express 5 · TypeScript · Prisma 6 · Zod 4 · JWT · bcrypt · express-rate-limit |
+| **Frontend** | React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · Zustand · React Router 7 · Recharts · Web Speech API · PWA · react-i18next |
+| **Backend** | Node.js · Express 5 · TypeScript · Prisma 6 · Zod 4 · JWT · bcrypt · express-rate-limit · i18next |
 | **AI / LLM** | Google Gemini (mặc định) · OpenAI — Dual engine tự do chuyển đổi |
 | **Testing** | Vitest · Testing Library · Supertest · Playwright |
 | **Triển khai** | Docker · Docker Compose · Cloudflare Tunnel · PostgreSQL / SQLite |

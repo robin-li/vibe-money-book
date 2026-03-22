@@ -79,6 +79,21 @@ Query transactions in natural language — no need to remember category names. A
 - AI generates a summary in the selected persona style and filters matching entries
 - Manual filters (date/category) and AI search are mutually exclusive; "Clear Filters" resets everything at once
 
+### 🌍 Multilingual Support (i18n)
+
+| Language | Coverage |
+|----------|----------|
+| 🇹🇼 繁體中文 | Full support (default language) |
+| 🇺🇸 English | Full support |
+| 🇨🇳 简体中文 | Full support |
+| 🇻🇳 Tiếng Việt | Full support |
+
+- Frontend UI, backend error messages, and AI feedback all follow the language setting
+- Language can be switched on the login/registration page without needing to log in
+- Language preference three-layer persistence: DB (logged in) → localStorage → browser detection
+- AI Prompt multilingual: persona feedback, chat replies, and semantic search summaries are generated in the user's language
+- Voice recognition language automatically follows the UI language setting
+
 ### More Features
 
 | Feature | Description |
@@ -184,8 +199,8 @@ Query transactions in natural language — no need to remember category names. A
 
 | Layer | Technologies |
 |-------|-------------|
-| **Frontend** | React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · Zustand · React Router 7 · Recharts · Web Speech API · PWA |
-| **Backend** | Node.js · Express 5 · TypeScript · Prisma 6 · Zod 4 · JWT · bcrypt · express-rate-limit |
+| **Frontend** | React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · Zustand · React Router 7 · Recharts · Web Speech API · PWA · react-i18next |
+| **Backend** | Node.js · Express 5 · TypeScript · Prisma 6 · Zod 4 · JWT · bcrypt · express-rate-limit · i18next |
 | **AI / LLM** | Google Gemini (default) · OpenAI — dual engine, switch freely |
 | **Testing** | Vitest · Testing Library · Supertest · Playwright |
 | **Deployment** | Docker · Docker Compose · Cloudflare Tunnel · PostgreSQL / SQLite |

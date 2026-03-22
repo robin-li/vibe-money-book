@@ -79,6 +79,21 @@
 - AI 依人设风格生成总结评语，并筛选出匹配账目
 - 手动筛选器（日期／类别）与 AI 查询互斥，「清除筛选」一次清除所有
 
+### 🌍 多语系支持 (i18n)
+
+| 语言 | 支持范围 |
+|------|---------|
+| 🇹🇼 繁體中文 | 完整支持（默认语言） |
+| 🇺🇸 English | 完整支持 |
+| 🇨🇳 简体中文 | 完整支持 |
+| 🇻🇳 Tiếng Việt | 完整支持 |
+
+- 前端 UI、后端错误消息、AI 反馈均跟随语言设置
+- 登录／注册页面即可切换语言，无需登录
+- 语言偏好三层持久化：DB（已登录）→ localStorage → 浏览器侦测
+- AI Prompt 多语化：人设反馈、聊天回复、语义查询总结依用户语言生成
+- 语音识别语言自动跟随 UI 语言设置
+
 ### 更多功能
 
 | 功能 | 说明 |
@@ -184,8 +199,8 @@
 
 | 层级 | 技术 |
 |------|------|
-| **前端** | React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · Zustand · React Router 7 · Recharts · Web Speech API · PWA |
-| **后端** | Node.js · Express 5 · TypeScript · Prisma 6 · Zod 4 · JWT · bcrypt · express-rate-limit |
+| **前端** | React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · Zustand · React Router 7 · Recharts · Web Speech API · PWA · react-i18next |
+| **后端** | Node.js · Express 5 · TypeScript · Prisma 6 · Zod 4 · JWT · bcrypt · express-rate-limit · i18next |
 | **AI / LLM** | Google Gemini（预设）· OpenAI — 双引擎自由切换 |
 | **测试** | Vitest · Testing Library · Supertest · Playwright |
 | **部署** | Docker · Docker Compose · Cloudflare Tunnel · PostgreSQL / SQLite |
