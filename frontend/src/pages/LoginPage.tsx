@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '../stores/authStore.ts'
+import LanguageSelector from '../components/LanguageSelector.tsx'
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -52,7 +53,10 @@ function LoginPage() {
   }
 
   return (
-    <div className="min-h-svh flex flex-col items-center justify-center p-2xl bg-bg">
+    <div className="min-h-svh flex flex-col items-center justify-center p-2xl bg-bg relative">
+      <div className="absolute top-md right-md">
+        <LanguageSelector />
+      </div>
       <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center text-3xl mb-lg">
         💰
       </div>
