@@ -69,6 +69,18 @@
 | 💖 Chế độ Dịu dàng | Ấm áp khích lệ | 「辛苦了～偶爾犒賞自己也很重要呢」(Vất vả rồi~ thỉnh thoảng thưởng cho bản thân cũng quan trọng lắm) |
 | 🥺 Chế độ Tội lỗi | Áy náy thiện chí | 「這個月已經超支了...我好擔心你啊...」(Tháng này đã vượt ngân sách rồi... tôi lo cho bạn quá...) |
 
+### Chỉ dẫn AI — Quy tắc phân loại tùy chỉnh
+
+Với tính năng "Chỉ dẫn AI", bạn có thể dạy AI phân loại theo thói quen của mình:
+
+> **Ví dụ chỉ dẫn:**
+> - Trả tiền cho người khác → Chi tiêu / Trả nợ
+> - Nhận tiền hoàn trả → Thu nhập / Trả nợ
+> - Cho người khác vay → Chi tiêu / Cho vay
+> - Vay tiền từ người khác → Thu nhập / Cho vay
+
+Kết hợp với "Danh mục tùy chỉnh", bạn có thể xây dựng hệ thống phân loại riêng. AI sẽ ưu tiên tuân theo chỉ dẫn của bạn khi phân loại.
+
 ### Tìm kiếm ngữ nghĩa AI
 
 Tra cứu chi tiêu bằng ngôn ngữ tự nhiên, không cần nhớ tên danh mục, AI tự động khớp và tổng kết:

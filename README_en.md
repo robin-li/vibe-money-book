@@ -69,6 +69,18 @@
 | 💖 Gentle Mode | Warm & encouraging | "辛苦了～偶爾犒賞自己也很重要呢" (You've worked hard~ treating yourself once in a while matters too) |
 | 🥺 Guilt-Trip Mode | Well-meaning guilt | "這個月已經超支了...我好擔心你啊..." (You've already overspent this month... I'm so worried about you...) |
 
+### AI Instructions — Custom Classification Rules
+
+With "AI Instructions", you can teach the AI to categorize expenses according to your preferences:
+
+> **Example instructions:**
+> - Paying someone back → Expense / Repayment
+> - Receiving repayment → Income / Repayment
+> - Lending money → Expense / Loan
+> - Borrowing money → Income / Loan
+
+Combined with "Custom Categories", you can build your own classification system. The AI will prioritize your instructions when categorizing.
+
 ### AI Semantic Search
 
 Query transactions in natural language — no need to remember category names. AI auto-matches and summarizes:
