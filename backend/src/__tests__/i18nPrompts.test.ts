@@ -195,6 +195,68 @@ describe('T-603: AI Prompt i18n', () => {
         expect(prompt).toContain(`必須使用${name}撰寫`);
       }
     });
+
+    it('should instruct suggested_category to use target language (issue #158)', () => {
+      const langMap: Record<string, string> = {
+        'zh-TW': '繁體中文',
+        'en': 'English',
+        'zh-CN': '简体中文',
+        'vi': 'Tiếng Việt',
+      };
+      for (const [lang, name] of Object.entries(langMap)) {
+        const prompt = buildDataExtractorPrompt({
+          rawText: 'test',
+          categories: ['food'],
+          currentDateTime: '2026年3月22日',
+          targetLanguage: lang,
+        });
+        // Rule 5: suggested_category language directive
+        expect(prompt).toContain(`suggested_category 填入建議的類別名稱（必須使用${name}）`);
+        // Field description table: suggested_category language directive
+        expect(prompt).toMatch(new RegExp(`suggested_category.*必須使用${name}`));
+      }
+    });
+
+    it('should instruct suggested_category to use zh-TW by default when no targetLanguage', () => {
+      const prompt = buildDataExtractorPrompt({
+        rawText: 'test',
+        categories: ['food'],
+        currentDateTime: '2026年3月22日',
+      });
+      expect(prompt).toContain('suggested_category 填入建議的類別名稱（必須使用繁體中文）');
+    });
+
+    it('should instruct suggested_category to use English when targetLanguage is "en"', () => {
+      const prompt = buildDataExtractorPrompt({
+        rawText: 'bought a jacket',
+        categories: ['daily'],
+        currentDateTime: '2026年3月22日',
+        targetLanguage: 'en',
+      });
+      expect(prompt).toContain('suggested_category 填入建議的類別名稱（必須使用English）');
+      // Should NOT contain the old hardcoded Chinese instruction
+      expect(prompt).not.toContain('建議的中文類別名稱');
+    });
+
+    it('should display category names in target language in the prompt', () => {
+      const promptEn = buildDataExtractorPrompt({
+        rawText: 'test',
+        categories: ['food', 'transport'],
+        currentDateTime: '2026年3月22日',
+        targetLanguage: 'en',
+      });
+      expect(promptEn).toContain('Food');
+      expect(promptEn).toContain('Transport');
+
+      const promptZhTW = buildDataExtractorPrompt({
+        rawText: 'test',
+        categories: ['food', 'transport'],
+        currentDateTime: '2026年3月22日',
+        targetLanguage: 'zh-TW',
+      });
+      expect(promptZhTW).toContain('飲食');
+      expect(promptZhTW).toContain('交通');
+    });
   });
 
   describe('intentDetectorPrompt', () => {
