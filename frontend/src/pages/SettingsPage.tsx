@@ -150,8 +150,11 @@ function SettingsPage() {
     try {
       await createCategoryAction(newCategoryName.trim(), newCategoryType)
       setNewCategoryName('')
-    } catch {
-      // Error handled by store
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      if (msg) {
+        alert(msg)
+      }
     } finally {
       setCategoryAdding(false)
     }

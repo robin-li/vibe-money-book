@@ -291,10 +291,9 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       await get().fetchCategories()
     } catch (err: unknown) {
       const status = (err as { response?: { status?: number } })?.response?.status
-      // 409 = category already exists, treat as success
       if (status === 409) {
         await get().fetchCategories()
-        return
+        // Show error message to user instead of silently ignoring
       }
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data
