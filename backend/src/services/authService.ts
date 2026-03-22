@@ -43,6 +43,7 @@ export function formatUserResponse(user: {
   aiEngine: string;
   monthlyBudget: unknown;
   currency: string;
+  language: string;
   aiInstructions?: string | null;
   createdAt: Date;
 }) {
@@ -54,6 +55,7 @@ export function formatUserResponse(user: {
     ai_engine: user.aiEngine,
     monthly_budget: Number(user.monthlyBudget),
     currency: user.currency,
+    language: user.language,
     ai_instructions: user.aiInstructions ?? null,
     created_at: user.createdAt.toISOString(),
   };

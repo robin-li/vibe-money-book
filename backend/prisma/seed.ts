@@ -38,6 +38,7 @@ async function main() {
       aiEngine: 'gemini',
       monthlyBudget: 30000,
       currency: 'TWD',
+      language: 'zh-TW',
     },
   });
 

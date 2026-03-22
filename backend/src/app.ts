@@ -2,6 +2,7 @@ import express from 'express';
 import { corsMiddleware } from './middlewares/cors';
 import { requestLogger } from './middlewares/requestLogger';
 import { apiRateLimiter } from './middlewares/rateLimiter';
+import { localeMiddleware } from './middlewares/locale';
 import { errorHandler } from './middlewares/errorHandler';
 import routes from './routes';
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
 app.use(apiRateLimiter);
+app.use(localeMiddleware);
 
 // Routes
 app.use(routes);

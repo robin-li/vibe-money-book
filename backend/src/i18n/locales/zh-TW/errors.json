@@ -1,0 +1,14 @@
+{
+  "validation_failed": "參數驗證失敗",
+  "not_found": "資源不存在",
+  "unauthorized": "未授權的存取",
+  "token_missing": "未提供認證 Token",
+  "token_expired": "Token 已過期",
+  "token_invalid": "Token 無效",
+  "user_not_found": "使用者不存在",
+  "email_already_exists": "此 Email 已被註冊",
+  "invalid_credentials": "Email 或密碼錯誤",
+  "internal_error": "內部伺服器錯誤",
+  "rate_limit_exceeded": "請求過於頻繁，請稍後再試",
+  "at_least_one_field": "至少需提供一個欄位進行更新"
+}

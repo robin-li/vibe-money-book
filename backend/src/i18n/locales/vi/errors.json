@@ -1,0 +1,14 @@
+{
+  "validation_failed": "Xac thuc tham so that bai",
+  "not_found": "Khong tim thay tai nguyen",
+  "unauthorized": "Truy cap khong duoc phep",
+  "token_missing": "Chua cung cap token xac thuc",
+  "token_expired": "Token da het han",
+  "token_invalid": "Token khong hop le",
+  "user_not_found": "Khong tim thay nguoi dung",
+  "email_already_exists": "Email nay da duoc dang ky",
+  "invalid_credentials": "Email hoac mat khau khong dung",
+  "internal_error": "Loi may chu noi bo",
+  "rate_limit_exceeded": "Qua nhieu yeu cau, vui long thu lai sau",
+  "at_least_one_field": "Can cung cap it nhat mot truong de cap nhat"
+}
