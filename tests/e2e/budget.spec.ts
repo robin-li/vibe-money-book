@@ -38,7 +38,7 @@ test.describe('預算血條顯示', () => {
 
     await loginViaUI(page, authEmail, TEST_PASSWORD);
 
-    const budgetSection = page.getByLabel('預算概覽');
+    const budgetSection = page.getByLabel('預算剩餘');
     await expect(budgetSection).toBeVisible();
     await expect(budgetSection.getByText('尚未設定預算')).toBeVisible();
   });
@@ -67,7 +67,7 @@ test.describe('預算血條顯示', () => {
 
     await loginViaUI(page, authEmail, TEST_PASSWORD);
 
-    const budgetSection = page.getByLabel('預算概覽');
+    const budgetSection = page.getByLabel('預算剩餘');
     await expect(budgetSection).toBeVisible();
 
     // 應顯示剩餘百分比
@@ -107,7 +107,7 @@ test.describe('預算血條顯示', () => {
 
     await loginViaUI(page, authEmail, TEST_PASSWORD);
 
-    const budgetSection = page.getByLabel('預算概覽');
+    const budgetSection = page.getByLabel('預算剩餘');
     await expect(budgetSection).toBeVisible();
 
     // 應顯示剩餘百分比
@@ -145,7 +145,7 @@ test.describe('預算血條顯示', () => {
 
     await loginViaUI(page, authEmail, TEST_PASSWORD);
 
-    const budgetSection = page.getByLabel('預算概覽');
+    const budgetSection = page.getByLabel('預算剩餘');
     await expect(budgetSection).toBeVisible();
 
     // 應顯示剩餘百分比
@@ -185,7 +185,7 @@ test.describe('預算血條顯示', () => {
 
     await loginViaUI(page, authEmail, TEST_PASSWORD);
 
-    const budgetSection = page.getByLabel('預算概覽');
+    const budgetSection = page.getByLabel('預算剩餘');
     await expect(budgetSection).toBeVisible();
     await expect(budgetSection.getByText('超支')).toBeVisible();
   });
@@ -214,7 +214,7 @@ test.describe('預算血條顯示', () => {
 
     await loginViaUI(page, authEmail, TEST_PASSWORD);
 
-    const budgetSection = page.getByLabel('預算概覽');
+    const budgetSection = page.getByLabel('預算剩餘');
     await expect(budgetSection.getByText('$12,345')).toBeVisible();
     await expect(budgetSection.getByText('$50,000')).toBeVisible();
   });
