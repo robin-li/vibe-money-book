@@ -32,6 +32,9 @@ RUN npx prisma generate
 # Copy compiled output from build stage
 COPY --from=build /app/dist ./dist
 
+# Copy i18n locale JSON files (not included in tsc output)
+COPY src/i18n/locales ./dist/i18n/locales
+
 EXPOSE 3000
 
 # Run migrations then start server

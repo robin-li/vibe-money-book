@@ -1,7 +1,17 @@
 import rateLimit from 'express-rate-limit';
+import { Request } from 'express';
+import { t } from '../i18n';
 
 const isTest = process.env.NODE_ENV === 'test';
 const skipInTest = () => isTest;
+
+function rateLimitMessage(req: Request) {
+  return {
+    code: 429,
+    message: t('rate_limit_exceeded', req.locale),
+    timestamp: new Date().toISOString(),
+  };
+}
 
 // General API rate limiter: 100 req/min
 export const apiRateLimiter = rateLimit({
@@ -10,11 +20,7 @@ export const apiRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  message: {
-    code: 429,
-    message: '請求過於頻繁，請稍後再試',
-    timestamp: new Date().toISOString(),
-  },
+  message: rateLimitMessage,
 });
 
 // LLM-related rate limiter: 20 req/min/user
@@ -24,11 +30,7 @@ export const llmRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  message: {
-    code: 429,
-    message: 'LLM 請求過於頻繁，請稍後再試',
-    timestamp: new Date().toISOString(),
-  },
+  message: rateLimitMessage,
 });
 
 // Auth rate limiter: 10 req/min/IP
@@ -38,9 +40,5 @@ export const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: skipInTest,
-  message: {
-    code: 429,
-    message: '認證請求過於頻繁，請稍後再試',
-    timestamp: new Date().toISOString(),
-  },
+  message: rateLimitMessage,
 });
