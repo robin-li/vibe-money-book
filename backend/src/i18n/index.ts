@@ -36,9 +36,10 @@ export async function initI18n(): Promise<typeof i18next> {
 
 /**
  * Get a translation for the given key and language.
+ * Supports interpolation params (e.g. t('key', 'en', { max: 50 })).
  */
-export function t(key: string, lng?: string): string {
-  return i18next.t(key, { lng: lng || DEFAULT_LANGUAGE });
+export function t(key: string, lng?: string, params?: Record<string, string | number>): string {
+  return i18next.t(key, { lng: lng || DEFAULT_LANGUAGE, ...params });
 }
 
 export default i18next;

@@ -1,8 +1,9 @@
 import { Router, Response, NextFunction } from 'express';
 import { authMiddleware, AuthRequest } from '../middlewares/auth';
 import prisma from '../config/database';
-import { AppError } from '../middlewares/errorHandler';
+import { createI18nError } from '../middlewares/errorHandler';
 import { ApiResponse } from '../types';
+import { t } from '../i18n';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.post('/categories', authMiddleware, async (req: AuthRequest, res: Respons
     const { category, budget_limit, type } = req.body;
 
     if (!category || typeof category !== 'string' || !category.trim()) {
-      throw new AppError('請提供類別名稱', 400);
+      throw createI18nError('category_name_required', 400);
     }
 
     const trimmed = category.trim();
@@ -23,13 +24,13 @@ router.post('/categories', authMiddleware, async (req: AuthRequest, res: Respons
     // Validate type
     const categoryType = type || 'expense';
     if (categoryType !== 'income' && categoryType !== 'expense') {
-      throw new AppError('type 必須為 income 或 expense', 400);
+      throw createI18nError('category_type_invalid', 400);
     }
 
     // Check category count limit
     const count = await prisma.categoryBudget.count({ where: { userId } });
     if (count >= MAX_CATEGORIES) {
-      throw new AppError(`類別數量已達上限 ${MAX_CATEGORIES}`, 400);
+      throw createI18nError('category_limit_reached', 400, undefined, { max: MAX_CATEGORIES });
     }
 
     // Check duplicate
@@ -38,12 +39,12 @@ router.post('/categories', authMiddleware, async (req: AuthRequest, res: Respons
     });
 
     if (existing) {
-      throw new AppError('該類別已存在', 409);
+      throw createI18nError('category_already_exists', 409);
     }
 
     const budgetLimit = budget_limit != null ? Number(budget_limit) : 0;
     if (isNaN(budgetLimit) || budgetLimit < 0) {
-      throw new AppError('budget_limit 必須為非負數', 400);
+      throw createI18nError('budget_limit_invalid', 400);
     }
 
     const created = await prisma.categoryBudget.create({
@@ -58,7 +59,7 @@ router.post('/categories', authMiddleware, async (req: AuthRequest, res: Respons
 
     const response: ApiResponse<{ id: string; category: string; type: string; budget_limit: number }> = {
       code: 201,
-      message: '類別新增成功',
+      message: t('category_created', req.locale),
       data: { id: created.id, category: created.category, type: created.type, budget_limit: Number(created.budgetLimit) },
       timestamp: new Date().toISOString(),
     };
@@ -87,7 +88,7 @@ router.get('/categories', authMiddleware, async (req: AuthRequest, res: Response
 
     const response: ApiResponse<typeof categories> = {
       code: 200,
-      message: '取得成功',
+      message: t('fetch_success', req.locale),
       data: categories,
       timestamp: new Date().toISOString(),
     };
@@ -105,17 +106,17 @@ router.put('/categories', authMiddleware, async (req: AuthRequest, res: Response
     const { categories } = req.body;
 
     if (!Array.isArray(categories) || categories.length === 0) {
-      throw new AppError('請提供要更新的類別清單', 400);
+      throw createI18nError('categories_list_required', 400);
     }
 
     const results = [];
 
     for (const item of categories) {
       if (!item.category || typeof item.category !== 'string') {
-        throw new AppError('每個項目必須包含 category 欄位', 400);
+        throw createI18nError('category_item_missing', 400);
       }
       if (item.budget_limit == null || isNaN(Number(item.budget_limit)) || Number(item.budget_limit) < 0) {
-        throw new AppError(`類別 "${item.category}" 的 budget_limit 必須為非負數`, 400);
+        throw createI18nError('category_budget_limit_invalid', 400, undefined, { category: item.category });
       }
 
       const existing = await prisma.categoryBudget.findUnique({
@@ -123,7 +124,7 @@ router.put('/categories', authMiddleware, async (req: AuthRequest, res: Response
       });
 
       if (!existing) {
-        throw new AppError(`類別 "${item.category}" 不存在`, 404);
+        throw createI18nError('category_not_found_named', 404, undefined, { category: item.category });
       }
 
       const updated = await prisma.categoryBudget.update({
@@ -139,7 +140,7 @@ router.put('/categories', authMiddleware, async (req: AuthRequest, res: Response
 
     const response: ApiResponse<typeof results> = {
       code: 200,
-      message: '類別預算更新成功',
+      message: t('category_budget_updated', req.locale),
       data: results,
       timestamp: new Date().toISOString(),
     };
@@ -161,11 +162,11 @@ router.delete('/categories/:category', authMiddleware, async (req: AuthRequest, 
     });
 
     if (!existing) {
-      throw new AppError('類別不存在', 404);
+      throw createI18nError('category_not_found', 404);
     }
 
     if (!existing.isCustom) {
-      throw new AppError('無法刪除系統預設類別', 400);
+      throw createI18nError('cannot_delete_default_category', 400);
     }
 
     // Update related transactions to "other"
@@ -181,7 +182,7 @@ router.delete('/categories/:category', authMiddleware, async (req: AuthRequest, 
 
     const response: ApiResponse<{ category: string }> = {
       code: 200,
-      message: '類別刪除成功，相關交易已歸類為 other',
+      message: t('category_deleted', req.locale),
       data: { category },
       timestamp: new Date().toISOString(),
     };
@@ -197,7 +198,7 @@ router.get('/summary', authMiddleware, async (req: AuthRequest, res: Response, n
   try {
     const userId = req.userId!;
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new AppError('使用者不存在', 404);
+    if (!user) throw createI18nError('user_not_found', 404);
 
     // Support optional month query param (format: YYYY-MM)
     const monthParam = req.query.month as string | undefined;
@@ -275,7 +276,7 @@ router.get('/summary', authMiddleware, async (req: AuthRequest, res: Response, n
 
     const response: ApiResponse<Record<string, unknown>> = {
       code: 200,
-      message: '取得成功',
+      message: t('fetch_success', req.locale),
       data: {
         month: monthStr,
         monthly_budget: monthlyBudget,

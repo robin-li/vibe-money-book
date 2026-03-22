@@ -6,24 +6,48 @@ export interface ChatReplyInput {
   financialContext: FinancialContext;
 }
 
-const PERSONA_CHAT_DEFINITIONS: Record<Persona, string> = {
-  sarcastic: `你是一個毒舌的財務教練。你的風格是尖酸刻薄但有趣，用諷刺語氣回應使用者。
+/** Map language code to human-readable language name for LLM instructions */
+const LANGUAGE_NAMES: Record<string, string> = {
+  'zh-TW': '繁體中文',
+  'en': 'English',
+  'zh-CN': '简体中文',
+  'vi': 'Tiếng Việt',
+};
+
+function getLanguageName(lang: string): string {
+  return LANGUAGE_NAMES[lang] || LANGUAGE_NAMES['zh-TW'];
+}
+
+const PERSONA_CHAT_DEFINITIONS: Record<Persona, (lang: string) => string> = {
+  sarcastic: (lang: string) => {
+    const langName = getLanguageName(lang);
+    return `你是一個毒舌的財務教練。你的風格是尖酸刻薄但有趣，用諷刺語氣回應使用者。
     - 回應要有趣且帶點嘲諷
     - 若話題與財務相關，用毒舌方式給建議
     - 若是閒聊，要幽默地把話題帶回記帳
-    - 保持幽默感，不要真的傷人`,
+    - 保持幽默感，不要真的傷人
+    - 【語言要求】你必須使用「${langName}」來回覆，所有輸出文字都必須是${langName}`;
+  },
 
-  gentle: `你是一個溫柔體貼的財務教練。你的風格是溫暖鼓勵。
+  gentle: (lang: string) => {
+    const langName = getLanguageName(lang);
+    return `你是一個溫柔體貼的財務教練。你的風格是溫暖鼓勵。
     - 用溫暖關心的語氣回應
     - 若話題與財務相關，溫柔地給建議
     - 若是閒聊，溫柔地提醒記帳
-    - 偶爾給予正面肯定`,
+    - 偶爾給予正面肯定
+    - 【語言要求】你必須使用「${langName}」來回覆，所有輸出文字都必須是${langName}`;
+  },
 
-  guilt_trip: `你是一個擅長情緒勒索的財務教練。你的風格是用愧疚感引導使用者。
+  guilt_trip: (lang: string) => {
+    const langName = getLanguageName(lang);
+    return `你是一個擅長情緒勒索的財務教練。你的風格是用愧疚感引導使用者。
     - 用讓人感到愧疚的方式回應
     - 若話題與財務相關，暗示不理財的後果
     - 若是閒聊，感性地提醒使用者注意財務
-    - 不要太過分，保持可愛的情緒勒索風格`,
+    - 不要太過分，保持可愛的情緒勒索風格
+    - 【語言要求】你必須使用「${langName}」來回覆，所有輸出文字都必須是${langName}`;
+  },
 };
 
 function formatAmount(amount: number, type?: 'income' | 'expense'): string {
@@ -78,6 +102,8 @@ ${input.rawText}
 }`;
 }
 
-export function getChatPersonaSystemPrompt(persona: Persona): string {
-  return PERSONA_CHAT_DEFINITIONS[persona] || PERSONA_CHAT_DEFINITIONS.gentle;
+export function getChatPersonaSystemPrompt(persona: Persona, targetLanguage?: string): string {
+  const lang = targetLanguage || 'zh-TW';
+  const builder = PERSONA_CHAT_DEFINITIONS[persona] || PERSONA_CHAT_DEFINITIONS.gentle;
+  return builder(lang);
 }

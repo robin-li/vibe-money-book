@@ -1,13 +1,26 @@
 import { TransactionSummaryForQuery, Persona } from '../types/llm';
 
-// ─── 階段 1：時間範圍解析 ───
+/** Map language code to human-readable language name for LLM instructions */
+const LANGUAGE_NAMES: Record<string, string> = {
+  'zh-TW': '繁體中文',
+  'en': 'English',
+  'zh-CN': '简体中文',
+  'vi': 'Tiếng Việt',
+};
+
+function getLanguageName(lang: string): string {
+  return LANGUAGE_NAMES[lang] || LANGUAGE_NAMES['zh-TW'];
+}
+
+// ─── 階段 1：時間範圍解析 (語言無關) ───
 
 export const TIME_RANGE_SYSTEM_PROMPT = `你是一個時間範圍解析器。你的任務是從使用者的查詢文字中提取時間範圍。
+你必須理解多種語言的時間表達（包括繁體中文、簡體中文、英文、越南文等）。
 
 規則：
 1. 輸出格式必須為 JSON：{ "start_date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD" }
 2. 僅輸出 JSON，不要加任何解釋文字
-3. 支援相對日期：「最近一個月」、「上週」、「今年」、「這個月」等
+3. 支援相對日期：「最近一個月」、「上週」、「今年」、「這個月」、"last month"、"this week"、"tuần trước" 等
 4. 若使用者未提及時間，預設為當月（當月 1 日至當月最後一天）
 5. 「最近 N 天/週/月」從今天往回推算
 6. 注意閏年與月份天數差異`;
@@ -25,16 +38,20 @@ export function buildTimeRangePrompt(queryText: string, currentDateTime: string)
 function getQueryPersonaInstruction(persona: Persona): string {
   switch (persona) {
     case 'sarcastic':
-      return '你是一個毒舌教練 🔥，用尖銳犀利但幽默的語氣總結使用者的消費情況。';
+      return '你是一個毒舌教練，用尖銳犀利但幽默的語氣總結使用者的消費情況。';
     case 'gentle':
-      return '你是一個溫柔管家 💖，用溫暖關懷的語氣總結使用者的消費情況。';
+      return '你是一個溫柔管家，用溫暖關懷的語氣總結使用者的消費情況。';
     case 'guilt_trip':
-      return '你是一個心疼天使 🥺，用帶有愧疚感但善意的語氣總結使用者的消費情況。';
+      return '你是一個心疼天使，用帶有愧疚感但善意的語氣總結使用者的消費情況。';
   }
 }
 
-export function buildTransactionMatchSystemPrompt(persona: Persona): string {
+export function buildTransactionMatchSystemPrompt(persona: Persona, targetLanguage?: string): string {
+  const lang = targetLanguage || 'zh-TW';
+  const langName = getLanguageName(lang);
+
   return `你是一個消費分析助手。你的任務是根據使用者的查詢，從交易記錄中找出匹配的項目，並生成一句總結。
+你必須理解多種語言的查詢（包括繁體中文、簡體中文、英文、越南文等）。
 
 ${getQueryPersonaInstruction(persona)}
 
@@ -45,12 +62,13 @@ ${getQueryPersonaInstruction(persona)}
 4. summary_text 必須是一句自然語言的總結（50 字以內），使用指定的人設風格
 5. 計算匹配交易的金額總和（僅計算 expense 的金額，income 不計入支出總和）
 6. emotion_tag 可選值：sarcastic_warning, gentle_reminder, guilt_concern, encouraging, neutral
+7. 【語言要求】summary_text 和 emotion_tag 必須使用「${langName}」輸出
 
 輸出格式：
 {
   "matched_ids": ["uuid-1", "uuid-2"],
   "total_amount": 2800,
-  "summary_text": "你這個月在這上面花了 2800 元...",
+  "summary_text": "<使用${langName}的總結>",
   "emotion_tag": "sarcastic_warning"
 }
 
@@ -58,7 +76,7 @@ ${getQueryPersonaInstruction(persona)}
 {
   "matched_ids": [],
   "total_amount": 0,
-  "summary_text": "找不到相關的消費記錄呢。",
+  "summary_text": "<使用${langName}表達找不到相關記錄>",
   "emotion_tag": "neutral"
 }`;
 }

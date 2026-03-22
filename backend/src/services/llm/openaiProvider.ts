@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { LLMProvider } from './llmProvider';
 import { ParsedTransaction, AIFeedbackContent } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
-import { AppError } from '../../middlewares/errorHandler';
+import { createI18nError } from '../../middlewares/errorHandler';
 
 const OPENAI_MODEL = process.env.OPENAI_MODEL || 'gpt-5.4-mini';
 const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 10000;
@@ -48,12 +48,12 @@ export class OpenAIProvider implements LLMProvider {
     const message = lastError?.message || '';
     console.error('[OpenAI Error]', message, lastError);
     if (message.includes('Incorrect API key') || message.includes('invalid_api_key')) {
-      throw new AppError('OpenAI API Key 無效，請確認您的 API Key', 403);
+      throw createI18nError('openai_api_key_invalid', 403);
     }
     if (message.includes('Rate limit') || message.includes('quota')) {
-      throw new AppError('OpenAI API 額度已用盡，請檢查您的配額或切換引擎', 403);
+      throw createI18nError('openai_quota_exhausted', 403);
     }
-    throw new AppError('LLM 服務暫時不可用，請稍後再試', 502);
+    throw createI18nError('llm_service_unavailable', 502);
   }
 
   async extractData(prompt: string, apiKey: string): Promise<ParsedTransaction> {
@@ -96,7 +96,7 @@ export class OpenAIProvider implements LLMProvider {
           // fall through
         }
       }
-      throw new AppError('LLM 回傳格式異常，無法解析', 502);
+      throw createI18nError('llm_parse_error', 502);
     }
   }
 }

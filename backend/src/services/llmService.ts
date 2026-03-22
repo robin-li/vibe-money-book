@@ -24,7 +24,7 @@ import {
   QueryMatchResult,
   AIQueryResult,
 } from '../types/llm';
-import { AppError } from '../middlewares/errorHandler';
+import { AppError, createI18nError } from '../middlewares/errorHandler';
 
 /** 記帳意圖回應 */
 export interface TransactionResult {
@@ -54,12 +54,14 @@ export async function parseTransaction(
   });
 
   if (!user) {
-    throw new AppError('使用者不存在', 404);
+    throw createI18nError('user_not_found', 404);
   }
 
   const engine = user.aiEngine as AIEngine;
   const persona = user.persona as Persona;
   const provider = getProvider(engine);
+
+  const targetLanguage = user.language || 'zh-TW';
 
   // 0. Intent detection
   const intent = await detectIntent(rawText, apiKey, provider);
@@ -70,7 +72,7 @@ export async function parseTransaction(
     const financialContext = await getFinancialContext(userId, user.monthlyBudget);
     let chatReply: AIFeedbackContent;
     try {
-      chatReply = await generateChatReply(persona, rawText, financialContext, apiKey, provider, user.aiInstructions);
+      chatReply = await generateChatReply(persona, rawText, financialContext, apiKey, provider, user.aiInstructions, targetLanguage);
     } catch (err) {
       console.warn('[Chat Fallback] generateChatReply 失敗，使用預設回饋', err);
       chatReply = { text: '已記錄！', emotion_tag: 'neutral' };
@@ -162,7 +164,7 @@ export async function parseTransaction(
     remainingBudget: remaining,
   };
 
-  const personaSystemPrompt = getPersonaSystemPrompt(persona);
+  const personaSystemPrompt = getPersonaSystemPrompt(persona, targetLanguage);
   const feedbackUserPrompt = buildPersonaFeedbackPrompt(feedbackInput, user.aiInstructions);
   const aiInstructionsBlock = user.aiInstructions
     ? `\n\n【重要】使用者自訂指示（你必須優先遵從以下指示來調整回覆風格與內容）：\n${user.aiInstructions}`
@@ -279,9 +281,10 @@ async function generateChatReply(
   financialContext: FinancialContext,
   apiKey: string,
   provider: ReturnType<typeof getProvider>,
-  aiInstructions?: string | null
+  aiInstructions?: string | null,
+  targetLanguage?: string
 ): Promise<AIFeedbackContent> {
-  const systemPrompt = getChatPersonaSystemPrompt(persona);
+  const systemPrompt = getChatPersonaSystemPrompt(persona, targetLanguage);
   const userPrompt = buildChatReplyPrompt({ persona, rawText, financialContext, aiInstructions });
   const aiInstructionsBlock = aiInstructions
     ? `\n\n【重要】使用者自訂指示（你必須優先遵從以下指示來調整回覆風格與內容）：\n${aiInstructions}`
@@ -301,12 +304,13 @@ export async function queryTransactions(
 ): Promise<AIQueryResult> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
-    throw new AppError('使用者不存在', 404);
+    throw createI18nError('user_not_found', 404);
   }
 
   const engine = user.aiEngine as AIEngine;
   const persona = user.persona as Persona;
   const provider = getProvider(engine);
+  const userLanguage = user.language || 'zh-TW';
 
   // 當前時間（台北時區）
   const now = new Date();
@@ -359,7 +363,7 @@ export async function queryTransactions(
   }));
 
   // 階段 2b：LLM 匹配分析
-  const matchResult = await matchTransactions(queryText, txnSummaries, persona, apiKey, provider);
+  const matchResult = await matchTransactions(queryText, txnSummaries, persona, apiKey, provider, userLanguage);
 
   return {
     summary: {
@@ -411,9 +415,10 @@ async function matchTransactions(
   transactions: TransactionSummaryForQuery[],
   persona: Persona,
   apiKey: string,
-  provider: ReturnType<typeof getProvider>
+  provider: ReturnType<typeof getProvider>,
+  targetLanguage?: string
 ): Promise<QueryMatchResult> {
-  const systemPrompt = buildTransactionMatchSystemPrompt(persona);
+  const systemPrompt = buildTransactionMatchSystemPrompt(persona, targetLanguage);
   const userPrompt = buildTransactionMatchUserPrompt(queryText, transactions);
 
   try {
@@ -450,7 +455,7 @@ async function matchTransactions(
 export async function validateApiKey(userId: string, apiKey: string): Promise<{ valid: boolean; engine: AIEngine }> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
-    throw new AppError('使用者不存在', 404);
+    throw createI18nError('user_not_found', 404);
   }
 
   const engine = user.aiEngine as AIEngine;
@@ -468,6 +473,6 @@ export async function validateApiKey(userId: string, apiKey: string): Promise<{ 
     if (err instanceof AppError && err.statusCode === 403) {
       throw err;
     }
-    throw new AppError('API Key 驗證失敗，請確認 Key 是否正確', 403);
+    throw createI18nError('llm_api_key_invalid', 403);
   }
 }
