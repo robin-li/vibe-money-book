@@ -109,7 +109,7 @@ interface DashboardState {
     feedback?: AIFeedbackContent
   }) => Promise<void>
   createCategory: (category: string, type?: 'income' | 'expense') => Promise<void>
-  deleteCategory: (category: string) => Promise<void>
+  deleteCategory: (category: string, type?: 'income' | 'expense') => Promise<void>
   updateTransaction: (id: string, data: { type?: 'income' | 'expense'; amount: number; category: string; merchant: string; date: string; note?: string }) => Promise<void>
   deleteTransaction: (id: string) => Promise<void>
   fetchBudgetSummary: () => Promise<void>
@@ -303,9 +303,10 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
     }
   },
 
-  deleteCategory: async (category: string) => {
+  deleteCategory: async (category: string, type?: 'income' | 'expense') => {
     try {
-      await api.delete(`/budget/categories/${encodeURIComponent(category)}`)
+      const categoryType = type || 'expense'
+      await api.delete(`/budget/categories/${encodeURIComponent(category)}`, { params: { type: categoryType } })
       await get().fetchCategories()
     } catch (err: unknown) {
       const message =

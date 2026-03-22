@@ -35,7 +35,7 @@ router.post('/categories', authMiddleware, async (req: AuthRequest, res: Respons
 
     // Check duplicate
     const existing = await prisma.categoryBudget.findUnique({
-      where: { userId_category: { userId, category: trimmed } },
+      where: { userId_type_category: { userId, type: categoryType, category: trimmed } },
     });
 
     if (existing) {
@@ -119,8 +119,9 @@ router.put('/categories', authMiddleware, async (req: AuthRequest, res: Response
         throw createI18nError('category_budget_limit_invalid', 400, undefined, { category: item.category });
       }
 
+      const itemType = item.type || 'expense';
       const existing = await prisma.categoryBudget.findUnique({
-        where: { userId_category: { userId, category: item.category } },
+        where: { userId_type_category: { userId, type: itemType, category: item.category } },
       });
 
       if (!existing) {
@@ -128,7 +129,7 @@ router.put('/categories', authMiddleware, async (req: AuthRequest, res: Response
       }
 
       const updated = await prisma.categoryBudget.update({
-        where: { userId_category: { userId, category: item.category } },
+        where: { userId_type_category: { userId, type: itemType, category: item.category } },
         data: { budgetLimit: Number(item.budget_limit) },
       });
 
@@ -156,9 +157,14 @@ router.delete('/categories/:category', authMiddleware, async (req: AuthRequest, 
   try {
     const userId = req.userId!;
     const category = req.params.category as string;
+    const type = (req.query.type as string) || 'expense';
+
+    if (type !== 'income' && type !== 'expense') {
+      throw createI18nError('category_type_invalid', 400);
+    }
 
     const existing = await prisma.categoryBudget.findUnique({
-      where: { userId_category: { userId, category } },
+      where: { userId_type_category: { userId, type, category } },
     });
 
     if (!existing) {
@@ -171,13 +177,13 @@ router.delete('/categories/:category', authMiddleware, async (req: AuthRequest, 
 
     // Update related transactions to "other"
     await prisma.transaction.updateMany({
-      where: { userId, category },
-      data: { category: 'other' },
+      where: { userId, category, type },
+      data: { category: type === 'income' ? 'other_income' : 'other' },
     });
 
     // Delete the category
     await prisma.categoryBudget.delete({
-      where: { userId_category: { userId, category } },
+      where: { userId_type_category: { userId, type, category } },
     });
 
     const response: ApiResponse<{ category: string }> = {
