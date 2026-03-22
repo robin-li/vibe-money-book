@@ -22,13 +22,6 @@
 </p>
 
 <p align="center">
-  <a href="#-live-demo"><strong>Live Demo</strong></a> ·
-  <a href="#-features">Features</a> ·
-  <a href="#-quick-start">Quick Start</a> ·
-  <a href="#-screenshots">Screenshots</a>
-</p>
-
-<p align="center">
   <img src="docs/screenshots/01-home-dashboard.jpg" alt="Vibe Money Book Home Dashboard" width="300" />
 </p>
 

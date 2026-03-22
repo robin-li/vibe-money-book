@@ -22,13 +22,6 @@
 </p>
 
 <p align="center">
-  <a href="#-demo-trực-tuyến"><strong>Demo trực tuyến</strong></a> ·
-  <a href="#-tính-năng">Tính năng</a> ·
-  <a href="#-bắt-đầu-nhanh">Bắt đầu nhanh</a> ·
-  <a href="#-ảnh-chụp-màn-hình">Ảnh chụp màn hình</a>
-</p>
-
-<p align="center">
   <img src="docs/screenshots/01-home-dashboard.jpg" alt="Bảng điều khiển trang chủ Vibe Money Book" width="300" />
 </p>
 

@@ -22,13 +22,6 @@
 </p>
 
 <p align="center">
-  <a href="#-live-demo"><strong>Live Demo</strong></a> ·
-  <a href="#-功能特色">功能特色</a> ·
-  <a href="#-快速开始">快速开始</a> ·
-  <a href="#-截图展示">截图展示</a>
-</p>
-
-<p align="center">
   <img src="docs/screenshots/01-home-dashboard.jpg" alt="Vibe Money Book 首页仪表盘" width="300" />
 </p>
 
