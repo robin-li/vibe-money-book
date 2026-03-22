@@ -410,10 +410,21 @@ const QUERY_RANGE_TOO_LARGE_MESSAGES: Record<string, Record<Persona, string>> = 
     gentle: "That's a lot of data to go through~ Could you try a shorter time period? I can give you much better insights that way 💕",
     guilt_trip: 'You want me to look through all that data at once... Do you even care about me? Please try one month at a time 🥺',
   },
+  'zh-CN': {
+    sarcastic: '半年的账？你是要我加班到死吗？把范围缩小一点再来，我又不是超级电脑。',
+    gentle: '这段时间的数据好多呢～可以试试查询某个月份吗？这样我能给你更精确的分析哦 💕',
+    guilt_trip: '你要我一次看这么多数据...是不是不在乎我的感受？拜托一次查一个月好不好嘛 🥺',
+  },
+  vi: {
+    sarcastic: 'Nửa năm chi tiêu? Tôi là kế toán riêng của bạn à? Thu hẹp phạm vi lại đi, tôi không phải siêu máy tính đâu.',
+    gentle: 'Dữ liệu nhiều quá đi~ Bạn thử hỏi theo từng tháng được không? Như vậy mình phân tích chính xác hơn nè 💕',
+    guilt_trip: 'Bạn muốn mình xem nhiều dữ liệu vậy sao... Bạn có quan tâm mình không? Hỏi từng tháng thôi mà 🥺',
+  },
 };
 
 export function getQueryRangeTooLargeMessage(persona: Persona, language: string): string {
-  const lang = language.startsWith('en') ? 'en' : 'zh-TW';
+  const langMap: Record<string, string> = { 'zh-TW': 'zh-TW', 'zh-CN': 'zh-CN', en: 'en', vi: 'vi' };
+  const lang = langMap[language] || (language.startsWith('en') ? 'en' : language.startsWith('zh') ? 'zh-TW' : 'zh-TW');
   const messages = QUERY_RANGE_TOO_LARGE_MESSAGES[lang] || QUERY_RANGE_TOO_LARGE_MESSAGES['zh-TW'];
   return messages[persona] || messages['sarcastic'];
 }
