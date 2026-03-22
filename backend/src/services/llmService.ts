@@ -329,6 +329,25 @@ export async function queryTransactions(
   // 階段 1：時間範圍解析
   const timeRange = await parseTimeRange(queryText, currentDateTime, apiKey, provider, taipeiDate);
 
+  // 階段 1.5：檢查查詢範圍是否超過 180 天（6 個月）
+  const rangeStartDate = new Date(timeRange.start_date);
+  const rangeEndDate = new Date(timeRange.end_date);
+  const rangeDays = Math.ceil((rangeEndDate.getTime() - rangeStartDate.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (rangeDays > 180) {
+    const personaMessage = getQueryRangeTooLargeMessage(persona, userLanguage);
+    return {
+      summary: {
+        text: personaMessage,
+        emotion_tag: 'neutral',
+        total_amount: 0,
+        match_count: 0,
+      },
+      matched_transaction_ids: [],
+      time_range: timeRange,
+    };
+  }
+
   // 階段 2a：查詢 DB 取得交易記錄
   const startDate = new Date(timeRange.start_date);
   const endDate = new Date(timeRange.end_date);
@@ -376,6 +395,27 @@ export async function queryTransactions(
     matched_transaction_ids: matchResult.matched_ids,
     time_range: timeRange,
   };
+}
+
+// ─── 查詢範圍過大時的人設回應 ───
+
+const QUERY_RANGE_TOO_LARGE_MESSAGES: Record<string, Record<Persona, string>> = {
+  'zh-TW': {
+    sarcastic: '半年的帳？你是要我加班到死嗎？把範圍縮小一點再來，我又不是超級電腦。',
+    gentle: '這段時間的數據好多呢～可以試試查詢某個月份嗎？這樣我能給你更精確的分析喔 💕',
+    guilt_trip: '你要我一次看這麼多數據...是不是不在乎我的感受？拜託一次查一個月好不好嘛 🥺',
+  },
+  en: {
+    sarcastic: "Six months of expenses? Am I your personal accountant? Narrow it down, I'm not a supercomputer.",
+    gentle: "That's a lot of data to go through~ Could you try a shorter time period? I can give you much better insights that way 💕",
+    guilt_trip: 'You want me to look through all that data at once... Do you even care about me? Please try one month at a time 🥺',
+  },
+};
+
+export function getQueryRangeTooLargeMessage(persona: Persona, language: string): string {
+  const lang = language.startsWith('en') ? 'en' : 'zh-TW';
+  const messages = QUERY_RANGE_TOO_LARGE_MESSAGES[lang] || QUERY_RANGE_TOO_LARGE_MESSAGES['zh-TW'];
+  return messages[persona] || messages['sarcastic'];
 }
 
 async function parseTimeRange(
