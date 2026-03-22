@@ -1,0 +1,14 @@
+{
+  "language": {
+    "title": "Language"
+  },
+  "persona": {
+    "title": "AI Persona",
+    "sarcastic": "Sarcastic",
+    "gentle": "Gentle",
+    "guilt_trip": "Guilt Trip"
+  },
+  "budget": {
+    "title": "Monthly Budget"
+  }
+}

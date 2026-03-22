@@ -1,0 +1,17 @@
+{
+  "save": "Save",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "delete": "Delete",
+  "edit": "Edit",
+  "loading": "Loading...",
+  "error": "An error occurred",
+  "retry": "Retry",
+  "back": "Back",
+  "next": "Next",
+  "done": "Done",
+  "close": "Close",
+  "search": "Search",
+  "noData": "No data",
+  "currency": "USD"
+}

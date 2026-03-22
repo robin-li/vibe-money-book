@@ -1,0 +1,12 @@
+{
+  "distribution": {
+    "title": "Expense Distribution"
+  },
+  "period": {
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month",
+    "custom": "Custom"
+  },
+  "totalIncome": "Total Income",
+  "totalExpense": "Total Expense"
+}

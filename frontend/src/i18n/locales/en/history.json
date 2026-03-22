@@ -1,0 +1,10 @@
+{
+  "filter": {
+    "category": "Category",
+    "dateRange": "Date Range",
+    "type": "Type"
+  },
+  "aiQuery": {
+    "placeholder": "Search transactions with natural language..."
+  }
+}

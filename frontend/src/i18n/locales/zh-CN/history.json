@@ -1,0 +1,10 @@
+{
+  "filter": {
+    "category": "类别",
+    "dateRange": "日期范围",
+    "type": "类型"
+  },
+  "aiQuery": {
+    "placeholder": "用自然语言搜索交易记录..."
+  }
+}

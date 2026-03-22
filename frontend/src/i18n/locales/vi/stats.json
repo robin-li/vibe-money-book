@@ -1,0 +1,12 @@
+{
+  "distribution": {
+    "title": "Phân bổ chi tiêu"
+  },
+  "period": {
+    "thisMonth": "Tháng này",
+    "lastMonth": "Tháng trước",
+    "custom": "Tùy chỉnh"
+  },
+  "totalIncome": "Tổng thu nhập",
+  "totalExpense": "Tổng chi tiêu"
+}

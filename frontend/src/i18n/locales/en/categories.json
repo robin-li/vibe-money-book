@@ -1,0 +1,12 @@
+{
+  "food": "Food",
+  "transport": "Transport",
+  "entertainment": "Entertainment",
+  "shopping": "Shopping",
+  "housing": "Housing",
+  "medical": "Medical",
+  "education": "Education",
+  "other": "Other",
+  "salary": "Salary",
+  "investment": "Investment"
+}

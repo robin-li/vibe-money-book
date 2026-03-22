@@ -1,0 +1,12 @@
+{
+  "distribution": {
+    "title": "支出分布"
+  },
+  "period": {
+    "thisMonth": "本月",
+    "lastMonth": "上月",
+    "custom": "自訂"
+  },
+  "totalIncome": "總收入",
+  "totalExpense": "總支出"
+}

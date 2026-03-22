@@ -1,0 +1,14 @@
+{
+  "language": {
+    "title": "Ngôn ngữ"
+  },
+  "persona": {
+    "title": "Nhân cách AI",
+    "sarcastic": "Châm biếm",
+    "gentle": "Nhẹ nhàng",
+    "guilt_trip": "Cảm giác tội lỗi"
+  },
+  "budget": {
+    "title": "Ngân sách tháng"
+  }
+}

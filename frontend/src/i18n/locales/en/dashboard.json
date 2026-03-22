@@ -1,0 +1,10 @@
+{
+  "budgetCard": {
+    "title": "Monthly Budget"
+  },
+  "recentTransactions": "Recent Transactions",
+  "voiceInput": {
+    "placeholder": "Tell me what you spent...",
+    "recording": "Recording..."
+  }
+}
