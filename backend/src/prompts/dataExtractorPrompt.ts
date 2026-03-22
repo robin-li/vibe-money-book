@@ -1,5 +1,16 @@
 import { DataExtractorInput } from '../types/llm';
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  'zh-TW': '繁體中文',
+  'en': 'English',
+  'zh-CN': '简体中文',
+  'vi': 'Tiếng Việt',
+};
+
+function getLanguageName(lang: string): string {
+  return LANGUAGE_NAMES[lang] || LANGUAGE_NAMES['zh-TW'];
+}
+
 export function buildDataExtractorPrompt(input: DataExtractorInput): string {
   // Build categorized list if available, otherwise use flat list
   // Category name mapping for display in prompt
@@ -87,7 +98,7 @@ ${input.aiInstructions ? `\n## 使用者自訂指示（請優先遵從）\n${inp
 | catalogtype_confidence | number (0-1) | 類別匹配度：所選 category 與使用者輸入內容的語義匹配程度。1.0=完全匹配（如「拉麵」→food），0.5=勉強匹配（如「飛行傘」→entertainment），0=完全不匹配 |
 | is_new_category | boolean | **強制規則：catalogtype_confidence < 0.8 時必須為 true**（見規則5） |
 | suggested_category | string 或 null | is_new_category 為 true 時，填入建議的中文類別名稱 |
-| note | string 或 null | 備註：無法歸入結構化欄位的有價值上下文（店名、地點、對象、購買原因等），不超過100字，若已完整涵蓋則為 null |
+| note | string 或 null | 備註：無法歸入結構化欄位的有價值上下文（店名、地點、對象、購買原因等），不超過100字，若已完整涵蓋則為 null。**必須使用${getLanguageName(input.targetLanguage || 'zh-TW')}撰寫** |
 
 JSON 結構：
 {

@@ -109,6 +109,7 @@ export async function parseTransaction(
     categoriesWithType,
     currentDateTime,
     aiInstructions: user.aiInstructions,
+    targetLanguage,
   });
 
 

@@ -137,6 +137,64 @@ describe('T-603: AI Prompt i18n', () => {
       expect(prompt).toContain('yesterday');
       expect(prompt).toContain('hôm qua');
     });
+
+    it('should instruct note field to use zh-TW by default', () => {
+      const prompt = buildDataExtractorPrompt({
+        rawText: 'test',
+        categories: ['food'],
+        currentDateTime: '2026年3月22日',
+      });
+      expect(prompt).toContain('繁體中文');
+      expect(prompt).toMatch(/note.*必須使用繁體中文撰寫/);
+    });
+
+    it('should instruct note field to use English when targetLanguage is "en"', () => {
+      const prompt = buildDataExtractorPrompt({
+        rawText: 'bought a t-shirt',
+        categories: ['daily'],
+        currentDateTime: '2026年3月22日',
+        targetLanguage: 'en',
+      });
+      expect(prompt).toMatch(/note.*必須使用English撰寫/);
+    });
+
+    it('should instruct note field to use zh-CN when targetLanguage is "zh-CN"', () => {
+      const prompt = buildDataExtractorPrompt({
+        rawText: '买了一件衣服',
+        categories: ['daily'],
+        currentDateTime: '2026年3月22日',
+        targetLanguage: 'zh-CN',
+      });
+      expect(prompt).toMatch(/note.*必須使用简体中文撰寫/);
+    });
+
+    it('should instruct note field to use Vietnamese when targetLanguage is "vi"', () => {
+      const prompt = buildDataExtractorPrompt({
+        rawText: 'mua áo',
+        categories: ['daily'],
+        currentDateTime: '2026年3月22日',
+        targetLanguage: 'vi',
+      });
+      expect(prompt).toMatch(/note.*必須使用Tiếng Việt撰寫/);
+    });
+
+    it('should instruct note field in all supported languages', () => {
+      const langMap: Record<string, string> = {
+        'zh-TW': '繁體中文',
+        'en': 'English',
+        'zh-CN': '简体中文',
+        'vi': 'Tiếng Việt',
+      };
+      for (const [lang, name] of Object.entries(langMap)) {
+        const prompt = buildDataExtractorPrompt({
+          rawText: 'test',
+          categories: ['food'],
+          currentDateTime: '2026年3月22日',
+          targetLanguage: lang,
+        });
+        expect(prompt).toContain(`必須使用${name}撰寫`);
+      }
+    });
   });
 
   describe('intentDetectorPrompt', () => {
