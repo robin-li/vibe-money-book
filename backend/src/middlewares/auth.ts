@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { jwtConfig } from '../config/jwt';
-import { AppError } from './errorHandler';
+import { createI18nError } from './errorHandler';
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -19,7 +19,7 @@ export function authMiddleware(
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new AppError('未提供認證 Token', 401);
+    throw createI18nError('token_missing', 401);
   }
 
   const token = authHeader.substring(7);
@@ -30,8 +30,8 @@ export function authMiddleware(
     next();
   } catch (err) {
     if (err instanceof jwt.TokenExpiredError) {
-      throw new AppError('Token 已過期', 401);
+      throw createI18nError('token_expired', 401);
     }
-    throw new AppError('Token 無效', 401);
+    throw createI18nError('token_invalid', 401);
   }
 }

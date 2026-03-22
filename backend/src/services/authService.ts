@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt, { SignOptions } from 'jsonwebtoken';
 import prisma from '../config/database';
 import { jwtConfig } from '../config/jwt';
-import { AppError } from '../middlewares/errorHandler';
+import { createI18nError } from '../middlewares/errorHandler';
 import { RegisterInput, LoginInput } from '../validators/authValidators';
 
 const BCRYPT_ROUNDS = 10;
@@ -67,7 +67,7 @@ export async function register(input: RegisterInput) {
     where: { email: input.email },
   });
   if (existing) {
-    throw new AppError('此 Email 已被註冊', 409);
+    throw createI18nError('email_already_exists', 409);
   }
 
   const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
@@ -93,12 +93,12 @@ export async function login(input: LoginInput) {
     where: { email: input.email },
   });
   if (!user) {
-    throw new AppError('Email 或密碼錯誤', 401);
+    throw createI18nError('invalid_credentials', 401);
   }
 
   const isPasswordValid = await bcrypt.compare(input.password, user.passwordHash);
   if (!isPasswordValid) {
-    throw new AppError('Email 或密碼錯誤', 401);
+    throw createI18nError('invalid_credentials', 401);
   }
 
   const token = generateToken(user.id);

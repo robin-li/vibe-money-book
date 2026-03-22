@@ -2,8 +2,9 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { aiParseSchema, aiQuerySchema } from '../validators/aiValidators';
 import * as llmService from '../services/llmService';
-import { AppError } from '../middlewares/errorHandler';
+import { createI18nError } from '../middlewares/errorHandler';
 import { ApiResponse } from '../types';
+import { t } from '../i18n';
 import { ZodError } from 'zod';
 import prisma from '../config/database';
 
@@ -31,7 +32,7 @@ async function extractApiKey(req: AuthRequest): Promise<string> {
   const defaultKey = getDefaultApiKey(engine);
   if (defaultKey) return defaultKey;
 
-  throw new AppError('請提供 LLM API Key（X-LLM-API-Key Header）', 400);
+  throw createI18nError('llm_api_key_missing', 400);
 }
 
 export async function aiParse(
@@ -42,7 +43,7 @@ export async function aiParse(
   try {
     const parsed = aiParseSchema.safeParse(req.body);
     if (!parsed.success) {
-      throw new AppError('參數驗證失敗', 400, formatZodErrors(parsed.error));
+      throw createI18nError('validation_failed', 400, formatZodErrors(parsed.error));
     }
 
     const apiKey = await extractApiKey(req);
@@ -52,7 +53,7 @@ export async function aiParse(
 
     const response: ApiResponse<typeof result> = {
       code: 200,
-      message: result.intent === 'chat' ? '對話回覆成功' : '解析成功',
+      message: result.intent === 'chat' ? t('chat_reply_success', req.locale) : t('parse_success', req.locale),
       data: result,
       timestamp: new Date().toISOString(),
     };
@@ -76,7 +77,7 @@ export async function validateKey(
 
     const response: ApiResponse<typeof result> = {
       code: 200,
-      message: '驗證成功',
+      message: t('validate_success', req.locale),
       data: result,
       timestamp: new Date().toISOString(),
     };
@@ -95,7 +96,7 @@ export async function aiQuery(
   try {
     const parsed = aiQuerySchema.safeParse(req.body);
     if (!parsed.success) {
-      throw new AppError('參數驗證失敗', 400, formatZodErrors(parsed.error));
+      throw createI18nError('validation_failed', 400, formatZodErrors(parsed.error));
     }
 
     const apiKey = await extractApiKey(req);
@@ -105,7 +106,7 @@ export async function aiQuery(
 
     const response: ApiResponse<typeof result> = {
       code: 200,
-      message: '查詢成功',
+      message: t('query_success', req.locale),
       data: result,
       timestamp: new Date().toISOString(),
     };
@@ -117,14 +118,14 @@ export async function aiQuery(
 }
 
 export async function getAIConfig(
-  _req: AuthRequest,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> {
   try {
     const response: ApiResponse<{ hasDefaultKey: Record<string, boolean> }> = {
       code: 200,
-      message: '取得 AI 配置',
+      message: t('ai_config_fetched', req.locale),
       data: {
         hasDefaultKey: {
           gemini: !!process.env.DEFAULT_GEMINI_API_KEY,

@@ -1,5 +1,5 @@
 import prisma from '../config/database';
-import { AppError } from '../middlewares/errorHandler';
+import { createI18nError } from '../middlewares/errorHandler';
 import { formatUserResponse } from './authService';
 import { UpdateProfileInput } from '../validators/userValidators';
 
@@ -9,7 +9,7 @@ export async function getProfile(userId: string) {
   });
 
   if (!user) {
-    throw new AppError('使用者不存在', 404);
+    throw createI18nError('user_not_found', 404);
   }
 
   return formatUserResponse(user);

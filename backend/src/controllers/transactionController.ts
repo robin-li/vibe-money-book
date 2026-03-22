@@ -2,8 +2,9 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { createTransactionSchema, listTransactionsSchema } from '../validators/transactionValidators';
 import * as transactionService from '../services/transactionService';
-import { AppError } from '../middlewares/errorHandler';
+import { createI18nError } from '../middlewares/errorHandler';
 import { ApiResponse } from '../types';
+import { t } from '../i18n';
 import { ZodError } from 'zod';
 
 function formatZodErrors(error: ZodError) {
@@ -21,14 +22,14 @@ export async function createTransaction(
   try {
     const parsed = createTransactionSchema.safeParse(req.body);
     if (!parsed.success) {
-      throw new AppError('參數驗證失敗', 400, formatZodErrors(parsed.error));
+      throw createI18nError('validation_failed', 400, formatZodErrors(parsed.error));
     }
 
     const result = await transactionService.createTransaction(req.userId!, parsed.data);
 
     const response: ApiResponse<typeof result> = {
       code: 201,
-      message: '交易建立成功',
+      message: t('transaction_created', req.locale),
       data: result,
       timestamp: new Date().toISOString(),
     };
@@ -47,7 +48,7 @@ export async function listTransactions(
   try {
     const parsed = listTransactionsSchema.safeParse(req.query);
     if (!parsed.success) {
-      throw new AppError('參數驗證失敗', 400, formatZodErrors(parsed.error));
+      throw createI18nError('validation_failed', 400, formatZodErrors(parsed.error));
     }
 
     const result = await transactionService.listTransactions(req.userId!, parsed.data);
@@ -98,7 +99,7 @@ export async function updateTransaction(
 
     const response: ApiResponse<typeof result> = {
       code: 200,
-      message: '交易更新成功',
+      message: t('transaction_updated', req.locale),
       data: result,
       timestamp: new Date().toISOString(),
     };

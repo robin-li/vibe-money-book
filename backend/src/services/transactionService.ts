@@ -1,5 +1,5 @@
 import prisma from '../config/database';
-import { AppError } from '../middlewares/errorHandler';
+import { createI18nError } from '../middlewares/errorHandler';
 import { CreateTransactionInput, ListTransactionsInput } from '../validators/transactionValidators';
 
 export async function createTransaction(userId: string, input: CreateTransactionInput) {
@@ -93,11 +93,11 @@ export async function getTransaction(userId: string, id: string) {
   });
 
   if (!transaction) {
-    throw new AppError('交易記錄不存在', 404);
+    throw createI18nError('transaction_not_found', 404);
   }
 
   if (transaction.userId !== userId) {
-    throw new AppError('交易記錄不存在', 404);
+    throw createI18nError('transaction_not_found', 404);
   }
 
   return formatTransactionDetail(transaction);
@@ -109,8 +109,8 @@ export async function updateTransaction(
   input: { type?: string; amount?: number; category?: string; merchant?: string; transaction_date?: string; note?: string }
 ) {
   const transaction = await prisma.transaction.findUnique({ where: { id } });
-  if (!transaction) throw new AppError('交易記錄不存在', 404);
-  if (transaction.userId !== userId) throw new AppError('交易記錄不存在', 404);
+  if (!transaction) throw createI18nError('transaction_not_found', 404);
+  if (transaction.userId !== userId) throw createI18nError('transaction_not_found', 404);
 
   const data: Record<string, unknown> = {};
   if (input.type !== undefined) data.type = input.type;
@@ -135,11 +135,11 @@ export async function deleteTransaction(userId: string, id: string) {
   });
 
   if (!transaction) {
-    throw new AppError('交易記錄不存在', 404);
+    throw createI18nError('transaction_not_found', 404);
   }
 
   if (transaction.userId !== userId) {
-    throw new AppError('交易記錄不存在', 404);
+    throw createI18nError('transaction_not_found', 404);
   }
 
   await prisma.transaction.delete({ where: { id } });

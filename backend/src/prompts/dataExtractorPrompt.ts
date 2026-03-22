@@ -28,12 +28,13 @@ export function buildDataExtractorPrompt(input: DataExtractorInput): string {
   }
 
   return `你是一個記帳助手，負責將使用者的自然語言輸入轉換為結構化的 JSON 資料。
+你能理解多種語言的輸入，包括繁體中文、簡體中文、英文、越南文等。無論使用者用什麼語言輸入，你都必須正確萃取記帳資訊。
 
 ## 規則
 1. 從使用者輸入中萃取：交易類型、金額、類別、商家、日期
 2. **交易類型（type）**：判斷是收入（income）還是消費（expense）
-   - 收入關鍵字：薪水、薪資、獎金、紅包、退款、利息、收入、入帳、進帳、賣出、兼職、稿費、股息、投資獲利、賺、中獎等
-   - 消費關鍵字：買、吃、喝、搭、付、花、繳、租、訂閱等（或任何花錢行為）
+   - 收入關鍵字：薪水、薪資、獎金、紅包、退款、利息、收入、入帳、進帳、賣出、兼職、稿費、股息、投資獲利、賺、中獎、salary、income、bonus、refund、lương、thưởng 等
+   - 消費關鍵字：買、吃、喝、搭、付、花、繳、租、訂閱、buy、eat、pay、spend、mua、ăn、trả 等（或任何花錢行為）
    - 若無法明確判斷收入或消費，設 type 為 "expense"（預設為消費）
 3. 金額必須為正數。若無法辨識金額，回傳 amount 為 null
 4. **類別選擇**：根據判斷的交易類型（type），從對應的類別清單中選擇：
@@ -68,6 +69,7 @@ ${categorySection}
    - 「昨天」= 今天減 1 天，「前天」= 今天減 2 天
    - 「上周X」= 上一個完整周的星期X（7天前的那一周）
    - 日期不可為未來日期
+   - 支援多語言日期表達：yesterday, last week, hôm qua, tuần trước 等
 9. 僅處理第一筆消費，若包含多筆，忽略後續的
 10. confidence 值介於 0 到 1 之間，反映解析的確定性
 ${input.aiInstructions ? `\n## 使用者自訂指示（請優先遵從）\n${input.aiInstructions}\n` : ''}
@@ -105,4 +107,4 @@ JSON 結構：
 ${input.rawText}`;
 }
 
-export const DATA_EXTRACTOR_SYSTEM_PROMPT = '你是一個精確的記帳資料萃取引擎。你只能回傳 JSON 格式的結果，不能包含任何其他文字。';
+export const DATA_EXTRACTOR_SYSTEM_PROMPT = '你是一個精確的記帳資料萃取引擎。你只能回傳 JSON 格式的結果，不能包含任何其他文字。你能理解多種語言的輸入（繁體中文、簡體中文、英文、越南文等）。';
