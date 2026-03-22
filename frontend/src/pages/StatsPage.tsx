@@ -223,7 +223,7 @@ function StatsPage() {
           <section aria-label={isExpense ? t('distribution.expenseDistribution') : t('distribution.incomeDistribution')} className="mb-xl">
             <DistributionChart
               data={distribution}
-              totalSpent={isExpense ? (budgetSummary?.totalSpent ?? totalAmount) : totalAmount}
+              totalSpent={totalAmount}
               emptyMessage={isExpense ? t('noExpenseRecords') : t('noIncomeRecords')}
             />
           </section>
