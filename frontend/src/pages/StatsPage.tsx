@@ -205,18 +205,16 @@ function StatsPage() {
               <p className="text-caption text-text-secondary">
                 {getTotalLabel()}
               </p>
-              {isExpense && budgetSummary && budgetSummary.monthlyBudget > 0 && (
+              {isExpense && timeFilter !== 'custom' && budgetSummary && budgetSummary.monthlyBudget > 0 && (
                 <p className="text-small text-text-secondary">
                   {t('target')}：{formatMoney(budgetSummary.monthlyBudget)}
                 </p>
               )}
             </div>
             <p className={`text-headline font-bold mb-md ${isExpense ? 'text-danger' : 'text-success'}`}>
-              {isExpense
-                ? formatMoney(budgetSummary?.totalSpent ?? totalAmount)
-                : formatMoney(totalAmount)}
+              {formatMoney(totalAmount)}
             </p>
-            {isExpense && budgetSummary && budgetSummary.monthlyBudget > 0 && (
+            {isExpense && timeFilter !== 'custom' && budgetSummary && budgetSummary.monthlyBudget > 0 && (
               <BudgetBar usedRatio={budgetSummary.usedRatio} />
             )}
           </section>
