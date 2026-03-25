@@ -16,7 +16,8 @@ model User {
   email          String   @unique
   passwordHash   String   @map("password_hash")
   persona        String   @default("gentle") // sarcastic, gentle, guilt_trip
-  aiEngine       String   @default("gemini") @map("ai_engine") // gemini, openai
+  aiEngine       String   @default("gemini") @map("ai_engine") // gemini, openai, anthropic, xai
+  aiModel        String?  @map("ai_model")
   monthlyBudget  Decimal  @default(30000.00) @map("monthly_budget")
   currency       String   @default("TWD")
   language       String   @default("zh-TW")

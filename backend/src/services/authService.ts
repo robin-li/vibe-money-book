@@ -41,6 +41,7 @@ export function formatUserResponse(user: {
   email: string;
   persona: string;
   aiEngine: string;
+  aiModel?: string | null;
   monthlyBudget: unknown;
   currency: string;
   language: string;
@@ -53,6 +54,7 @@ export function formatUserResponse(user: {
     email: user.email,
     persona: user.persona,
     ai_engine: user.aiEngine,
+    ai_model: user.aiModel ?? null,
     monthly_budget: Number(user.monthlyBudget),
     currency: user.currency,
     language: user.language,

@@ -1,56 +1,42 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Anthropic from '@anthropic-ai/sdk';
 import { LLMProvider } from './llmProvider';
 import { ParsedTransaction, AIFeedbackContent, ModelInfo } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { createI18nError } from '../../middlewares/errorHandler';
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3-flash-preview';
+const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
 const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 30000;
 const MAX_RETRIES = 2;
 
-export class GeminiProvider implements LLMProvider {
+export class AnthropicProvider implements LLMProvider {
   private async callWithRetry(
     apiKey: string,
     systemPrompt: string,
     userPrompt: string,
     temperature: number,
     maxTokens: number,
-    responseMimeType?: string,
     model?: string
   ): Promise<string> {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const generationConfig: Record<string, unknown> = {
-      temperature,
-      maxOutputTokens: maxTokens,
-      // Disable thinking to reduce latency and token usage
-      thinkingConfig: { thinkingBudget: 0 },
-    };
-    if (responseMimeType) {
-      generationConfig.responseMimeType = responseMimeType;
-    }
-    const genModel = genAI.getGenerativeModel({
-      model: model || GEMINI_MODEL,
-      generationConfig,
-      systemInstruction: systemPrompt,
-    });
+    const client = new Anthropic({ apiKey, timeout: TIMEOUT_MS });
 
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const generatePromise = genModel.generateContent({
-          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+        const response = await client.messages.create({
+          model: model || ANTHROPIC_MODEL,
+          max_tokens: maxTokens,
+          temperature,
+          system: systemPrompt,
+          messages: [
+            { role: 'user', content: userPrompt },
+          ],
         });
 
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Gemini API timeout')), TIMEOUT_MS)
-        );
-
-        const result = await Promise.race([generatePromise, timeoutPromise]);
-
-        const text = result.response.text();
+        const textBlock = response.content.find((block) => block.type === 'text');
+        const text = textBlock && 'text' in textBlock ? textBlock.text : null;
         if (!text) {
-          throw new Error('Gemini 回傳空結果');
+          throw new Error('Anthropic 回傳空結果');
         }
         return text;
       } catch (err) {
@@ -62,46 +48,49 @@ export class GeminiProvider implements LLMProvider {
     }
 
     const message = lastError?.message || '';
-    console.error('[Gemini Error]', message, lastError);
-    if (message.includes('API_KEY_INVALID') || message.includes('PERMISSION_DENIED')) {
-      throw createI18nError('gemini_api_key_invalid', 403);
+    console.error('[Anthropic Error]', message, lastError);
+    if (message.includes('invalid x-api-key') || message.includes('authentication_error')) {
+      throw createI18nError('anthropic_api_key_invalid', 403);
     }
-    if (message.includes('RESOURCE_EXHAUSTED') || message.includes('quota')) {
-      throw createI18nError('gemini_quota_exhausted', 403);
+    if (message.includes('rate_limit') || message.includes('overloaded')) {
+      throw createI18nError('anthropic_quota_exhausted', 403);
     }
     throw createI18nError('llm_service_unavailable', 502);
   }
 
   async extractData(prompt: string, apiKey: string, model?: string): Promise<ParsedTransaction> {
-    const text = await this.callWithRetry(apiKey, DATA_EXTRACTOR_SYSTEM_PROMPT, prompt, 0, 2048, 'application/json', model);
+    const systemPrompt = DATA_EXTRACTOR_SYSTEM_PROMPT + '\n\nYou MUST respond with valid JSON only. No markdown, no code blocks, no explanation.';
+    const text = await this.callWithRetry(apiKey, systemPrompt, prompt, 0, 2048, model);
     return this.parseJSON<ParsedTransaction>(text);
   }
 
   async generateFeedback(prompt: string, apiKey: string, model?: string): Promise<AIFeedbackContent> {
-    // The persona system prompt is embedded in the prompt parameter
     const parts = prompt.split('\n---SYSTEM---\n');
-    const systemPrompt = parts.length > 1 ? parts[0] : '';
+    const systemPrompt = parts.length > 1
+      ? parts[0] + '\n\nYou MUST respond with valid JSON only. No markdown, no code blocks, no explanation.'
+      : 'You MUST respond with valid JSON only.';
     const userPrompt = parts.length > 1 ? parts[1] : prompt;
-    const text = await this.callWithRetry(apiKey, systemPrompt, userPrompt, 0.8, 4096, 'application/json', model);
+    const text = await this.callWithRetry(apiKey, systemPrompt, userPrompt, 0.8, 4096, model);
     return this.parseJSON<AIFeedbackContent>(text);
   }
 
   async generateText(systemPrompt: string, userPrompt: string, apiKey: string, model?: string): Promise<string> {
-    return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024, 'application/json', model);
+    const enhancedSystemPrompt = systemPrompt + '\n\nYou MUST respond with valid JSON only. No markdown, no code blocks, no explanation.';
+    return this.callWithRetry(apiKey, enhancedSystemPrompt, userPrompt, 0, 1024, model);
   }
 
   getAvailableModels(): ModelInfo[] {
     return [
       {
-        id: 'gemini-3-flash-preview',
-        name: 'Gemini 3 Flash',
-        description: 'Fast and efficient model for everyday tasks',
+        id: 'claude-haiku-4-5-20251001',
+        name: 'Claude Haiku 4.5',
+        description: 'Fast and cost-effective model for everyday tasks',
         isDefault: true,
       },
       {
-        id: 'gemini-2.5-pro-preview-05-06',
-        name: 'Gemini 2.5 Pro',
-        description: 'Advanced model with stronger reasoning capabilities',
+        id: 'claude-sonnet-4-5-20250514',
+        name: 'Claude Sonnet 4.5',
+        description: 'Advanced model with strong reasoning and analysis',
         isDefault: false,
       },
     ];
@@ -109,10 +98,11 @@ export class GeminiProvider implements LLMProvider {
 
   async validateKey(apiKey: string): Promise<boolean> {
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const genModel = genAI.getGenerativeModel({ model: GEMINI_MODEL });
-      await genModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: 'test' }] }],
+      const client = new Anthropic({ apiKey, timeout: TIMEOUT_MS });
+      await client.messages.create({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 5,
+        messages: [{ role: 'user', content: 'test' }],
       });
       return true;
     } catch {

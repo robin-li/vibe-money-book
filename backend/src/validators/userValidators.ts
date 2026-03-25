@@ -14,9 +14,14 @@ export const updateProfileSchema = z.object({
     })
     .optional(),
   ai_engine: z
-    .enum(['gemini', 'openai'], {
-      error: 'AI 引擎必須為 gemini 或 openai',
+    .enum(['gemini', 'openai', 'anthropic', 'xai'], {
+      error: 'AI 引擎必須為 gemini、openai、anthropic 或 xai',
     })
+    .optional(),
+  ai_model: z
+    .string()
+    .max(100, 'AI 模型名稱最多 100 個字元')
+    .nullable()
     .optional(),
   monthly_budget: z
     .number()

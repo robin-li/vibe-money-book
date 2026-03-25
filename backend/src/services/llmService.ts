@@ -60,11 +60,12 @@ export async function parseTransaction(
   const engine = user.aiEngine as AIEngine;
   const persona = user.persona as Persona;
   const provider = getProvider(engine);
+  const userModel = (user as Record<string, unknown>).aiModel as string | undefined;
 
   const targetLanguage = user.language || 'zh-TW';
 
   // 0. Intent detection
-  const intent = await detectIntent(rawText, apiKey, provider);
+  const intent = await detectIntent(rawText, apiKey, provider, userModel);
 
 
   // 1. If chat intent → generate chat reply and return
@@ -72,7 +73,7 @@ export async function parseTransaction(
     const financialContext = await getFinancialContext(userId, user.monthlyBudget);
     let chatReply: AIFeedbackContent;
     try {
-      chatReply = await generateChatReply(persona, rawText, financialContext, apiKey, provider, user.aiInstructions, targetLanguage);
+      chatReply = await generateChatReply(persona, rawText, financialContext, apiKey, provider, user.aiInstructions, targetLanguage, userModel);
     } catch (err) {
       console.warn('[Chat Fallback] generateChatReply 失敗，使用預設回饋', err);
       chatReply = { text: '已記錄！', emotion_tag: 'neutral' };
@@ -113,7 +114,7 @@ export async function parseTransaction(
   });
 
 
-  const parsed = await provider.extractData(extractorPrompt, apiKey);
+  const parsed = await provider.extractData(extractorPrompt, apiKey, userModel);
 
 
 
@@ -174,7 +175,7 @@ export async function parseTransaction(
 
   let feedback: AIFeedbackContent;
   try {
-    feedback = await provider.generateFeedback(combinedPrompt, apiKey);
+    feedback = await provider.generateFeedback(combinedPrompt, apiKey, userModel);
   } catch (err) {
     console.warn('[Feedback Fallback] generateFeedback 失敗，使用預設回饋', err);
     feedback = { text: '已記錄！', emotion_tag: 'neutral' };
@@ -186,11 +187,12 @@ export async function parseTransaction(
 async function detectIntent(
   rawText: string,
   apiKey: string,
-  provider: ReturnType<typeof getProvider>
+  provider: ReturnType<typeof getProvider>,
+  model?: string
 ): Promise<Intent> {
   try {
     const userPrompt = buildIntentDetectorPrompt(rawText);
-    const text = await provider.generateText(INTENT_DETECTOR_SYSTEM_PROMPT, userPrompt, apiKey);
+    const text = await provider.generateText(INTENT_DETECTOR_SYSTEM_PROMPT, userPrompt, apiKey, model);
 
     // Parse intent from JSON response
     let cleaned = text.trim();
@@ -283,7 +285,8 @@ async function generateChatReply(
   apiKey: string,
   provider: ReturnType<typeof getProvider>,
   aiInstructions?: string | null,
-  targetLanguage?: string
+  targetLanguage?: string,
+  model?: string
 ): Promise<AIFeedbackContent> {
   const systemPrompt = getChatPersonaSystemPrompt(persona, targetLanguage);
   const userPrompt = buildChatReplyPrompt({ persona, rawText, financialContext, aiInstructions });
@@ -293,7 +296,7 @@ async function generateChatReply(
   const combinedPrompt = `${systemPrompt}${aiInstructionsBlock}\n---SYSTEM---\n${userPrompt}`;
 
 
-  return provider.generateFeedback(combinedPrompt, apiKey);
+  return provider.generateFeedback(combinedPrompt, apiKey, model);
 }
 
 // ─── AI 語義查詢 (PRD-F-014) ───
@@ -311,6 +314,7 @@ export async function queryTransactions(
   const engine = user.aiEngine as AIEngine;
   const persona = user.persona as Persona;
   const provider = getProvider(engine);
+  const queryModel = (user as Record<string, unknown>).aiModel as string | undefined;
   const userLanguage = user.language || 'zh-TW';
 
   // 當前時間（台北時區）
@@ -327,7 +331,7 @@ export async function queryTransactions(
   const currentDateTime = `${year}年${month}月${day}日 ${weekday} ${hh}:${mm}:${ss} (GMT+8)`;
 
   // 階段 1：時間範圍解析
-  const timeRange = await parseTimeRange(queryText, currentDateTime, apiKey, provider, taipeiDate);
+  const timeRange = await parseTimeRange(queryText, currentDateTime, apiKey, provider, taipeiDate, queryModel);
 
   // 階段 1.5：檢查查詢範圍是否超過 180 天（6 個月）
   const rangeStartDate = new Date(timeRange.start_date);
@@ -383,7 +387,7 @@ export async function queryTransactions(
   }));
 
   // 階段 2b：LLM 匹配分析
-  const matchResult = await matchTransactions(queryText, txnSummaries, persona, apiKey, provider, userLanguage);
+  const matchResult = await matchTransactions(queryText, txnSummaries, persona, apiKey, provider, userLanguage, queryModel);
 
   return {
     summary: {
@@ -434,7 +438,8 @@ async function parseTimeRange(
   currentDateTime: string,
   apiKey: string,
   provider: ReturnType<typeof getProvider>,
-  taipeiDate: Date
+  taipeiDate: Date,
+  model?: string
 ): Promise<QueryTimeRange> {
   // 預設當月
   const defaultStart = `${taipeiDate.getFullYear()}-${String(taipeiDate.getMonth() + 1).padStart(2, '0')}-01`;
@@ -443,7 +448,7 @@ async function parseTimeRange(
 
   try {
     const userPrompt = buildTimeRangePrompt(queryText, currentDateTime);
-    const text = await provider.generateText(TIME_RANGE_SYSTEM_PROMPT, userPrompt, apiKey);
+    const text = await provider.generateText(TIME_RANGE_SYSTEM_PROMPT, userPrompt, apiKey, model);
 
     let cleaned = text.trim();
     const codeBlockMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
@@ -468,13 +473,14 @@ async function matchTransactions(
   persona: Persona,
   apiKey: string,
   provider: ReturnType<typeof getProvider>,
-  targetLanguage?: string
+  targetLanguage?: string,
+  model?: string
 ): Promise<QueryMatchResult> {
   const systemPrompt = buildTransactionMatchSystemPrompt(persona, targetLanguage);
   const userPrompt = buildTransactionMatchUserPrompt(queryText, transactions);
 
   try {
-    const text = await provider.generateText(systemPrompt, userPrompt, apiKey);
+    const text = await provider.generateText(systemPrompt, userPrompt, apiKey, model);
 
     let cleaned = text.trim();
     const codeBlockMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
@@ -505,25 +511,30 @@ async function matchTransactions(
   }
 }
 
-export async function validateApiKey(userId: string, apiKey: string): Promise<{ valid: boolean; engine: AIEngine }> {
+export async function validateApiKey(
+  userId: string,
+  apiKey: string,
+  overrideEngine?: AIEngine,
+  model?: string
+): Promise<{ valid: boolean; engine: AIEngine; model?: string }> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
     throw createI18nError('user_not_found', 404);
   }
 
-  const engine = user.aiEngine as AIEngine;
+  const engine = overrideEngine || (user.aiEngine as AIEngine);
   const provider = getProvider(engine);
 
-  // Minimal test: try extracting from a simple input
+  // Use provider.validateKey() for lightweight validation
   try {
-    await provider.extractData(
-      '測試：午餐 100 元',
-      apiKey
-    );
-    return { valid: true, engine };
+    const valid = await provider.validateKey(apiKey);
+    if (!valid) {
+      throw createI18nError('llm_api_key_invalid', 403);
+    }
+    return { valid: true, engine, model };
   } catch (err) {
     console.error('[validateApiKey] Raw error:', err);
-    if (err instanceof AppError && err.statusCode === 403) {
+    if (err instanceof AppError && (err.statusCode === 403 || err.statusCode === 429)) {
       throw err;
     }
     throw createI18nError('llm_api_key_invalid', 403);
