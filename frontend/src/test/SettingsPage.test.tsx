@@ -24,6 +24,39 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+const mockProviders = [
+  {
+    code: 'gemini' as const,
+    name: 'Google Gemini',
+    models: [
+      { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash', description: '快速且經濟實惠', isDefault: true },
+      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', description: '高品質推理能力', isDefault: false },
+    ],
+  },
+  {
+    code: 'openai' as const,
+    name: 'OpenAI',
+    models: [
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', description: '高性價比', isDefault: true },
+    ],
+  },
+  {
+    code: 'anthropic' as const,
+    name: 'Anthropic',
+    models: [
+      { id: 'claude-haiku-4-5-20251001', name: 'Claude Haiku 4.5', description: '快速且經濟實惠', isDefault: true },
+      { id: 'claude-sonnet-4-5-20250514', name: 'Claude Sonnet 4.5', description: '平衡速度與品質', isDefault: false },
+    ],
+  },
+  {
+    code: 'xai' as const,
+    name: 'xAI',
+    models: [
+      { id: 'grok-3-mini-fast', name: 'Grok 3 Mini Fast', description: '最快速度', isDefault: true },
+    ],
+  },
+]
+
 function renderSettings() {
   return render(
     <MemoryRouter>
@@ -38,10 +71,10 @@ describe('SettingsPage', () => {
     vi.clearAllMocks()
 
     // Set store to non-loading state with defaults
-    // Override fetchProfile to a no-op so mount doesn't trigger loading
     useSettingsStore.setState({
       persona: 'gentle',
       aiEngine: 'gemini',
+      aiModel: null,
       monthlyBudget: 20000,
       userName: '測試使用者',
       userEmail: 'test@example.com',
@@ -49,7 +82,10 @@ describe('SettingsPage', () => {
       saving: false,
       error: null,
       keyValidationStatus: 'idle',
+      providers: mockProviders,
       fetchProfile: vi.fn(),
+      fetchAIConfig: vi.fn(),
+      fetchProviders: vi.fn(),
     })
   })
 
@@ -130,25 +166,58 @@ describe('SettingsPage', () => {
   })
 
   describe('AIEngineSelector', () => {
-    it('renders Gemini and OpenAI options', () => {
+    it('renders all four provider options', () => {
       renderSettings()
       expect(screen.getByLabelText('選擇 Gemini 引擎')).toBeInTheDocument()
       expect(screen.getByLabelText('選擇 OpenAI 引擎')).toBeInTheDocument()
+      expect(screen.getByLabelText('選擇 Anthropic 引擎')).toBeInTheDocument()
+      expect(screen.getByLabelText('選擇 xAI 引擎')).toBeInTheDocument()
     })
 
     it('highlights selected engine', () => {
       renderSettings()
       expect(screen.getByLabelText('選擇 Gemini 引擎')).toHaveAttribute('aria-pressed', 'true')
       expect(screen.getByLabelText('選擇 OpenAI 引擎')).toHaveAttribute('aria-pressed', 'false')
+      expect(screen.getByLabelText('選擇 Anthropic 引擎')).toHaveAttribute('aria-pressed', 'false')
+      expect(screen.getByLabelText('選擇 xAI 引擎')).toHaveAttribute('aria-pressed', 'false')
     })
 
-    it('calls updateAIEngine when clicking', async () => {
+    it('calls updateAIEngine and updateAIModel when switching provider', async () => {
       const updateAIEngine = vi.fn()
-      useSettingsStore.setState({ updateAIEngine })
+      const updateAIModel = vi.fn()
+      useSettingsStore.setState({ updateAIEngine, updateAIModel })
       renderSettings()
 
-      await userEvent.click(screen.getByLabelText('選擇 OpenAI 引擎'))
-      expect(updateAIEngine).toHaveBeenCalledWith('openai')
+      await userEvent.click(screen.getByLabelText('選擇 Anthropic 引擎'))
+      expect(updateAIEngine).toHaveBeenCalledWith('anthropic')
+    })
+  })
+
+  describe('ModelSelector', () => {
+    it('renders model dropdown for current provider', () => {
+      renderSettings()
+      const select = screen.getByLabelText('AI 模型') as HTMLSelectElement
+      expect(select).toBeInTheDocument()
+      // Gemini should have 2 models
+      const options = select.querySelectorAll('option')
+      expect(options).toHaveLength(2)
+      expect(options[0].textContent).toContain('Gemini 2.5 Flash')
+      expect(options[0].textContent).toContain('(推薦)')
+    })
+
+    it('shows model description', () => {
+      renderSettings()
+      expect(screen.getByText('快速且經濟實惠')).toBeInTheDocument()
+    })
+
+    it('calls updateAIModel when selecting a different model', async () => {
+      const updateAIModel = vi.fn()
+      useSettingsStore.setState({ updateAIModel })
+      renderSettings()
+
+      const select = screen.getByLabelText('AI 模型') as HTMLSelectElement
+      await userEvent.selectOptions(select, 'gemini-2.5-pro')
+      expect(updateAIModel).toHaveBeenCalledWith('gemini-2.5-pro')
     })
   })
 
@@ -164,7 +233,7 @@ describe('SettingsPage', () => {
     })
 
     it('loads existing API key from localStorage', () => {
-      localStorage.setItem('llm_api_keys', JSON.stringify({ gemini: 'existing-key', openai: '' }))
+      localStorage.setItem('llm_api_keys', JSON.stringify({ gemini: 'existing-key', openai: '', anthropic: '', xai: '' }))
       useSettingsStore.setState({ loading: false })
       renderSettings()
 
@@ -185,7 +254,7 @@ describe('SettingsPage', () => {
       expect(input.type).toBe('password')
     })
 
-    it('calls validateApiKey when clicking validate button', async () => {
+    it('calls validateApiKey with engine and model when clicking validate button', async () => {
       const validateApiKey = vi.fn().mockResolvedValue(true)
       useSettingsStore.setState({ validateApiKey })
       renderSettings()
@@ -194,7 +263,7 @@ describe('SettingsPage', () => {
       await userEvent.type(input, 'my-key')
 
       await userEvent.click(screen.getByLabelText('驗證 API Key'))
-      expect(validateApiKey).toHaveBeenCalledWith('my-key')
+      expect(validateApiKey).toHaveBeenCalledWith('my-key', 'gemini', 'gemini-2.5-flash')
     })
 
     it('shows validation status', () => {
@@ -208,7 +277,8 @@ describe('SettingsPage', () => {
       renderSettings()
       expect(screen.getByText('❌ 金鑰無效')).toBeInTheDocument()
     })
-  })
+
+})
 
   describe('Logout', () => {
     it('calls logout and navigates to /login', async () => {
@@ -246,6 +316,7 @@ describe('settingsStore', () => {
     useSettingsStore.setState({
       persona: 'gentle',
       aiEngine: 'gemini',
+      aiModel: null,
       monthlyBudget: 0,
       userName: '',
       userEmail: '',
@@ -253,18 +324,15 @@ describe('settingsStore', () => {
       saving: false,
       error: null,
       keyValidationStatus: 'idle',
+      providers: [],
     })
   })
 
   it('API key is stored only in localStorage, never sent to profile API', async () => {
-    // This test verifies the architectural decision:
-    // API key is ONLY in localStorage, never in the settings store state
     const store = useSettingsStore.getState()
-    // The store should not have an apiKey field
     expect('apiKey' in store).toBe(false)
 
-    // Setting in localStorage should work (per-engine format)
-    const keys = { gemini: 'secret-key', openai: 'other-key' }
+    const keys = { gemini: 'secret-key', openai: 'other-key', anthropic: '', xai: '' }
     localStorage.setItem('llm_api_keys', JSON.stringify(keys))
     expect(JSON.parse(localStorage.getItem('llm_api_keys')!).gemini).toBe('secret-key')
   })

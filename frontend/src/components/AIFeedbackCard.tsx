@@ -10,6 +10,8 @@ interface AIFeedbackCardProps {
 const engineLabel: Record<AIEngine, string> = {
   gemini: 'Gemini',
   openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  xai: 'xAI',
 }
 
 function AIFeedbackCard({ feedbackText, persona, aiEngine }: AIFeedbackCardProps) {

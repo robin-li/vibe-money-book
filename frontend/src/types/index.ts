@@ -4,7 +4,8 @@ export interface User {
   name: string
   email: string
   persona: 'sarcastic' | 'gentle' | 'guilt_trip'
-  aiEngine: 'gemini' | 'openai'
+  aiEngine: 'gemini' | 'openai' | 'anthropic' | 'xai'
+  aiModel?: string | null
   monthlyBudget: number
   currency: string
   createdAt: string

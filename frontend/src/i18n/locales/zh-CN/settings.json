@@ -33,7 +33,10 @@
     "validating": "⏳ 验证中...",
     "valid": "✅ 密钥有效",
     "invalid": "❌ 密钥无效",
-    "defaultKeyConfigured": "✅ 已配置默认密钥，无需手动输入即可使用 AI 功能"
+    "defaultKeyConfigured": "✅ 已配置默认密钥，无需手动输入即可使用 AI 功能",
+    "modelLabel": "AI 模型",
+    "selectModel": "选择模型",
+    "recommended": "(推荐)"
   },
   "aiInstructions": {
     "title": "AI 指示",
