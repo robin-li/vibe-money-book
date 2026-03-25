@@ -2,7 +2,7 @@
 
 > **專案名稱**：Vibe Money Book — 語音記帳應用
 > **API 版本**：v1.0
-> **文檔版本**：v1.2
+> **文檔版本**：v1.3
 > **最後更新**：2026-03-22
 
 ---
@@ -35,7 +35,10 @@
 ```
 Content-Type: application/json
 Authorization: Bearer <JWT_TOKEN>  # 需認證端點
+Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 zh-TW）
 ```
+
+> **Accept-Language**（PRD-F-015）：前端在所有 API 請求中附加此 Header，後端依此回傳對應語言的錯誤訊息與系統文字。支援值：`zh-TW`（預設）、`en`、`zh-CN`、`vi`。
 
 ### 1.3 響應格式
 
@@ -129,7 +132,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
 | 方法 | 端點 | 描述 | 認證 |
 |------|------|------|------|
 | GET | /users/profile | 取得個人資料 | ✓ |
-| PUT | /users/profile | 更新個人資料（人設、預算、AI 引擎偏好） | ✓ |
+| PUT | /users/profile | 更新個人資料（人設、預算、AI 引擎偏好、語言） | ✓ |
 
 ### 4.3 AI 記帳模組
 
@@ -199,6 +202,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
       "email": "ming@example.com",
       "persona": "gentle",
       "ai_engine": "gemini",
+      "language": "zh-TW",
       "monthly_budget": 30000.00,
       "currency": "TWD"
     },
@@ -234,6 +238,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
       "email": "ming@example.com",
       "persona": "sarcastic",
       "ai_engine": "gemini",
+      "language": "zh-TW",
       "monthly_budget": 30000.00,
       "currency": "TWD"
     },
@@ -262,6 +267,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
     "email": "ming@example.com",
     "persona": "sarcastic",
     "ai_engine": "gemini",
+    "language": "zh-TW",
     "monthly_budget": 30000.00,
     "currency": "TWD",
     "created_at": "2026-03-01T00:00:00Z"
@@ -277,6 +283,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
   "name": "小明",
   "persona": "sarcastic",
   "ai_engine": "openai",
+  "language": "en",
   "monthly_budget": 35000.00
 }
 ```
@@ -284,6 +291,7 @@ Authorization: Bearer <JWT_TOKEN>  # 需認證端點
 **驗證**：
 - `persona`：可選，必須為 `sarcastic` / `gentle` / `guilt_trip`
 - `ai_engine`：可選，必須為 `gemini` / `openai`（PRD-F-013）
+- `language`：可選，必須為 `zh-TW` / `en` / `zh-CN` / `vi`（PRD-F-015）
 - `monthly_budget`：可選，> 0，≤ 10000000
 
 **成功響應 (200)**：回傳更新後的完整 profile。
@@ -805,3 +813,4 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 | v1.0 | 2026-03-16 | 初版定稿 |
 | v1.1 | 2026-03-21 | 配合 PRD-F-014（語義篩選查詢）新增：§4.3 AI 記帳模組新增 `POST /ai/query` 端點清單；§5.3 新增 `POST /ai/query` 詳細端點規範（含請求/響應格式、兩階段處理流程說明、錯誤碼） |
 | v1.2 | 2026-03-22 | §4.3 新增 `GET /ai/config` 端點（預設 API Key 狀態查詢）；§5.6 `/stats/distribution` 新增 `period`、`start_date`、`end_date`、`type` 查詢參數，支援本週與自訂日期範圍 |
+| v1.3 | 2026-03-22 | 配合 PRD-F-015（i18n 多語系支援）：§1.2 請求格式新增 `Accept-Language` Header 說明；使用者模組（register/login/profile）回應新增 `language` 欄位；`PUT /users/profile` 新增 `language` 可選參數 |
