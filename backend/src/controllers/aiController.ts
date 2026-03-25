@@ -8,7 +8,7 @@ import { t } from '../i18n';
 import { ZodError } from 'zod';
 import prisma from '../config/database';
 import { AIEngine } from '../types/llm';
-import { getAllProviders, getProvider } from '../services/llm/llmFactory';
+import { getAllProviders } from '../services/llm/llmFactory';
 
 function formatZodErrors(error: ZodError) {
   return error.issues.map((issue) => ({
