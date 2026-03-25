@@ -4,7 +4,7 @@ import { create } from 'zustand'
 export type Persona = 'sarcastic' | 'gentle' | 'guilt_trip'
 
 /** AI 引擎類型 */
-export type AIEngine = 'gemini' | 'openai'
+export type AIEngine = 'gemini' | 'openai' | 'anthropic' | 'xai'
 
 /** 使用者設定 */
 export interface UserSettings {
