@@ -33,7 +33,10 @@
     "validating": "⏳ 驗證中...",
     "valid": "✅ 金鑰有效",
     "invalid": "❌ 金鑰無效",
-    "defaultKeyConfigured": "✅ 已配置預設金鑰，無需手動輸入即可使用 AI 功能"
+    "defaultKeyConfigured": "✅ 已配置預設金鑰，無需手動輸入即可使用 AI 功能",
+    "modelLabel": "AI 模型",
+    "selectModel": "選擇模型",
+    "recommended": "(推薦)"
   },
   "aiInstructions": {
     "title": "AI 指示",

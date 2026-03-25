@@ -33,7 +33,10 @@
     "validating": "⏳ Validating...",
     "valid": "✅ Key is valid",
     "invalid": "❌ Key is invalid",
-    "defaultKeyConfigured": "✅ Default key configured, AI features available without manual input"
+    "defaultKeyConfigured": "✅ Default key configured, AI features available without manual input",
+    "modelLabel": "AI Model",
+    "selectModel": "Select a model",
+    "recommended": "(Recommended)"
   },
   "aiInstructions": {
     "title": "AI Instructions",

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useLocaleFormatter } from '../hooks/useLocaleFormatter'
@@ -22,6 +22,8 @@ const PERSONA_OPTIONS: { value: Persona; emoji: string }[] = [
 const ENGINE_OPTIONS: { value: AIEngine; label: string; emoji: string }[] = [
   { value: 'gemini', label: 'Gemini', emoji: '✨' },
   { value: 'openai', label: 'OpenAI', emoji: '🤖' },
+  { value: 'anthropic', label: 'Anthropic', emoji: '🧠' },
+  { value: 'xai', label: 'xAI', emoji: '⚡' },
 ]
 
 /** 語言選項 */
@@ -41,6 +43,7 @@ function SettingsPage() {
   const {
     persona,
     aiEngine,
+    aiModel,
     monthlyBudget,
     userName,
     userEmail,
@@ -51,11 +54,14 @@ function SettingsPage() {
     error,
     keyValidationStatus,
     hasDefaultKey,
+    providers,
     fetchProfile,
     fetchAIConfig,
+    fetchProviders,
     updatePersona,
     updateBudget,
     updateAIEngine,
+    updateAIModel,
     updateAIInstructions,
     setLanguage,
     validateApiKey,
@@ -77,25 +83,60 @@ function SettingsPage() {
     } catch { /* ignore */ }
     const legacy = localStorage.getItem('llm_api_key')
     if (legacy) {
-      const migrated = { gemini: legacy, openai: '' }
+      const migrated = { gemini: legacy, openai: '', anthropic: '', xai: '' }
       localStorage.setItem('llm_api_keys', JSON.stringify(migrated))
       localStorage.removeItem('llm_api_key')
       return migrated
     }
-    return { gemini: '', openai: '' }
+    return { gemini: '', openai: '', anthropic: '', xai: '' }
   })
   const [showApiKey, setShowApiKey] = useState(false)
   const currentApiKey = apiKeys[aiEngine] ?? ''
 
+  // Current provider's available models
+  const currentProviderModels = useMemo(() => {
+    return providers.find((p) => p.code === aiEngine)?.models ?? []
+  }, [providers, aiEngine])
+
+  // Selected model (use aiModel from store, fallback to default model)
+  const selectedModel = useMemo(() => {
+    if (aiModel && currentProviderModels.some((m) => m.id === aiModel)) {
+      return aiModel
+    }
+    return currentProviderModels.find((m) => m.isDefault)?.id ?? currentProviderModels[0]?.id ?? ''
+  }, [aiModel, currentProviderModels])
+
+  // Selected model description
+  const selectedModelDescription = useMemo(() => {
+    return currentProviderModels.find((m) => m.id === selectedModel)?.description ?? ''
+  }, [currentProviderModels, selectedModel])
+
   useEffect(() => {
     const load = async () => {
-      await Promise.all([fetchProfile(), fetchAIConfig()])
+      await Promise.all([fetchProfile(), fetchAIConfig(), fetchProviders()])
       const state = useSettingsStore.getState()
       if (state.monthlyBudget > 0) setBudgetInput(String(state.monthlyBudget))
       setAiInstructionsInput(state.aiInstructions)
     }
     load()
-  }, [fetchProfile, fetchAIConfig])
+  }, [fetchProfile, fetchAIConfig, fetchProviders])
+
+  const handleEngineChange = useCallback(async (engine: AIEngine) => {
+    await updateAIEngine(engine)
+    useSettingsStore.setState({ keyValidationStatus: 'idle' })
+    // Auto-select default model for the new provider
+    const provider = useSettingsStore.getState().providers.find((p) => p.code === engine)
+    const defaultModel = provider?.models.find((m) => m.isDefault)
+    if (defaultModel) {
+      await updateAIModel(defaultModel.id)
+    } else {
+      await updateAIModel(null)
+    }
+  }, [updateAIEngine, updateAIModel])
+
+  const handleModelChange = useCallback(async (modelId: string) => {
+    await updateAIModel(modelId)
+  }, [updateAIModel])
 
   const handleBudgetSave = useCallback(() => {
     const val = parseInt(budgetInput, 10)
@@ -120,8 +161,8 @@ function SettingsPage() {
 
   const handleValidateKey = useCallback(async () => {
     saveApiKeys(apiKeys)
-    await validateApiKey(currentApiKey)
-  }, [currentApiKey, apiKeys, saveApiKeys, validateApiKey])
+    await validateApiKey(currentApiKey, aiEngine, selectedModel || undefined)
+  }, [currentApiKey, apiKeys, saveApiKeys, validateApiKey, aiEngine, selectedModel])
 
   const handleLanguageChange = useCallback(async (lang: SupportedLanguage) => {
     await setLanguage(lang)
@@ -345,26 +386,55 @@ function SettingsPage() {
       {/* AI 引擎設定 */}
       <section className="bg-surface rounded-lg shadow-card p-lg mb-xl" aria-label={t('aiEngine.title')}>
         <h2 className="text-caption text-text-secondary mb-md">{t('aiEngine.title')}</h2>
-        <div className="flex gap-md mb-lg">
+
+        {/* 供應商選擇 */}
+        <div className="grid grid-cols-2 gap-md mb-lg">
           {ENGINE_OPTIONS.map((opt) => {
             const selected = aiEngine === opt.value
             return (
               <button key={opt.value}
-                onClick={() => { updateAIEngine(opt.value); useSettingsStore.setState({ keyValidationStatus: 'idle' }) }}
+                onClick={() => handleEngineChange(opt.value)}
                 disabled={saving}
-                className={`flex-1 h-20 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all ${
+                className={`h-20 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all ${
                   selected ? 'bg-primary-light border-2 border-primary' : 'bg-surface shadow-card hover:shadow-card-hover'
                 }`}
                 aria-pressed={selected}
                 aria-label={t('aiEngine.selectLabel', { label: opt.label })}>
                 <span className="text-lg">{opt.emoji}</span>
                 <span className="text-body font-semibold">{opt.label}</span>
-                <span className="text-small text-text-secondary">{opt.value === 'gemini' ? t('aiEngine.default') : '(GPT-4o-mini)'}</span>
+                {opt.value === 'gemini' && <span className="text-small text-text-secondary">{t('aiEngine.default')}</span>}
               </button>
             )
           })}
         </div>
 
+        {/* 模型選擇 */}
+        {currentProviderModels.length > 0 && (
+          <div className="mb-lg">
+            <label className="text-caption text-text-secondary mb-sm block">
+              {t('aiEngine.modelLabel')}
+            </label>
+            <select
+              value={selectedModel}
+              onChange={(e) => handleModelChange(e.target.value)}
+              disabled={saving}
+              className="w-full h-12 rounded-md border border-border bg-bg px-lg text-body text-text-primary focus:outline-none focus:border-primary"
+              aria-label={t('aiEngine.modelLabel')}>
+              {currentProviderModels.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} {m.isDefault ? t('aiEngine.recommended') : ''}
+                </option>
+              ))}
+            </select>
+            {selectedModelDescription && (
+              <p className="text-small text-text-secondary mt-sm">
+                {selectedModelDescription}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* API Key 輸入 */}
         <div className="mt-md">
           <label className="text-caption text-text-secondary mb-sm block">
             {t('aiEngine.apiKeyLabel', { engine: ENGINE_OPTIONS.find((e) => e.value === aiEngine)?.label })}

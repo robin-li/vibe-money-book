@@ -4,14 +4,28 @@ import type { SupportedLanguage } from '../i18n/index'
 import api from '../lib/api.ts'
 
 export type Persona = 'sarcastic' | 'gentle' | 'guilt_trip'
-export type AIEngine = 'gemini' | 'openai'
+export type AIEngine = 'gemini' | 'openai' | 'anthropic' | 'xai'
 
 export type KeyValidationStatus = 'idle' | 'validating' | 'valid' | 'invalid'
+
+export interface ModelInfo {
+  id: string
+  name: string
+  description: string
+  isDefault: boolean
+}
+
+export interface ProviderInfo {
+  code: AIEngine
+  name: string
+  models: ModelInfo[]
+}
 
 interface SettingsState {
   /** 使用者 Profile（從後端載入） */
   persona: Persona
   aiEngine: AIEngine
+  aiModel: string | null
   monthlyBudget: number
   userName: string
   userEmail: string
@@ -29,20 +43,27 @@ interface SettingsState {
   /** 後端是否配置了預設 API Key（按引擎） */
   hasDefaultKey: Record<string, boolean>
 
+  /** 供應商與模型列表 */
+  providers: ProviderInfo[]
+
   /** 從後端載入使用者設定 */
   fetchProfile: () => Promise<void>
   /** 載入 AI 配置（預設 Key 狀態） */
   fetchAIConfig: () => Promise<void>
+  /** 載入供應商與模型列表 */
+  fetchProviders: () => Promise<void>
   /** 更新人設 */
   updatePersona: (persona: Persona) => Promise<void>
   /** 更新月預算 */
   updateBudget: (monthlyBudget: number) => Promise<void>
   /** 更新 AI 引擎 */
   updateAIEngine: (aiEngine: AIEngine) => Promise<void>
+  /** 更新 AI 模型 */
+  updateAIModel: (aiModel: string | null) => Promise<void>
   /** 更新 AI 指示 */
   updateAIInstructions: (aiInstructions: string) => Promise<void>
   /** 驗證 API Key */
-  validateApiKey: (apiKey: string) => Promise<boolean>
+  validateApiKey: (apiKey: string, engine?: AIEngine, model?: string) => Promise<boolean>
   /** 設定語言 */
   setLanguage: (language: SupportedLanguage) => Promise<void>
   /** 清除錯誤 */
@@ -52,6 +73,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   persona: 'gentle',
   aiEngine: 'gemini',
+  aiModel: null,
   monthlyBudget: 0,
   userName: '',
   userEmail: '',
@@ -62,12 +84,21 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   error: null,
   keyValidationStatus: 'idle',
   hasDefaultKey: {},
+  providers: [],
 
   fetchAIConfig: async () => {
     try {
       const res = await api.get('/ai/config')
       const data = res.data.data as { hasDefaultKey: Record<string, boolean> }
       set({ hasDefaultKey: data.hasDefaultKey })
+    } catch { /* ignore */ }
+  },
+
+  fetchProviders: async () => {
+    try {
+      const res = await api.get('/ai/providers')
+      const data = res.data.data as { providers: ProviderInfo[] }
+      set({ providers: data.providers })
     } catch { /* ignore */ }
   },
 
@@ -80,6 +111,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       set({
         persona: d.persona ?? 'gentle',
         aiEngine: d.ai_engine ?? d.aiEngine ?? 'gemini',
+        aiModel: d.ai_model ?? d.aiModel ?? null,
         monthlyBudget: Number(d.monthly_budget ?? d.monthlyBudget ?? 0),
         userName: d.name ?? '',
         userEmail: d.email ?? '',
@@ -133,6 +165,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     }
   },
 
+  updateAIModel: async (aiModel: string | null) => {
+    const prev = get().aiModel
+    set({ aiModel, saving: true, error: null })
+    try {
+      await api.put('/users/profile', { ai_model: aiModel })
+      set({ saving: false })
+    } catch (err: unknown) {
+      const message = extractErrorMessage(err, '更新 AI 模型失敗')
+      set({ aiModel: prev, saving: false, error: message })
+    }
+  },
+
   updateAIInstructions: async (aiInstructions: string) => {
     const prev = get().aiInstructions
     set({ aiInstructions, saving: true, error: null })
@@ -163,10 +207,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     }
   },
 
-  validateApiKey: async (apiKey: string) => {
+  validateApiKey: async (apiKey: string, engine?: AIEngine, model?: string) => {
     set({ keyValidationStatus: 'validating' })
     try {
-      await api.post('/ai/validate-key', {}, {
+      const body: Record<string, string> = {}
+      if (engine) body.engine = engine
+      if (model) body.model = model
+      await api.post('/ai/validate-key', body, {
         headers: { 'X-LLM-API-Key': apiKey },
       })
       set({ keyValidationStatus: 'valid' })

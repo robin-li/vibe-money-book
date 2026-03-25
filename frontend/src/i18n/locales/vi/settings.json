@@ -33,7 +33,10 @@
     "validating": "⏳ Đang xác thực...",
     "valid": "✅ Khóa hợp lệ",
     "invalid": "❌ Khóa không hợp lệ",
-    "defaultKeyConfigured": "✅ Đã cấu hình khóa mặc định, có thể sử dụng AI mà không cần nhập thủ công"
+    "defaultKeyConfigured": "✅ Đã cấu hình khóa mặc định, có thể sử dụng AI mà không cần nhập thủ công",
+    "modelLabel": "Mô hình AI",
+    "selectModel": "Chọn mô hình",
+    "recommended": "(Đề xuất)"
   },
   "aiInstructions": {
     "title": "Hướng dẫn AI",
