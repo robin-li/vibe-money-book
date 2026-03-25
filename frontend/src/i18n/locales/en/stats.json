@@ -25,5 +25,14 @@
   "noIncomeRecords": "No income records this month",
   "noRecords": "No records this month",
   "startDate": "Start Date",
-  "endDate": "End Date"
+  "endDate": "End Date",
+  "noTransactionsInCategory": "No transactions in this category",
+  "loading": "Loading...",
+  "detail": {
+    "amount": "Amount",
+    "merchant": "Merchant",
+    "date": "Date",
+    "note": "Note",
+    "aiFeedback": "AI Feedback"
+  }
 }
