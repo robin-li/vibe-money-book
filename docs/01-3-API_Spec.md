@@ -2,8 +2,8 @@
 
 > **專案名稱**：Vibe Money Book — 語音記帳應用
 > **API 版本**：v1.0
-> **文檔版本**：v1.3
-> **最後更新**：2026-03-22
+> **文檔版本**：v1.4
+> **最後更新**：2026-03-25
 
 ---
 
@@ -132,16 +132,17 @@ Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 
 | 方法 | 端點 | 描述 | 認證 |
 |------|------|------|------|
 | GET | /users/profile | 取得個人資料 | ✓ |
-| PUT | /users/profile | 更新個人資料（人設、預算、AI 引擎偏好、語言） | ✓ |
+| PUT | /users/profile | 更新個人資料（人設、預算、AI 引擎偏好、AI 模型、語言） | ✓ |
 
 ### 4.3 AI 記帳模組
 
 | 方法 | 端點 | 描述 | 認證 |
 |------|------|------|------|
-| POST | /ai/validate-key | 驗證使用者提供的 LLM API Key 是否有效（PRD-F-013） | ✓ |
+| POST | /ai/validate-key | 驗證使用者提供的 LLM API Key 是否有效（PRD-F-013, PRD-F-017） | ✓ |
 | POST | /ai/parse | 解析自然語言輸入（資料萃取 + 人設回饋） | ✓ |
 | POST | /ai/query | 自然語言篩選查詢交易記錄（PRD-F-014） | ✓ |
-| GET | /ai/config | 查詢 AI 配置（預設 API Key 可用狀態） | ✓ |
+| GET | /ai/config | 查詢 AI 配置（預設 API Key 可用狀態，PRD-F-017 擴展） | ✓ |
+| GET | /ai/providers | 取得支援的 AI 供應商與可用模型列表（PRD-F-017） | ✓ |
 
 ### 4.4 交易模組
 
@@ -202,6 +203,7 @@ Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 
       "email": "ming@example.com",
       "persona": "gentle",
       "ai_engine": "gemini",
+      "ai_model": null,
       "language": "zh-TW",
       "monthly_budget": 30000.00,
       "currency": "TWD"
@@ -238,6 +240,7 @@ Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 
       "email": "ming@example.com",
       "persona": "sarcastic",
       "ai_engine": "gemini",
+      "ai_model": null,
       "language": "zh-TW",
       "monthly_budget": 30000.00,
       "currency": "TWD"
@@ -267,6 +270,7 @@ Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 
     "email": "ming@example.com",
     "persona": "sarcastic",
     "ai_engine": "gemini",
+    "ai_model": null,
     "language": "zh-TW",
     "monthly_budget": 30000.00,
     "currency": "TWD",
@@ -283,6 +287,7 @@ Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 
   "name": "小明",
   "persona": "sarcastic",
   "ai_engine": "openai",
+  "ai_model": "gpt-4o-mini",
   "language": "en",
   "monthly_budget": 35000.00
 }
@@ -290,7 +295,8 @@ Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 
 
 **驗證**：
 - `persona`：可選，必須為 `sarcastic` / `gentle` / `guilt_trip`
-- `ai_engine`：可選，必須為 `gemini` / `openai`（PRD-F-013）
+- `ai_engine`：可選，必須為 `gemini` / `openai` / `anthropic` / `xai`（PRD-F-013, PRD-F-017）
+- `ai_model`：可選，字串，所選供應商的模型名稱（PRD-F-017）
 - `language`：可選，必須為 `zh-TW` / `en` / `zh-CN` / `vi`（PRD-F-015）
 - `monthly_budget`：可選，> 0，≤ 10000000
 
@@ -300,16 +306,26 @@ Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 
 
 ### 5.3 AI 記帳模組
 
-#### POST /ai/validate-key — 驗證 LLM API Key（PRD-F-013）
+#### POST /ai/validate-key — 驗證 LLM API Key（PRD-F-013, PRD-F-017）
 
-**描述**：驗證使用者提供的 LLM API Key 是否有效。後端根據使用者的 `ai_engine` 偏好，使用對應引擎發送最小化測試請求，確認 Key 可用。
+**描述**：驗證使用者提供的 LLM API Key 是否有效。後端根據請求中指定的供應商（或使用者的 `ai_engine` 偏好），使用對應引擎發送最小化測試請求，確認 Key 可用。
 
 **Request Header**：
 ```
 X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 ```
 
-**請求**：無 Body（僅需 Header）
+**請求**（PRD-F-017 擴展）：
+```json
+{
+  "engine": "anthropic",
+  "model": "claude-haiku-4-5-20251001"
+}
+```
+
+**驗證**：
+- `engine`：可選，`gemini` / `openai` / `anthropic` / `xai`。未指定時使用使用者的 `ai_engine` 偏好
+- `model`：可選，指定測試的模型。未指定時使用該供應商的預設模型
 
 **成功響應 (200)**：
 ```json
@@ -317,9 +333,10 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
   "code": 200,
   "data": {
     "valid": true,
-    "engine": "gemini"
+    "engine": "anthropic",
+    "model": "claude-haiku-4-5-20251001"
   },
-  "timestamp": "2026-03-17T12:00:00Z"
+  "timestamp": "2026-03-25T12:00:00Z"
 }
 ```
 
@@ -486,7 +503,7 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 - 429：超過 LLM 速率限制
 - 502：LLM 服務暫時不可用
 
-#### GET /ai/config — 查詢 AI 配置
+#### GET /ai/config — 查詢 AI 配置（PRD-F-017 擴展）
 
 查詢伺服器是否配置了預設 API Key（不回傳 Key 本身，僅回傳可用狀態）。
 
@@ -497,9 +514,62 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
   "data": {
     "hasDefaultKey": {
       "gemini": true,
-      "openai": false
+      "openai": false,
+      "anthropic": false,
+      "xai": false
     }
   }
+}
+```
+
+#### GET /ai/providers — 取得 AI 供應商與模型列表（PRD-F-017）
+
+**描述**：回傳系統支援的所有 AI 供應商及其可用模型列表，供前端設定頁面使用。
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "providers": [
+      {
+        "code": "gemini",
+        "name": "Google Gemini",
+        "models": [
+          { "id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash", "description": "快速且經濟實惠", "isDefault": true },
+          { "id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro", "description": "高品質推理能力", "isDefault": false },
+          { "id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash", "description": "上一代快速模型", "isDefault": false }
+        ]
+      },
+      {
+        "code": "openai",
+        "name": "OpenAI",
+        "models": [
+          { "id": "gpt-4o-mini", "name": "GPT-4o Mini", "description": "高性價比，結構化輸出穩定", "isDefault": true },
+          { "id": "gpt-4o", "name": "GPT-4o", "description": "旗艦多模態模型", "isDefault": false },
+          { "id": "gpt-4.1-mini", "name": "GPT-4.1 Mini", "description": "新一代經濟模型", "isDefault": false }
+        ]
+      },
+      {
+        "code": "anthropic",
+        "name": "Anthropic",
+        "models": [
+          { "id": "claude-haiku-4-5-20251001", "name": "Claude Haiku 4.5", "description": "快速且經濟實惠", "isDefault": true },
+          { "id": "claude-sonnet-4-5-20250514", "name": "Claude Sonnet 4.5", "description": "平衡速度與品質", "isDefault": false }
+        ]
+      },
+      {
+        "code": "xai",
+        "name": "xAI (Grok)",
+        "models": [
+          { "id": "grok-3-mini-fast", "name": "Grok 3 Mini Fast", "description": "最快速度", "isDefault": true },
+          { "id": "grok-3-mini", "name": "Grok 3 Mini", "description": "小型模型", "isDefault": false },
+          { "id": "grok-3", "name": "Grok 3", "description": "旗艦模型", "isDefault": false }
+        ]
+      }
+    ]
+  },
+  "timestamp": "2026-03-25T12:00:00Z"
 }
 ```
 
@@ -802,7 +872,7 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 ---
 
 **文檔責任人**：技術架構團隊
-**最後修訂日期**：2026-03-22
+**最後修訂日期**：2026-03-25
 
 ---
 
@@ -814,3 +884,4 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 | v1.1 | 2026-03-21 | 配合 PRD-F-014（語義篩選查詢）新增：§4.3 AI 記帳模組新增 `POST /ai/query` 端點清單；§5.3 新增 `POST /ai/query` 詳細端點規範（含請求/響應格式、兩階段處理流程說明、錯誤碼） |
 | v1.2 | 2026-03-22 | §4.3 新增 `GET /ai/config` 端點（預設 API Key 狀態查詢）；§5.6 `/stats/distribution` 新增 `period`、`start_date`、`end_date`、`type` 查詢參數，支援本週與自訂日期範圍 |
 | v1.3 | 2026-03-22 | 配合 PRD-F-015（i18n 多語系支援）：§1.2 請求格式新增 `Accept-Language` Header 說明；使用者模組（register/login/profile）回應新增 `language` 欄位；`PUT /users/profile` 新增 `language` 可選參數 |
+| v1.4 | 2026-03-25 | M7 新增功能：§4.3 新增 `GET /ai/providers` 端點（供應商與模型列表）；`POST /ai/validate-key` 擴展支援 engine/model body 參數；`GET /ai/config` 擴展回傳 anthropic/xai 預設 Key 狀態；`PUT /users/profile` 新增 `ai_model` 可選參數、`ai_engine` 擴展為四供應商 |

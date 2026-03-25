@@ -36,6 +36,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - T-607：i18n E2E 測試（PR #152）
   - 額外修復：登入頁語系選擇(#155)、Note語言(#156)、語言偏好保留(#159)、分類語言(#160)
   - 額外修復：統計頁日期篩選(#161)、AI查詢範圍防護(#164)、同名類別支援(#167)、類別篩選(#169)
+- [ ] **M7 迭代**：統計頁互動 + AI 引擎進階設定（PRD-F-016、PRD-F-017）— 規格已定稿
+  - T-701：多供應商 LLM 引擎擴展（Anthropic + xAI Provider）
+  - T-702：AI 供應商與模型 API
+  - T-703：統計頁條狀圖交互展開
+  - T-704：設定頁 AI 引擎進階設定 UI
+  - T-705：M7 E2E 測試更新
 
 ---
 
