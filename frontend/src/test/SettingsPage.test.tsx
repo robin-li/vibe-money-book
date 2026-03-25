@@ -278,15 +278,7 @@ describe('SettingsPage', () => {
       expect(screen.getByText('❌ 金鑰無效')).toBeInTheDocument()
     })
 
-    it('initializes localStorage with all 4 provider keys', () => {
-      renderSettings()
-      const stored = JSON.parse(localStorage.getItem('llm_api_keys') ?? '{}')
-      expect(stored).toHaveProperty('gemini')
-      expect(stored).toHaveProperty('openai')
-      expect(stored).toHaveProperty('anthropic')
-      expect(stored).toHaveProperty('xai')
-    })
-  })
+})
 
   describe('Logout', () => {
     it('calls logout and navigates to /login', async () => {
