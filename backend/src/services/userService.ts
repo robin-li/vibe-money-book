@@ -21,6 +21,7 @@ export async function updateProfile(userId: string, input: UpdateProfileInput) {
   if (input.name !== undefined) updateData.name = input.name;
   if (input.persona !== undefined) updateData.persona = input.persona;
   if (input.ai_engine !== undefined) updateData.aiEngine = input.ai_engine;
+  if (input.ai_model !== undefined) updateData.aiModel = input.ai_model;
   if (input.monthly_budget !== undefined) updateData.monthlyBudget = input.monthly_budget;
   if (input.ai_instructions !== undefined) updateData.aiInstructions = input.ai_instructions;
   if (input.language !== undefined) updateData.language = input.language;

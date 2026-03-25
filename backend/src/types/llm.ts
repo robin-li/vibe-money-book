@@ -1,4 +1,11 @@
-export type AIEngine = 'gemini' | 'openai';
+export type AIEngine = 'gemini' | 'openai' | 'anthropic' | 'xai';
+
+export interface ModelInfo {
+  id: string;
+  name: string;
+  description: string;
+  isDefault: boolean;
+}
 export type Persona = 'sarcastic' | 'gentle' | 'guilt_trip';
 export type Intent = 'transaction' | 'chat';
 

@@ -1,12 +1,14 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth';
-import { aiParseSchema, aiQuerySchema } from '../validators/aiValidators';
+import { aiParseSchema, aiQuerySchema, aiValidateKeySchema } from '../validators/aiValidators';
 import * as llmService from '../services/llmService';
 import { createI18nError } from '../middlewares/errorHandler';
 import { ApiResponse } from '../types';
 import { t } from '../i18n';
 import { ZodError } from 'zod';
 import prisma from '../config/database';
+import { AIEngine } from '../types/llm';
+import { getAllProviders, getProvider } from '../services/llm/llmFactory';
 
 function formatZodErrors(error: ZodError) {
   return error.issues.map((issue) => ({
@@ -18,6 +20,8 @@ function formatZodErrors(error: ZodError) {
 function getDefaultApiKey(engine: string): string | undefined {
   if (engine === 'gemini') return process.env.DEFAULT_GEMINI_API_KEY;
   if (engine === 'openai') return process.env.DEFAULT_OPENAI_API_KEY;
+  if (engine === 'anthropic') return process.env.DEFAULT_ANTHROPIC_API_KEY;
+  if (engine === 'xai') return process.env.DEFAULT_XAI_API_KEY;
   return undefined;
 }
 
@@ -70,10 +74,18 @@ export async function validateKey(
   next: NextFunction
 ): Promise<void> {
   try {
+    const parsed = aiValidateKeySchema.safeParse(req.body);
+    if (!parsed.success) {
+      throw createI18nError('validation_failed', 400, formatZodErrors(parsed.error));
+    }
+
     const apiKey = await extractApiKey(req);
     const userId = req.userId!;
 
-    const result = await llmService.validateApiKey(userId, apiKey);
+    const engine = parsed.data?.engine as AIEngine | undefined;
+    const model = parsed.data?.model;
+
+    const result = await llmService.validateApiKey(userId, apiKey, engine, model);
 
     const response: ApiResponse<typeof result> = {
       code: 200,
@@ -130,8 +142,43 @@ export async function getAIConfig(
         hasDefaultKey: {
           gemini: !!process.env.DEFAULT_GEMINI_API_KEY,
           openai: !!process.env.DEFAULT_OPENAI_API_KEY,
+          anthropic: !!process.env.DEFAULT_ANTHROPIC_API_KEY,
+          xai: !!process.env.DEFAULT_XAI_API_KEY,
         },
       },
+      timestamp: new Date().toISOString(),
+    };
+
+    res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getProviders(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const allProviders = getAllProviders();
+    const providerNames: Record<AIEngine, string> = {
+      gemini: 'Google Gemini',
+      openai: 'OpenAI',
+      anthropic: 'Anthropic',
+      xai: 'xAI',
+    };
+
+    const providers = (Object.keys(allProviders) as AIEngine[]).map((code) => ({
+      code,
+      name: providerNames[code],
+      models: allProviders[code].getAvailableModels(),
+    }));
+
+    const response: ApiResponse<{ providers: typeof providers }> = {
+      code: 200,
+      message: 'success',
+      data: { providers },
       timestamp: new Date().toISOString(),
     };
 

@@ -69,13 +69,16 @@ vi.mock('../config/database', () => ({
 const mockExtractData = vi.fn();
 const mockGenerateFeedback = vi.fn();
 const mockGenerateText = vi.fn();
+const mockValidateKey = vi.fn();
 
 vi.mock('../services/llm/llmFactory', () => ({
   getProvider: vi.fn(() => ({
     extractData: mockExtractData,
     generateFeedback: mockGenerateFeedback,
     generateText: mockGenerateText,
+    validateKey: mockValidateKey,
   })),
+  getAllProviders: vi.fn(() => ({})),
 }));
 
 // ─── Test Helpers ──────────────────────────────────────────────
@@ -122,6 +125,9 @@ beforeEach(() => {
     text: '180 元買拉麵？你準備靠光合作用過活嗎？',
     emotion_tag: 'sarcastic_warning',
   });
+
+  // Default: validateKey returns true
+  mockValidateKey.mockResolvedValue(true);
 });
 
 afterEach(() => {
@@ -397,8 +403,7 @@ describe('POST /api/v1/ai/validate-key', () => {
 
   // --- 案例 16: 驗證失敗 ---
   it('應在 API Key 無效時回傳 403', async () => {
-    const { AppError } = await import('../middlewares/errorHandler');
-    mockExtractData.mockRejectedValue(new AppError('Gemini API Key 無效，請確認您的 API Key', 403));
+    mockValidateKey.mockResolvedValue(false);
 
     const res = await postValidateKey('bad-key');
     expect(res.status).toBe(403);

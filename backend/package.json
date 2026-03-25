@@ -21,6 +21,7 @@
   "license": "ISC",
   "description": "Vibe Money Book - Voice-powered expense tracking API",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.19.2",
     "bcrypt": "^6.0.0",
