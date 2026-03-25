@@ -25,5 +25,14 @@
   "noIncomeRecords": "Chưa có thu nhập tháng này",
   "noRecords": "Chưa có giao dịch tháng này",
   "startDate": "Ngày bắt đầu",
-  "endDate": "Ngày kết thúc"
+  "endDate": "Ngày kết thúc",
+  "noTransactionsInCategory": "Không có giao dịch trong danh mục này",
+  "loading": "Đang tải...",
+  "detail": {
+    "amount": "Số tiền",
+    "merchant": "Cửa hàng",
+    "date": "Ngày",
+    "note": "Ghi chú",
+    "aiFeedback": "Phản hồi AI"
+  }
 }

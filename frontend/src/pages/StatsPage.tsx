@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocaleFormatter } from '../hooks/useLocaleFormatter'
 import api from '../lib/api'
 import BudgetBar from '../components/BudgetBar'
 import DistributionChart from '../components/DistributionChart'
 import type { DistributionItem } from '../components/DistributionChart'
+import CategoryTransactionList from '../components/CategoryTransactionList'
 import { getCategoryColor, getCategoryName } from '../lib/categoryUtils'
 
 interface BudgetSummaryData {
@@ -27,6 +28,7 @@ function StatsPage() {
   const [distribution, setDistribution] = useState<DistributionItem[]>([])
   const [totalAmount, setTotalAmount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
 
   const today = new Date().toISOString().slice(0, 10)
   const firstOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10)
@@ -95,8 +97,39 @@ function StatsPage() {
 
   const formatMoney = (n: number) => formatCurrency(n)
 
+  // Reset expanded category when filters change
+  useEffect(() => {
+    setExpandedCategory(null)
+  }, [timeFilter, typeTab, customStart, customEnd])
+
   const ranked = [...distribution].sort((a, b) => b.amount - a.amount)
   const maxAmount = ranked.length > 0 ? ranked[0].amount : 0
+
+  // Compute explicit date range for transaction queries
+  const dateRange = useMemo(() => {
+    if (timeFilter === 'custom') {
+      return { start: customStart, end: customEnd }
+    }
+    const now = new Date()
+    if (timeFilter === 'week') {
+      const dayOfWeek = now.getDay()
+      const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+      const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + mondayOffset)
+      return {
+        start: monday.toISOString().slice(0, 10),
+        end: now.toISOString().slice(0, 10),
+      }
+    }
+    // month
+    return {
+      start: new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10),
+      end: now.toISOString().slice(0, 10),
+    }
+  }, [timeFilter, customStart, customEnd])
+
+  const handleCategoryClick = useCallback((category: string) => {
+    setExpandedCategory((prev) => (prev === category ? null : category))
+  }, [])
 
   const isExpense = typeTab === 'expense'
 
@@ -235,35 +268,65 @@ function StatsPage() {
                 {t('categoryRanking')}
               </h2>
               <div className="space-y-md">
-                {ranked.map((item, index) => (
-                  <div
-                    key={item.category}
-                    className="bg-surface rounded-lg shadow-card p-md flex items-center gap-md"
-                  >
-                    <span className="text-caption font-bold text-text-secondary w-6 text-center">
-                      {index + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-center mb-xs">
-                        <span className="text-body font-semibold text-text-primary">
-                          {getCategoryName(item.category)}
+                {ranked.map((item, index) => {
+                  const isExpanded = expandedCategory === item.category
+                  return (
+                    <div key={item.category}>
+                      <button
+                        type="button"
+                        onClick={() => handleCategoryClick(item.category)}
+                        className="w-full bg-surface rounded-lg shadow-card p-md flex items-center gap-md cursor-pointer hover:bg-bg transition-colors"
+                        aria-expanded={isExpanded}
+                        data-testid={`category-bar-${item.category}`}
+                      >
+                        <span className="text-caption font-bold text-text-secondary w-6 text-center">
+                          {index + 1}
                         </span>
-                        <span className="text-body text-text-primary">
-                          {formatMoney(item.amount)}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-center mb-xs">
+                            <span className="text-body font-semibold text-text-primary">
+                              {getCategoryName(item.category)}
+                            </span>
+                            <span className="text-body text-text-primary">
+                              {formatMoney(item.amount)}
+                            </span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-border overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: maxAmount > 0 ? `${(item.amount / maxAmount) * 100}%` : '0%',
+                                backgroundColor: getCategoryColor(item.category, index),
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <span
+                          className={`text-text-tertiary text-xs transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                        >
+                          ▼
                         </span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-border overflow-hidden">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: maxAmount > 0 ? `${(item.amount / maxAmount) * 100}%` : '0%',
-                            backgroundColor: getCategoryColor(item.category, index),
-                          }}
-                        />
+                      </button>
+                      {/* Expandable transaction list */}
+                      <div
+                        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                          isExpanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
+                        }`}
+                      >
+                        {isExpanded && (
+                          <div className="bg-surface rounded-b-lg shadow-card px-md pb-md -mt-1">
+                            <CategoryTransactionList
+                              category={item.category}
+                              startDate={dateRange.start}
+                              endDate={dateRange.end}
+                              type={typeTab}
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </section>
           )}

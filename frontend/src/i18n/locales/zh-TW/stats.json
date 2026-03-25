@@ -25,5 +25,14 @@
   "noIncomeRecords": "本月尚無收入記錄",
   "noRecords": "本月尚無消費記錄",
   "startDate": "開始日期",
-  "endDate": "結束日期"
+  "endDate": "結束日期",
+  "noTransactionsInCategory": "此類別無交易記錄",
+  "loading": "載入中...",
+  "detail": {
+    "amount": "金額",
+    "merchant": "商家",
+    "date": "日期",
+    "note": "備註",
+    "aiFeedback": "AI 評論"
+  }
 }

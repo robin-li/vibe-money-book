@@ -25,5 +25,14 @@
   "noIncomeRecords": "本月暂无收入记录",
   "noRecords": "本月暂无消费记录",
   "startDate": "开始日期",
-  "endDate": "结束日期"
+  "endDate": "结束日期",
+  "noTransactionsInCategory": "此类别无交易记录",
+  "loading": "加载中...",
+  "detail": {
+    "amount": "金额",
+    "merchant": "商家",
+    "date": "日期",
+    "note": "备注",
+    "aiFeedback": "AI 评论"
+  }
 }
