@@ -8,7 +8,7 @@ import { t } from '../i18n';
 import { ZodError } from 'zod';
 import prisma from '../config/database';
 import { AIEngine } from '../types/llm';
-import { getAllProviders } from '../services/llm/llmFactory';
+import { getAllProviders, getProvider } from '../services/llm/llmFactory';
 
 function formatZodErrors(error: ZodError) {
   return error.issues.map((issue) => ({
@@ -183,6 +183,43 @@ export async function getProviders(
     };
 
     res.status(200).json(response);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function listModels(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const engine = (req.query.engine as AIEngine) || 'gemini';
+    const validEngines: AIEngine[] = ['gemini', 'openai', 'anthropic', 'xai'];
+    if (!validEngines.includes(engine)) {
+      throw createI18nError('validation_failed', 400);
+    }
+
+    const provider = getProvider(engine);
+    const apiKey = req.headers['x-llm-api-key'] as string | undefined;
+    const defaultKey = getDefaultApiKey(engine);
+    const effectiveKey = apiKey || defaultKey;
+
+    let models;
+    if (effectiveKey) {
+      models = await provider.listModels(effectiveKey);
+    } else {
+      models = provider.getAvailableModels();
+    }
+
+    const apiResponse: ApiResponse<{ models: typeof models; dynamic: boolean }> = {
+      code: 200,
+      message: 'success',
+      data: { models, dynamic: !!effectiveKey },
+      timestamp: new Date().toISOString(),
+    };
+
+    res.status(200).json(apiResponse);
   } catch (err) {
     next(err);
   }

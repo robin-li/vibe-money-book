@@ -1,8 +1,7 @@
-import { useState, useCallback } from 'react'
+import { useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocaleFormatter } from '../hooks/useLocaleFormatter'
 import { getCategoryName } from '../lib/categoryUtils'
-import api from '../lib/api'
 import type { Transaction } from '../stores/index'
 
 interface TransactionDetailInlineProps {
@@ -18,8 +17,6 @@ function TransactionDetailInline({
 }: TransactionDetailInlineProps) {
   const { t } = useTranslation('stats')
   const { formatCurrency, formatDate: fmtDate } = useLocaleFormatter()
-  const [aiFeedback, setAiFeedback] = useState<string | null>(null)
-  const [loadingFeedback, setLoadingFeedback] = useState(false)
 
   const txType = tx.type ?? 'expense'
 
@@ -29,23 +26,8 @@ function TransactionDetailInline({
   }
 
   const handleToggle = useCallback(() => {
-    if (!isExpanded && aiFeedback === null && !loadingFeedback) {
-      setLoadingFeedback(true)
-      api
-        .get(`/transactions/${tx.id}`)
-        .then((res) => {
-          const data = res.data.data
-          setAiFeedback(data.ai_comment ?? data.ai_feedback ?? data.note ?? '')
-        })
-        .catch(() => {
-          setAiFeedback('')
-        })
-        .finally(() => {
-          setLoadingFeedback(false)
-        })
-    }
     onToggle()
-  }, [isExpanded, aiFeedback, loadingFeedback, tx.id, onToggle])
+  }, [onToggle])
 
   return (
     <div data-testid={`drilldown-tx-${tx.id}`}>
@@ -128,20 +110,6 @@ function TransactionDetailInline({
               </span>
             </div>
           )}
-          <div className="flex items-start gap-sm">
-            <span className="text-small text-text-secondary w-[50px] shrink-0">
-              {t('detail.aiFeedback')}
-            </span>
-            {loadingFeedback ? (
-              <span className="text-caption text-text-tertiary">
-                {t('loading')}
-              </span>
-            ) : (
-              <span className="text-caption text-text-secondary">
-                {aiFeedback || '--'}
-              </span>
-            )}
-          </div>
         </div>
       </div>
     </div>

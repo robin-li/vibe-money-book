@@ -94,6 +94,38 @@ export class OpenAIProvider implements LLMProvider {
     return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024, model);
   }
 
+  async listModels(apiKey: string): Promise<ModelInfo[]> {
+    try {
+      const client = this.getClient(apiKey);
+      const response = await client.models.list();
+      const models: ModelInfo[] = [];
+      const defaults = this.getAvailableModels();
+      const defaultMap = new Map(defaults.map((m) => [m.id, m]));
+
+      for await (const model of response) {
+        if (/^(gpt-|o[134]-|chatgpt-)/.test(model.id) && !/instruct|realtime|audio|tts|dall|whisper|embed|search/i.test(model.id)) {
+          const def = defaultMap.get(model.id);
+          models.push({
+            id: model.id,
+            name: def?.name ?? model.id,
+            description: def?.description ?? '',
+            isDefault: def?.isDefault ?? false,
+          });
+        }
+      }
+
+      models.sort((a, b) => {
+        if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
+        if (defaultMap.has(a.id) !== defaultMap.has(b.id)) return defaultMap.has(a.id) ? -1 : 1;
+        return a.id.localeCompare(b.id);
+      });
+
+      return models.length > 0 ? models : this.getAvailableModels();
+    } catch {
+      return this.getAvailableModels();
+    }
+  }
+
   getAvailableModels(): ModelInfo[] {
     return [
       {

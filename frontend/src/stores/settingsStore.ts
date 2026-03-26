@@ -46,12 +46,19 @@ interface SettingsState {
   /** 供應商與模型列表 */
   providers: ProviderInfo[]
 
+  /** 動態模型列表（按引擎） */
+  dynamicModels: Record<string, ModelInfo[]>
+  /** 模型載入中 */
+  modelsLoading: boolean
+
   /** 從後端載入使用者設定 */
   fetchProfile: () => Promise<void>
   /** 載入 AI 配置（預設 Key 狀態） */
   fetchAIConfig: () => Promise<void>
   /** 載入供應商與模型列表 */
   fetchProviders: () => Promise<void>
+  /** 動態載入模型列表 */
+  fetchModels: (engine: AIEngine, apiKey?: string) => Promise<void>
   /** 更新人設 */
   updatePersona: (persona: Persona) => Promise<void>
   /** 更新月預算 */
@@ -85,6 +92,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   keyValidationStatus: 'idle',
   hasDefaultKey: {},
   providers: [],
+  dynamicModels: {},
+  modelsLoading: false,
 
   fetchAIConfig: async () => {
     try {
@@ -100,6 +109,22 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const data = res.data.data as { providers: ProviderInfo[] }
       set({ providers: data.providers })
     } catch { /* ignore */ }
+  },
+
+  fetchModels: async (engine: AIEngine, apiKey?: string) => {
+    set({ modelsLoading: true })
+    try {
+      const headers: Record<string, string> = {}
+      if (apiKey) headers['X-LLM-API-Key'] = apiKey
+      const res = await api.get(`/ai/models?engine=${engine}`, { headers })
+      const data = res.data.data as { models: ModelInfo[]; dynamic: boolean }
+      set((state) => ({
+        dynamicModels: { ...state.dynamicModels, [engine]: data.models },
+        modelsLoading: false,
+      }))
+    } catch {
+      set({ modelsLoading: false })
+    }
   },
 
   fetchProfile: async () => {

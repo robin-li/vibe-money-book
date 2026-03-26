@@ -55,9 +55,12 @@ function SettingsPage() {
     keyValidationStatus,
     hasDefaultKey,
     providers,
+    dynamicModels,
+    modelsLoading,
     fetchProfile,
     fetchAIConfig,
     fetchProviders,
+    fetchModels,
     updatePersona,
     updateBudget,
     updateAIEngine,
@@ -93,10 +96,11 @@ function SettingsPage() {
   const [showApiKey, setShowApiKey] = useState(false)
   const currentApiKey = apiKeys[aiEngine] ?? ''
 
-  // Current provider's available models
+  // Current provider's available models (prefer dynamic models if available)
   const currentProviderModels = useMemo(() => {
+    if (dynamicModels[aiEngine]?.length) return dynamicModels[aiEngine]
     return providers.find((p) => p.code === aiEngine)?.models ?? []
-  }, [providers, aiEngine])
+  }, [providers, dynamicModels, aiEngine])
 
   // Selected model (use aiModel from store, fallback to default model)
   const selectedModel = useMemo(() => {
@@ -117,22 +121,36 @@ function SettingsPage() {
       const state = useSettingsStore.getState()
       if (state.monthlyBudget > 0) setBudgetInput(String(state.monthlyBudget))
       setAiInstructionsInput(state.aiInstructions)
+      // Fetch dynamic models for current engine if API key exists
+      const keys = apiKeys
+      const currentKey = keys[state.aiEngine] ?? ''
+      if (currentKey || state.hasDefaultKey[state.aiEngine]) {
+        fetchModels(state.aiEngine, currentKey || undefined)
+      }
     }
     load()
-  }, [fetchProfile, fetchAIConfig, fetchProviders])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchProfile, fetchAIConfig, fetchProviders, fetchModels])
 
   const handleEngineChange = useCallback(async (engine: AIEngine) => {
     await updateAIEngine(engine)
     useSettingsStore.setState({ keyValidationStatus: 'idle' })
-    // Auto-select default model for the new provider
-    const provider = useSettingsStore.getState().providers.find((p) => p.code === engine)
-    const defaultModel = provider?.models.find((m) => m.isDefault)
+    // Fetch dynamic models for new engine
+    const key = apiKeys[engine] ?? ''
+    const state = useSettingsStore.getState()
+    if (key || state.hasDefaultKey[engine]) {
+      await fetchModels(engine, key || undefined)
+    }
+    // Auto-select default model
+    const models = useSettingsStore.getState().dynamicModels[engine]
+      ?? state.providers.find((p) => p.code === engine)?.models ?? []
+    const defaultModel = models.find((m) => m.isDefault)
     if (defaultModel) {
       await updateAIModel(defaultModel.id)
     } else {
       await updateAIModel(null)
     }
-  }, [updateAIEngine, updateAIModel])
+  }, [updateAIEngine, updateAIModel, fetchModels, apiKeys])
 
   const handleModelChange = useCallback(async (modelId: string) => {
     await updateAIModel(modelId)
@@ -161,8 +179,12 @@ function SettingsPage() {
 
   const handleValidateKey = useCallback(async () => {
     saveApiKeys(apiKeys)
-    await validateApiKey(currentApiKey, aiEngine, selectedModel || undefined)
-  }, [currentApiKey, apiKeys, saveApiKeys, validateApiKey, aiEngine, selectedModel])
+    const valid = await validateApiKey(currentApiKey, aiEngine, selectedModel || undefined)
+    if (valid && currentApiKey) {
+      // Fetch dynamic models after successful validation
+      await fetchModels(aiEngine, currentApiKey)
+    }
+  }, [currentApiKey, apiKeys, saveApiKeys, validateApiKey, aiEngine, selectedModel, fetchModels])
 
   const handleLanguageChange = useCallback(async (lang: SupportedLanguage) => {
     await setLanguage(lang)
@@ -408,32 +430,6 @@ function SettingsPage() {
           })}
         </div>
 
-        {/* 模型選擇 */}
-        {currentProviderModels.length > 0 && (
-          <div className="mb-lg">
-            <label className="text-caption text-text-secondary mb-sm block">
-              {t('aiEngine.modelLabel')}
-            </label>
-            <select
-              value={selectedModel}
-              onChange={(e) => handleModelChange(e.target.value)}
-              disabled={saving}
-              className="w-full h-12 rounded-md border border-border bg-bg px-lg text-body text-text-primary focus:outline-none focus:border-primary"
-              aria-label={t('aiEngine.modelLabel')}>
-              {currentProviderModels.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} {m.isDefault ? t('aiEngine.recommended') : ''}
-                </option>
-              ))}
-            </select>
-            {selectedModelDescription && (
-              <p className="text-small text-text-secondary mt-sm">
-                {selectedModelDescription}
-              </p>
-            )}
-          </div>
-        )}
-
         {/* API Key 輸入 */}
         <div className="mt-md">
           <label className="text-caption text-text-secondary mb-sm block">
@@ -469,6 +465,33 @@ function SettingsPage() {
             </p>
           )}
         </div>
+
+        {/* 模型選擇 */}
+        {currentProviderModels.length > 0 && (
+          <div className="mt-lg">
+            <label className="text-caption text-text-secondary mb-sm block">
+              {t('aiEngine.modelLabel')}
+              {modelsLoading && <span className="ml-sm text-text-tertiary">{t('loading')}</span>}
+            </label>
+            <select
+              value={selectedModel}
+              onChange={(e) => handleModelChange(e.target.value)}
+              disabled={saving || modelsLoading}
+              className="w-full h-12 rounded-md border border-border bg-bg px-lg text-body text-text-primary focus:outline-none focus:border-primary disabled:opacity-50"
+              aria-label={t('aiEngine.modelLabel')}>
+              {currentProviderModels.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name} {m.isDefault ? t('aiEngine.recommended') : ''}
+                </option>
+              ))}
+            </select>
+            {selectedModelDescription && (
+              <p className="text-small text-text-secondary mt-sm">
+                {selectedModelDescription}
+              </p>
+            )}
+          </div>
+        )}
       </section>
 
       {/* 類別管理 */}

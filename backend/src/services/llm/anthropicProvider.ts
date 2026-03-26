@@ -79,6 +79,11 @@ export class AnthropicProvider implements LLMProvider {
     return this.callWithRetry(apiKey, enhancedSystemPrompt, userPrompt, 0, 1024, model);
   }
 
+  async listModels(_apiKey: string): Promise<ModelInfo[]> {
+    // Anthropic does not provide a List Models API
+    return this.getAvailableModels();
+  }
+
   getAvailableModels(): ModelInfo[] {
     return [
       {
