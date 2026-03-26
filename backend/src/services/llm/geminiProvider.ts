@@ -90,6 +90,11 @@ export class GeminiProvider implements LLMProvider {
     return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024, 'application/json', model);
   }
 
+  private static readonly EXCLUDE_PATTERNS = [
+    /embedding/i, /aqa/i, /imagen/i, /veo/i, /chirp/i, /codec/i,
+    /text-bison/i, /chat-bison/i, /gemma/i, /learnlm/i,
+  ];
+
   async listModels(apiKey: string): Promise<ModelInfo[]> {
     try {
       const res = await fetch(
@@ -114,7 +119,8 @@ export class GeminiProvider implements LLMProvider {
             description: def?.description ?? (m.description?.substring(0, 80) ?? ''),
             isDefault: def?.isDefault ?? false,
           };
-        });
+        })
+        .filter((m) => !GeminiProvider.EXCLUDE_PATTERNS.some((p) => p.test(m.id)));
 
       models.sort((a, b) => {
         if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
