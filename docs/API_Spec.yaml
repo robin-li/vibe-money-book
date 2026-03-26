@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Vibe Money Book API
-  version: 1.4.0
+  version: 1.5.0
   description: |
     語音記帳應用 API — 透過自然語言實現一句話記帳
 
@@ -11,6 +11,7 @@ info:
     - v1.2.0 (2026-03-22)：新增 GET /ai/config 端點；/stats/distribution 新增 period、start_date、end_date 參數
     - v1.3.0 (2026-03-22)：配合 PRD-F-015（i18n）新增 Accept-Language 請求 Header；User schema 新增 language 欄位；PUT /users/profile 新增 language 參數
     - v1.4.0 (2026-03-25)：M7 PRD-F-017（AI 引擎進階設定）：新增 GET /ai/providers 端點；POST /ai/validate-key 支援 engine/model body 參數；GET /ai/config 擴展四供應商；User schema 新增 ai_model 欄位、ai_engine 擴展為四供應商
+    - v1.5.0 (2026-03-27)：M7 Release 規格同步：補充 GET /ai/models 至 YAML、補充 ai_instructions 欄位、修正 engine 參數為非必填
   contact:
     name: Development Team
 
@@ -187,6 +188,11 @@ paths:
                   type: string
                   nullable: true
                   description: 使用者偏好的 AI 模型名稱（PRD-F-017）
+                ai_instructions:
+                  type: string
+                  nullable: true
+                  maxLength: 1000
+                  description: 使用者自訂的 AI 分類指示
                 language:
                   type: string
                   enum: [zh-TW, en, zh-CN, vi]
@@ -280,6 +286,44 @@ paths:
                     format: date-time
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  /ai/models:
+    get:
+      tags:
+        - AI
+      summary: 取得指定供應商的可用模型列表
+      description: 根據 engine 參數取得對應供應商的可用模型清單。若使用者有配置 API Key，會透過供應商 API 動態取得。
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: engine
+          in: query
+          schema:
+            type: string
+            enum: [gemini, openai, anthropic, xai]
+            default: openai
+          description: AI 供應商代碼（預設 openai）
+      responses:
+        '200':
+          description: 模型列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    properties:
+                      models:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ModelInfo'
+                      dynamic:
+                        type: boolean
+                        description: 是否為動態取得（透過供應商 API）
 
   /ai/validate-key:
     post:
@@ -992,6 +1036,11 @@ components:
           nullable: true
           default: null
           description: 使用者偏好的 AI 模型名稱（PRD-F-017）
+        ai_instructions:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: 使用者自訂的 AI 分類指示
         language:
           type: string
           enum: [zh-TW, en, zh-CN, vi]

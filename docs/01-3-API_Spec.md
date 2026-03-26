@@ -2,7 +2,7 @@
 
 > **專案名稱**：Vibe Money Book — 語音記帳應用
 > **API 版本**：v1.0
-> **文檔版本**：v1.5
+> **文檔版本**：v1.6
 > **最後更新**：2026-03-27
 
 ---
@@ -289,6 +289,7 @@ Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 
   "persona": "sarcastic",
   "ai_engine": "openai",
   "ai_model": "gpt-4o-mini",
+  "ai_instructions": "午餐、晚餐歸到「餐飲」，手搖飲歸到「飲料」",
   "language": "en",
   "monthly_budget": 35000.00
 }
@@ -298,6 +299,7 @@ Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 
 - `persona`：可選，必須為 `sarcastic` / `gentle` / `guilt_trip`
 - `ai_engine`：可選，必須為 `gemini` / `openai` / `anthropic` / `xai`（PRD-F-013, PRD-F-017）
 - `ai_model`：可選，字串，所選供應商的模型名稱（PRD-F-017）
+- `ai_instructions`：可選，字串（nullable），最大長度 1000，使用者自訂的 AI 分類指示
 - `language`：可選，必須為 `zh-TW` / `en` / `zh-CN` / `vi`（PRD-F-015）
 - `monthly_budget`：可選，> 0，≤ 10000000
 
@@ -586,7 +588,7 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>  # 可選
 ```
 
 **查詢參數**：
-- `engine`：必填，`gemini` / `openai` / `anthropic` / `xai`
+- `engine`：選填（預設 `openai`），`gemini` / `openai` / `anthropic` / `xai`
 
 **成功響應 (200)**：
 ```json
@@ -930,3 +932,4 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>  # 可選
 | v1.3 | 2026-03-22 | 配合 PRD-F-015（i18n 多語系支援）：§1.2 請求格式新增 `Accept-Language` Header 說明；使用者模組（register/login/profile）回應新增 `language` 欄位；`PUT /users/profile` 新增 `language` 可選參數 |
 | v1.4 | 2026-03-25 | M7 新增功能：§4.3 新增 `GET /ai/providers` 端點（供應商與模型列表）；`POST /ai/validate-key` 擴展支援 engine/model body 參數；`GET /ai/config` 擴展回傳 anthropic/xai 預設 Key 狀態；`PUT /users/profile` 新增 `ai_model` 可選參數、`ai_engine` 擴展為四供應商 |
 | v1.5 | 2026-03-27 | Add `GET /ai/models` endpoint; `validate-key` distinguishes key vs model errors (400/403); add `LLM_MODEL_INVALID` error code |
+| v1.6 | 2026-03-27 | M7 Release 規格同步：補充 GET /ai/models 至 YAML、補充 ai_instructions 欄位、修正 engine 參數為非必填 |
