@@ -39,6 +39,8 @@ interface SettingsState {
 
   /** API Key 驗證狀態 */
   keyValidationStatus: KeyValidationStatus
+  /** 驗證錯誤訊息 */
+  keyValidationMessage: string | null
 
   /** 後端是否配置了預設 API Key（按引擎） */
   hasDefaultKey: Record<string, boolean>
@@ -46,12 +48,19 @@ interface SettingsState {
   /** 供應商與模型列表 */
   providers: ProviderInfo[]
 
+  /** 動態模型列表（按引擎） */
+  dynamicModels: Record<string, ModelInfo[]>
+  /** 模型載入中 */
+  modelsLoading: boolean
+
   /** 從後端載入使用者設定 */
   fetchProfile: () => Promise<void>
   /** 載入 AI 配置（預設 Key 狀態） */
   fetchAIConfig: () => Promise<void>
   /** 載入供應商與模型列表 */
   fetchProviders: () => Promise<void>
+  /** 動態載入模型列表 */
+  fetchModels: (engine: AIEngine, apiKey?: string) => Promise<void>
   /** 更新人設 */
   updatePersona: (persona: Persona) => Promise<void>
   /** 更新月預算 */
@@ -83,8 +92,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   saving: false,
   error: null,
   keyValidationStatus: 'idle',
+  keyValidationMessage: null,
   hasDefaultKey: {},
   providers: [],
+  dynamicModels: {},
+  modelsLoading: false,
 
   fetchAIConfig: async () => {
     try {
@@ -100,6 +112,22 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const data = res.data.data as { providers: ProviderInfo[] }
       set({ providers: data.providers })
     } catch { /* ignore */ }
+  },
+
+  fetchModels: async (engine: AIEngine, apiKey?: string) => {
+    set({ modelsLoading: true })
+    try {
+      const headers: Record<string, string> = {}
+      if (apiKey) headers['X-LLM-API-Key'] = apiKey
+      const res = await api.get(`/ai/models?engine=${engine}`, { headers })
+      const data = res.data.data as { models: ModelInfo[]; dynamic: boolean }
+      set((state) => ({
+        dynamicModels: { ...state.dynamicModels, [engine]: data.models },
+        modelsLoading: false,
+      }))
+    } catch {
+      set({ modelsLoading: false })
+    }
   },
 
   fetchProfile: async () => {
@@ -208,18 +236,20 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   validateApiKey: async (apiKey: string, engine?: AIEngine, model?: string) => {
-    set({ keyValidationStatus: 'validating' })
+    set({ keyValidationStatus: 'validating', keyValidationMessage: null })
     try {
       const body: Record<string, string> = {}
       if (engine) body.engine = engine
       if (model) body.model = model
       await api.post('/ai/validate-key', body, {
         headers: { 'X-LLM-API-Key': apiKey },
+        timeout: 30000,
       })
-      set({ keyValidationStatus: 'valid' })
+      set({ keyValidationStatus: 'valid', keyValidationMessage: null })
       return true
-    } catch {
-      set({ keyValidationStatus: 'invalid' })
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? null
+      set({ keyValidationStatus: 'invalid', keyValidationMessage: message })
       return false
     }
   },

@@ -14,6 +14,7 @@
   "transaction_not_found": "交易記錄不存在",
   "llm_api_key_missing": "請提供 LLM API Key（X-LLM-API-Key Header）",
   "llm_api_key_invalid": "API Key 驗證失敗，請確認 Key 是否正確",
+  "llm_model_invalid": "此模型不可用，請選擇其他模型",
   "gemini_api_key_invalid": "Gemini API Key 無效，請確認您的 API Key",
   "gemini_quota_exhausted": "Gemini API 額度已用盡，請檢查您的配額或切換引擎",
   "openai_api_key_invalid": "OpenAI API Key 無效，請確認您的 API Key",

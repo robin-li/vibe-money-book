@@ -516,7 +516,7 @@ export async function validateApiKey(
   apiKey: string,
   overrideEngine?: AIEngine,
   model?: string
-): Promise<{ valid: boolean; engine: AIEngine; model?: string }> {
+): Promise<{ valid: boolean; engine: AIEngine; model?: string; errorType?: string }> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
     throw createI18nError('user_not_found', 404);
@@ -525,16 +525,18 @@ export async function validateApiKey(
   const engine = overrideEngine || (user.aiEngine as AIEngine);
   const provider = getProvider(engine);
 
-  // Use provider.validateKey() for lightweight validation
   try {
-    const valid = await provider.validateKey(apiKey);
-    if (!valid) {
+    const result = await provider.validateKey(apiKey, model);
+    if (!result.valid) {
+      if (result.errorType === 'invalid_model') {
+        throw createI18nError('llm_model_invalid', 400);
+      }
       throw createI18nError('llm_api_key_invalid', 403);
     }
     return { valid: true, engine, model };
   } catch (err) {
     console.error('[validateApiKey] Raw error:', err);
-    if (err instanceof AppError && (err.statusCode === 403 || err.statusCode === 429)) {
+    if (err instanceof AppError) {
       throw err;
     }
     throw createI18nError('llm_api_key_invalid', 403);

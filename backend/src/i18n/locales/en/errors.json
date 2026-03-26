@@ -14,6 +14,7 @@
   "transaction_not_found": "Transaction not found",
   "llm_api_key_missing": "Please provide LLM API Key (X-LLM-API-Key Header)",
   "llm_api_key_invalid": "API Key validation failed, please check your key",
+  "llm_model_invalid": "This model is not available, please select another model",
   "gemini_api_key_invalid": "Invalid Gemini API Key, please check your API Key",
   "gemini_quota_exhausted": "Gemini API quota exhausted, please check your quota or switch engine",
   "openai_api_key_invalid": "Invalid OpenAI API Key, please check your API Key",

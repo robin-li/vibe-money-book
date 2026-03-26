@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { LLMProvider } from './llmProvider';
+import { LLMProvider, ValidationResult } from './llmProvider';
 import { ParsedTransaction, AIFeedbackContent, ModelInfo } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { createI18nError } from '../../middlewares/errorHandler';
@@ -79,6 +79,11 @@ export class AnthropicProvider implements LLMProvider {
     return this.callWithRetry(apiKey, enhancedSystemPrompt, userPrompt, 0, 1024, model);
   }
 
+  async listModels(_apiKey: string): Promise<ModelInfo[]> {
+    // Anthropic does not provide a List Models API
+    return this.getAvailableModels();
+  }
+
   getAvailableModels(): ModelInfo[] {
     return [
       {
@@ -96,17 +101,24 @@ export class AnthropicProvider implements LLMProvider {
     ];
   }
 
-  async validateKey(apiKey: string): Promise<boolean> {
+  async validateKey(apiKey: string, model?: string): Promise<ValidationResult> {
     try {
       const client = new Anthropic({ apiKey, timeout: TIMEOUT_MS });
       await client.messages.create({
-        model: ANTHROPIC_MODEL,
+        model: model || ANTHROPIC_MODEL,
         max_tokens: 5,
         messages: [{ role: 'user', content: 'test' }],
       });
-      return true;
-    } catch {
-      return false;
+      return { valid: true };
+    } catch (err: unknown) {
+      const message = (err as Error)?.message ?? '';
+      if (message.includes('invalid x-api-key') || message.includes('authentication_error')) {
+        return { valid: false, errorType: 'invalid_key' };
+      }
+      if (message.includes('not_found_error') || message.includes('does not exist')) {
+        return { valid: false, errorType: 'invalid_model' };
+      }
+      return { valid: false, errorType: 'invalid_key' };
     }
   }
 

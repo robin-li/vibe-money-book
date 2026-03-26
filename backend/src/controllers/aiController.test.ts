@@ -126,8 +126,8 @@ beforeEach(() => {
     emotion_tag: 'sarcastic_warning',
   });
 
-  // Default: validateKey returns true
-  mockValidateKey.mockResolvedValue(true);
+  // Default: validateKey returns { valid: true }
+  mockValidateKey.mockResolvedValue({ valid: true });
 });
 
 afterEach(() => {
@@ -403,7 +403,7 @@ describe('POST /api/v1/ai/validate-key', () => {
 
   // --- 案例 16: 驗證失敗 ---
   it('應在 API Key 無效時回傳 403', async () => {
-    mockValidateKey.mockResolvedValue(false);
+    mockValidateKey.mockResolvedValue({ valid: false, errorType: 'invalid_key' });
 
     const res = await postValidateKey('bad-key');
     expect(res.status).toBe(403);

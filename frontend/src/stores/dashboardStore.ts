@@ -162,7 +162,7 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
       const res = await api.post(
         '/ai/parse',
         { raw_text: rawText },
-        { headers: llmHeaders() }
+        { headers: llmHeaders(), timeout: 60000 }
       )
       const data = res.data.data
       const intent: Intent = data.intent ?? 'transaction'

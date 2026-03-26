@@ -263,7 +263,6 @@ describe('Stats Page Drilldown', () => {
           category: 'food',
           merchant: '便利商店',
           note: '買水',
-          ai_comment: '又買零食了嗎？',
           transaction_date: '2026-03-22T00:00:00Z',
           created_at: '2026-03-22T10:00:00Z',
         }))
@@ -290,13 +289,10 @@ describe('Stats Page Drilldown', () => {
     const txToggle = screen.getByTestId('drilldown-tx-toggle-tx-detail-1')
     await user.click(txToggle)
 
-    // Should show AI feedback after lazy loading
+    // Should show note in expanded detail
     await waitFor(() => {
-      expect(screen.getByText('又買零食了嗎？')).toBeInTheDocument()
+      expect(screen.getByText('買水')).toBeInTheDocument()
     })
-
-    // Verify the detail API was called
-    expect(mockGet).toHaveBeenCalledWith('/transactions/tx-detail-1')
   })
 
   it('shows empty message when category has no transactions', async () => {

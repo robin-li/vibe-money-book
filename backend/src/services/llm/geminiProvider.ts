@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { LLMProvider } from './llmProvider';
+import { LLMProvider, ValidationResult } from './llmProvider';
 import { ParsedTransaction, AIFeedbackContent, ModelInfo } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { createI18nError } from '../../middlewares/errorHandler';
@@ -90,6 +90,44 @@ export class GeminiProvider implements LLMProvider {
     return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024, 'application/json', model);
   }
 
+  async listModels(apiKey: string): Promise<ModelInfo[]> {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+        { signal: AbortSignal.timeout(10000) }
+      );
+      if (!res.ok) return this.getAvailableModels();
+      const data = await res.json() as { models?: Array<{ name: string; displayName: string; description?: string; supportedGenerationMethods?: string[] }> };
+      if (!data.models) return this.getAvailableModels();
+
+      const defaults = this.getAvailableModels();
+      const defaultMap = new Map(defaults.map((m) => [m.id, m]));
+
+      const models: ModelInfo[] = data.models
+        .filter((m) => m.supportedGenerationMethods?.includes('generateContent'))
+        .map((m) => {
+          const id = m.name.replace('models/', '');
+          const def = defaultMap.get(id);
+          return {
+            id,
+            name: def?.name ?? m.displayName,
+            description: def?.description ?? (m.description?.substring(0, 80) ?? ''),
+            isDefault: def?.isDefault ?? false,
+          };
+        });
+
+      models.sort((a, b) => {
+        if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
+        if (defaultMap.has(a.id) !== defaultMap.has(b.id)) return defaultMap.has(a.id) ? -1 : 1;
+        return a.id.localeCompare(b.id);
+      });
+
+      return models.length > 0 ? models : this.getAvailableModels();
+    } catch {
+      return this.getAvailableModels();
+    }
+  }
+
   getAvailableModels(): ModelInfo[] {
     return [
       {
@@ -107,16 +145,23 @@ export class GeminiProvider implements LLMProvider {
     ];
   }
 
-  async validateKey(apiKey: string): Promise<boolean> {
+  async validateKey(apiKey: string, model?: string): Promise<ValidationResult> {
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const genModel = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+      const genModel = genAI.getGenerativeModel({ model: model || GEMINI_MODEL });
       await genModel.generateContent({
         contents: [{ role: 'user', parts: [{ text: 'test' }] }],
       });
-      return true;
-    } catch {
-      return false;
+      return { valid: true };
+    } catch (err: unknown) {
+      const message = (err as Error)?.message ?? '';
+      if (message.includes('API_KEY_INVALID') || message.includes('PERMISSION_DENIED')) {
+        return { valid: false, errorType: 'invalid_key' };
+      }
+      if (message.includes('NOT_FOUND') || message.includes('not found') || message.includes('is not supported')) {
+        return { valid: false, errorType: 'invalid_model' };
+      }
+      return { valid: false, errorType: 'invalid_key' };
     }
   }
 
