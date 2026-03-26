@@ -94,7 +94,7 @@ export class GeminiProvider implements LLMProvider {
     /embedding/i, /aqa/i, /imagen/i, /veo/i, /chirp/i, /codec/i,
     /text-bison/i, /chat-bison/i, /gemma/i, /learnlm/i,
     /nano/i, /tts/i, /robotics/i, /lyria/i, /computer.?use/i,
-    /deep.?research/i, /custom.?tools/i,
+    /deep.?research/i, /custom.?tools/i, /-image(?:-|$)/i,
   ];
 
   async listModels(apiKey: string): Promise<ModelInfo[]> {
