@@ -241,7 +241,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
       const res = await api.post(
         '/ai/query',
         { query_text: queryText },
-        { headers: llmHeaders() }
+        { headers: llmHeaders(), timeout: 60000 }
       )
 
       const result = res.data.data as AIQueryResult

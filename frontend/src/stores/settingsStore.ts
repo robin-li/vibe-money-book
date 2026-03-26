@@ -243,6 +243,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       if (model) body.model = model
       await api.post('/ai/validate-key', body, {
         headers: { 'X-LLM-API-Key': apiKey },
+        timeout: 30000,
       })
       set({ keyValidationStatus: 'valid', keyValidationMessage: null })
       return true
