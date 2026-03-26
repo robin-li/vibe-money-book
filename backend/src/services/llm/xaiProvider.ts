@@ -2,6 +2,7 @@ import OpenAI from 'openai';
 import { OpenAIProvider } from './openaiProvider';
 import { ModelInfo } from '../../types/llm';
 import { createI18nError } from '../../middlewares/errorHandler';
+import { loadModelFilters } from './modelFilterConfig';
 
 const XAI_MODEL = process.env.XAI_MODEL || 'grok-3-mini-fast';
 const TIMEOUT_MS = Number(process.env.LLM_TIMEOUT_MS) || 30000;
@@ -37,13 +38,13 @@ export class XAIProvider extends OpenAIProvider {
     throw createI18nError('llm_service_unavailable', 502);
   }
 
-  protected static override readonly INCLUDE_PATTERNS: RegExp[] = [
-    /^grok-/i,
-  ];
+  protected static override readonly DEFAULT_INCLUDES: RegExp[] = [/^grok-/i];
+  protected static override readonly DEFAULT_EXCLUDES: RegExp[] = [/embed/i, /image/i];
 
-  protected static override readonly EXCLUDE_PATTERNS: RegExp[] = [
-    /embed/i, /image/i,
-  ];
+  protected static override readonly MODEL_FILTERS = loadModelFilters(
+    'XAI_MODEL_INCLUDE', 'XAI_MODEL_EXCLUDE',
+    XAIProvider.DEFAULT_INCLUDES, XAIProvider.DEFAULT_EXCLUDES,
+  );
 
   override async listModels(apiKey: string): Promise<ModelInfo[]> {
     try {
@@ -54,8 +55,9 @@ export class XAIProvider extends OpenAIProvider {
       const defaultMap = new Map(defaults.map((m) => [m.id, m]));
 
       for await (const model of response) {
-        const included = XAIProvider.INCLUDE_PATTERNS.length === 0 || XAIProvider.INCLUDE_PATTERNS.some((p) => p.test(model.id));
-        if (included && !XAIProvider.EXCLUDE_PATTERNS.some((p) => p.test(model.id))) {
+        const { includes, excludes } = XAIProvider.MODEL_FILTERS;
+        const included = includes.length === 0 || includes.some((p) => p.test(model.id));
+        if (included && !excludes.some((p) => p.test(model.id))) {
           const def = defaultMap.get(model.id);
           models.push({
             id: model.id,

@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { LLMProvider, ValidationResult } from './llmProvider';
+import { loadModelFilters } from './modelFilterConfig';
 import { ParsedTransaction, AIFeedbackContent, ModelInfo } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { createI18nError } from '../../middlewares/errorHandler';
@@ -90,16 +91,16 @@ export class GeminiProvider implements LLMProvider {
     return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024, 'application/json', model);
   }
 
-  /** Include patterns: model ID must match at least one */
-  private static readonly INCLUDE_PATTERNS: RegExp[] = [
-    /^gemini-/i,
-  ];
-
-  /** Exclude patterns: applied after include filter */
-  private static readonly EXCLUDE_PATTERNS: RegExp[] = [
+  private static readonly DEFAULT_INCLUDES: RegExp[] = [/^gemini-/i];
+  private static readonly DEFAULT_EXCLUDES: RegExp[] = [
     /embedding/i, /-image(?:-|$)/i, /tts/i,
     /robotics/i, /computer.?use/i, /nano/i, /customtools/i,
   ];
+
+  private static readonly MODEL_FILTERS = loadModelFilters(
+    'GEMINI_MODEL_INCLUDE', 'GEMINI_MODEL_EXCLUDE',
+    GeminiProvider.DEFAULT_INCLUDES, GeminiProvider.DEFAULT_EXCLUDES,
+  );
 
   async listModels(apiKey: string): Promise<ModelInfo[]> {
     try {
@@ -127,8 +128,9 @@ export class GeminiProvider implements LLMProvider {
           };
         })
         .filter((m) => {
-          const included = GeminiProvider.INCLUDE_PATTERNS.length === 0 || GeminiProvider.INCLUDE_PATTERNS.some((p) => p.test(m.id));
-          return included && !GeminiProvider.EXCLUDE_PATTERNS.some((p) => p.test(m.id));
+          const { includes, excludes } = GeminiProvider.MODEL_FILTERS;
+          const included = includes.length === 0 || includes.some((p) => p.test(m.id));
+          return included && !excludes.some((p) => p.test(m.id));
         });
 
       models.sort((a, b) => {
