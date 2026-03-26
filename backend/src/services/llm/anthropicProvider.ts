@@ -79,7 +79,13 @@ export class AnthropicProvider implements LLMProvider {
     return this.callWithRetry(apiKey, enhancedSystemPrompt, userPrompt, 0, 1024, model);
   }
 
-  private static readonly EXCLUDE_PATTERNS = [
+  /** Include patterns: model ID must match at least one */
+  private static readonly INCLUDE_PATTERNS: RegExp[] = [
+    /^claude-/i,
+  ];
+
+  /** Exclude patterns: applied after include filter */
+  private static readonly EXCLUDE_PATTERNS: RegExp[] = [
     /^claude-3-haiku/,  // deprecated
   ];
 
@@ -100,7 +106,10 @@ export class AnthropicProvider implements LLMProvider {
       const defaultMap = new Map(defaults.map((m) => [m.id, m]));
 
       const models: ModelInfo[] = data.data
-        .filter((m) => !AnthropicProvider.EXCLUDE_PATTERNS.some((p) => p.test(m.id)))
+        .filter((m) => {
+          const included = AnthropicProvider.INCLUDE_PATTERNS.length === 0 || AnthropicProvider.INCLUDE_PATTERNS.some((p) => p.test(m.id));
+          return included && !AnthropicProvider.EXCLUDE_PATTERNS.some((p) => p.test(m.id));
+        })
         .map((m) => {
           const def = defaultMap.get(m.id);
           return {

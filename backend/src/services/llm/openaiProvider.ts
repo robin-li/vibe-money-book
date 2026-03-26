@@ -94,16 +94,15 @@ export class OpenAIProvider implements LLMProvider {
     return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024, model);
   }
 
-  protected static readonly EXCLUDE_PATTERNS: RegExp[] = [
-    /instruct/i, /realtime/i, /audio/i, /tts/i, /dall/i,
-    /whisper/i, /embed/i, /search/i, /moderation/i,
-    /babbage/i, /davinci/i, /curie/i, /ada(?!ptive)/i,
-    /image/i, /transcribe/i, /diarize/i, /codex/i,
-    /gpt-3\.5/i, /-chat-latest$/i,
-    /^gpt-4-\d{4}/i, /^gpt-4-turbo/i,
+  /** Include patterns: model ID must match at least one */
+  protected static readonly INCLUDE_PATTERNS: RegExp[] = [
+    /^gpt-5\.4/i, /^o4-/i,
   ];
 
-  protected static readonly INCLUDE_PATTERN = /^(gpt-|o[134]-)/;
+  /** Exclude patterns: applied after include filter */
+  protected static readonly EXCLUDE_PATTERNS: RegExp[] = [
+    /image/i, /codex/i, /-chat-latest$/i,
+  ];
 
   async listModels(apiKey: string): Promise<ModelInfo[]> {
     try {
@@ -112,11 +111,12 @@ export class OpenAIProvider implements LLMProvider {
       const models: ModelInfo[] = [];
       const defaults = this.getAvailableModels();
       const defaultMap = new Map(defaults.map((m) => [m.id, m]));
+      const includes = (this.constructor as typeof OpenAIProvider).INCLUDE_PATTERNS;
       const excludes = (this.constructor as typeof OpenAIProvider).EXCLUDE_PATTERNS;
-      const include = (this.constructor as typeof OpenAIProvider).INCLUDE_PATTERN;
 
       for await (const model of response) {
-        if (include.test(model.id) && !excludes.some((p) => p.test(model.id))) {
+        const included = includes.length === 0 || includes.some((p) => p.test(model.id));
+        if (included && !excludes.some((p) => p.test(model.id))) {
           const def = defaultMap.get(model.id);
           models.push({
             id: model.id,

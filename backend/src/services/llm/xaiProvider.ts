@@ -37,11 +37,13 @@ export class XAIProvider extends OpenAIProvider {
     throw createI18nError('llm_service_unavailable', 502);
   }
 
+  protected static override readonly INCLUDE_PATTERNS: RegExp[] = [
+    /^grok-/i,
+  ];
+
   protected static override readonly EXCLUDE_PATTERNS: RegExp[] = [
     /embed/i, /image/i,
   ];
-
-  protected static override readonly INCLUDE_PATTERN = /^grok-/;
 
   override async listModels(apiKey: string): Promise<ModelInfo[]> {
     try {
@@ -52,7 +54,8 @@ export class XAIProvider extends OpenAIProvider {
       const defaultMap = new Map(defaults.map((m) => [m.id, m]));
 
       for await (const model of response) {
-        if (XAIProvider.INCLUDE_PATTERN.test(model.id) && !XAIProvider.EXCLUDE_PATTERNS.some((p) => p.test(model.id))) {
+        const included = XAIProvider.INCLUDE_PATTERNS.length === 0 || XAIProvider.INCLUDE_PATTERNS.some((p) => p.test(model.id));
+        if (included && !XAIProvider.EXCLUDE_PATTERNS.some((p) => p.test(model.id))) {
           const def = defaultMap.get(model.id);
           models.push({
             id: model.id,

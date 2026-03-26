@@ -90,11 +90,15 @@ export class GeminiProvider implements LLMProvider {
     return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024, 'application/json', model);
   }
 
-  private static readonly EXCLUDE_PATTERNS = [
-    /embedding/i, /aqa/i, /imagen/i, /veo/i, /chirp/i, /codec/i,
-    /text-bison/i, /chat-bison/i, /gemma/i, /learnlm/i,
-    /nano/i, /tts/i, /robotics/i, /lyria/i, /computer.?use/i,
-    /deep.?research/i, /custom.?tools/i, /-image(?:-|$)/i,
+  /** Include patterns: model ID must match at least one */
+  private static readonly INCLUDE_PATTERNS: RegExp[] = [
+    /^gemini-/i,
+  ];
+
+  /** Exclude patterns: applied after include filter */
+  private static readonly EXCLUDE_PATTERNS: RegExp[] = [
+    /embedding/i, /-image(?:-|$)/i, /tts/i,
+    /robotics/i, /computer.?use/i, /nano/i,
   ];
 
   async listModels(apiKey: string): Promise<ModelInfo[]> {
@@ -122,7 +126,10 @@ export class GeminiProvider implements LLMProvider {
             isDefault: def?.isDefault ?? false,
           };
         })
-        .filter((m) => !GeminiProvider.EXCLUDE_PATTERNS.some((p) => p.test(m.id)));
+        .filter((m) => {
+          const included = GeminiProvider.INCLUDE_PATTERNS.length === 0 || GeminiProvider.INCLUDE_PATTERNS.some((p) => p.test(m.id));
+          return included && !GeminiProvider.EXCLUDE_PATTERNS.some((p) => p.test(m.id));
+        });
 
       models.sort((a, b) => {
         if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
