@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { LLMProvider, ValidationResult } from './llmProvider';
+import { loadModelFilters } from './modelFilterConfig';
 import { ParsedTransaction, AIFeedbackContent, ModelInfo } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { createI18nError } from '../../middlewares/errorHandler';
@@ -79,15 +80,13 @@ export class AnthropicProvider implements LLMProvider {
     return this.callWithRetry(apiKey, enhancedSystemPrompt, userPrompt, 0, 1024, model);
   }
 
-  /** Include patterns: model ID must match at least one */
-  private static readonly INCLUDE_PATTERNS: RegExp[] = [
-    /^claude-/i,
-  ];
+  private static readonly DEFAULT_INCLUDES: RegExp[] = [/^claude-/i];
+  private static readonly DEFAULT_EXCLUDES: RegExp[] = [/^claude-3-haiku/];
 
-  /** Exclude patterns: applied after include filter */
-  private static readonly EXCLUDE_PATTERNS: RegExp[] = [
-    /^claude-3-haiku/,  // deprecated
-  ];
+  private static readonly MODEL_FILTERS = loadModelFilters(
+    'ANTHROPIC_MODEL_INCLUDE', 'ANTHROPIC_MODEL_EXCLUDE',
+    AnthropicProvider.DEFAULT_INCLUDES, AnthropicProvider.DEFAULT_EXCLUDES,
+  );
 
   async listModels(apiKey: string): Promise<ModelInfo[]> {
     try {
@@ -107,8 +106,9 @@ export class AnthropicProvider implements LLMProvider {
 
       const models: ModelInfo[] = data.data
         .filter((m) => {
-          const included = AnthropicProvider.INCLUDE_PATTERNS.length === 0 || AnthropicProvider.INCLUDE_PATTERNS.some((p) => p.test(m.id));
-          return included && !AnthropicProvider.EXCLUDE_PATTERNS.some((p) => p.test(m.id));
+          const { includes, excludes } = AnthropicProvider.MODEL_FILTERS;
+          const included = includes.length === 0 || includes.some((p) => p.test(m.id));
+          return included && !excludes.some((p) => p.test(m.id));
         })
         .map((m) => {
           const def = defaultMap.get(m.id);

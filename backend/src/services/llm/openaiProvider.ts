@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { LLMProvider, ValidationResult } from './llmProvider';
+import { loadModelFilters } from './modelFilterConfig';
 import { ParsedTransaction, AIFeedbackContent, ModelInfo } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { createI18nError } from '../../middlewares/errorHandler';
@@ -94,15 +95,13 @@ export class OpenAIProvider implements LLMProvider {
     return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024, model);
   }
 
-  /** Include patterns: model ID must match at least one */
-  protected static readonly INCLUDE_PATTERNS: RegExp[] = [
-    /^gpt-5\.4/i, /^o4-/i,
-  ];
+  protected static readonly DEFAULT_INCLUDES: RegExp[] = [/^gpt-5\.4/i, /^o4-/i];
+  protected static readonly DEFAULT_EXCLUDES: RegExp[] = [/image/i, /codex/i, /-chat-latest$/i];
 
-  /** Exclude patterns: applied after include filter */
-  protected static readonly EXCLUDE_PATTERNS: RegExp[] = [
-    /image/i, /codex/i, /-chat-latest$/i,
-  ];
+  protected static readonly MODEL_FILTERS = loadModelFilters(
+    'OPENAI_MODEL_INCLUDE', 'OPENAI_MODEL_EXCLUDE',
+    OpenAIProvider.DEFAULT_INCLUDES, OpenAIProvider.DEFAULT_EXCLUDES,
+  );
 
   async listModels(apiKey: string): Promise<ModelInfo[]> {
     try {
@@ -111,8 +110,7 @@ export class OpenAIProvider implements LLMProvider {
       const models: ModelInfo[] = [];
       const defaults = this.getAvailableModels();
       const defaultMap = new Map(defaults.map((m) => [m.id, m]));
-      const includes = (this.constructor as typeof OpenAIProvider).INCLUDE_PATTERNS;
-      const excludes = (this.constructor as typeof OpenAIProvider).EXCLUDE_PATTERNS;
+      const { includes, excludes } = (this.constructor as typeof OpenAIProvider).MODEL_FILTERS;
 
       for await (const model of response) {
         const included = includes.length === 0 || includes.some((p) => p.test(model.id));
