@@ -2,8 +2,8 @@
 
 > **專案名稱**：Vibe Money Book — 語音記帳應用
 > **API 版本**：v1.0
-> **文檔版本**：v1.4
-> **最後更新**：2026-03-25
+> **文檔版本**：v1.5
+> **最後更新**：2026-03-27
 
 ---
 
@@ -143,6 +143,7 @@ Accept-Language: zh-TW             # 語言偏好（PRD-F-015，可選，預設 
 | POST | /ai/query | 自然語言篩選查詢交易記錄（PRD-F-014） | ✓ |
 | GET | /ai/config | 查詢 AI 配置（預設 API Key 可用狀態，PRD-F-017 擴展） | ✓ |
 | GET | /ai/providers | 取得支援的 AI 供應商與可用模型列表（PRD-F-017） | ✓ |
+| GET | /ai/models | 取得指定供應商的可用模型列表（PRD-F-017） | ✓ |
 
 ### 4.4 交易模組
 
@@ -341,6 +342,7 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 ```
 
 **錯誤**：
+- 400：模型無效或不存在（錯誤碼 `LLM_MODEL_INVALID`）
 - 401：`X-LLM-API-Key` Header 缺失或為空
 - 403：API Key 無效或 quota 耗盡，回傳具體錯誤原因（如「金鑰格式錯誤」、「配額已用盡」）
 - 429：超過速率限制
@@ -572,6 +574,47 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
   "timestamp": "2026-03-25T12:00:00Z"
 }
 ```
+
+#### GET /ai/models — 取得指定供應商的可用模型列表（PRD-F-017）
+
+**描述**：依指定供應商回傳可用模型列表。若提供有效 API Key（透過 Header 或伺服器預設），則呼叫供應商的 List Models API 取得動態列表；否則回傳硬編碼的預設模型清單。
+
+**Request Header**：
+```
+Authorization: Bearer <JWT_TOKEN>          # 必填
+X-LLM-API-Key: <使用者自行提供的 LLM API Key>  # 可選
+```
+
+**查詢參數**：
+- `engine`：必填，`gemini` / `openai` / `anthropic` / `xai`
+
+**成功響應 (200)**：
+```json
+{
+  "code": 200,
+  "data": {
+    "models": [
+      { "id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash", "description": "快速且經濟實惠", "isDefault": true },
+      { "id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro", "description": "高品質推理能力", "isDefault": false },
+      { "id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash", "description": "上一代快速模型", "isDefault": false }
+    ],
+    "dynamic": true
+  },
+  "timestamp": "2026-03-27T12:00:00Z"
+}
+```
+
+**回應欄位說明**：
+- `models`：模型資訊列表（`ModelInfo[]`）
+  - `id`：模型識別碼
+  - `name`：模型顯示名稱
+  - `description`：模型描述
+  - `isDefault`：是否為該供應商的預設模型
+- `dynamic`：`true` 表示透過供應商 API 動態取得，`false` 表示使用硬編碼預設清單
+
+**錯誤**：
+- 400：`engine` 參數缺失或不合法
+- 401：未認證或 Token 過期
 
 ---
 
@@ -864,6 +907,7 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 | NOT_FOUND | 404 | 資源不存在 |
 | LLM_API_KEY_MISSING | 401 | LLM API Key 未提供（PRD-F-013） |
 | LLM_API_KEY_INVALID | 403 | LLM API Key 無效或 quota 耗盡（PRD-F-013） |
+| LLM_MODEL_INVALID | 400 | 指定的模型無效或不存在（PRD-F-017） |
 | CONFLICT | 409 | 資源衝突（如 email 重複） |
 | RATE_LIMIT_EXCEEDED | 429 | 超出速率限制 |
 | LLM_SERVICE_ERROR | 502 | LLM 服務呼叫失敗 |
@@ -872,7 +916,7 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 ---
 
 **文檔責任人**：技術架構團隊
-**最後修訂日期**：2026-03-25
+**最後修訂日期**：2026-03-27
 
 ---
 
@@ -885,3 +929,4 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>
 | v1.2 | 2026-03-22 | §4.3 新增 `GET /ai/config` 端點（預設 API Key 狀態查詢）；§5.6 `/stats/distribution` 新增 `period`、`start_date`、`end_date`、`type` 查詢參數，支援本週與自訂日期範圍 |
 | v1.3 | 2026-03-22 | 配合 PRD-F-015（i18n 多語系支援）：§1.2 請求格式新增 `Accept-Language` Header 說明；使用者模組（register/login/profile）回應新增 `language` 欄位；`PUT /users/profile` 新增 `language` 可選參數 |
 | v1.4 | 2026-03-25 | M7 新增功能：§4.3 新增 `GET /ai/providers` 端點（供應商與模型列表）；`POST /ai/validate-key` 擴展支援 engine/model body 參數；`GET /ai/config` 擴展回傳 anthropic/xai 預設 Key 狀態；`PUT /users/profile` 新增 `ai_model` 可選參數、`ai_engine` 擴展為四供應商 |
+| v1.5 | 2026-03-27 | Add `GET /ai/models` endpoint; `validate-key` distinguishes key vs model errors (400/403); add `LLM_MODEL_INVALID` error code |
