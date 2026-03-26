@@ -6,3 +6,6 @@ node_modules/
 .claude/worktrees/
 .tunnel.pid
 *.db
+test-results/
+playwright-report/
+launchd.log
