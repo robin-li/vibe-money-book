@@ -20,8 +20,8 @@ const PERSONA_OPTIONS: { value: Persona; emoji: string }[] = [
 
 /** AI 引擎選項定義 */
 const ENGINE_OPTIONS: { value: AIEngine; label: string; emoji: string }[] = [
-  { value: 'gemini', label: 'Gemini', emoji: '✨' },
   { value: 'openai', label: 'OpenAI', emoji: '🤖' },
+  { value: 'gemini', label: 'Gemini', emoji: '✨' },
   { value: 'anthropic', label: 'Anthropic', emoji: '🧠' },
   { value: 'xai', label: 'xAI', emoji: '⚡' },
 ]
@@ -430,7 +430,7 @@ function SettingsPage() {
                 aria-label={t('aiEngine.selectLabel', { label: opt.label })}>
                 <span className="text-lg">{opt.emoji}</span>
                 <span className="text-body font-semibold">{opt.label}</span>
-                {opt.value === 'gemini' && <span className="text-small text-text-secondary">{t('aiEngine.default')}</span>}
+                {opt.value === 'openai' && <span className="text-small text-text-secondary">{t('aiEngine.default')}</span>}
               </button>
             )
           })}
