@@ -98,9 +98,12 @@ export class OpenAIProvider implements LLMProvider {
     /instruct/i, /realtime/i, /audio/i, /tts/i, /dall/i,
     /whisper/i, /embed/i, /search/i, /moderation/i,
     /babbage/i, /davinci/i, /curie/i, /ada(?!ptive)/i,
+    /image/i, /transcribe/i, /diarize/i, /codex/i,
+    /gpt-3\.5/i, /-chat-latest$/i,
+    /^gpt-4-\d{4}/i, /^gpt-4-turbo/i,
   ];
 
-  protected static readonly INCLUDE_PATTERN = /^(gpt-|o[134]-|chatgpt-)/;
+  protected static readonly INCLUDE_PATTERN = /^(gpt-|o[134]-)/;
 
   async listModels(apiKey: string): Promise<ModelInfo[]> {
     try {
