@@ -98,7 +98,7 @@ export class GeminiProvider implements LLMProvider {
   /** Exclude patterns: applied after include filter */
   private static readonly EXCLUDE_PATTERNS: RegExp[] = [
     /embedding/i, /-image(?:-|$)/i, /tts/i,
-    /robotics/i, /computer.?use/i, /nano/i,
+    /robotics/i, /computer.?use/i, /nano/i, /customtools/i,
   ];
 
   async listModels(apiKey: string): Promise<ModelInfo[]> {
