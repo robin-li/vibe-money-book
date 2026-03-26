@@ -40,12 +40,10 @@ user_invocable: true
 | 2a | *CI 通過* | **AI 助手** 通知開發者可進行 Code Review | — |
 | 2b | *CI 失敗* | **AI 助手** 讀取失敗報告，分析原因，修正程式碼，**確認 PR 仍為 OPEN 後**推送新 commit | 修正 commit |
 |    |           | → 回到步驟 1，GitHub 重新執行 CI | — |
+| 2c | *CI 環境問題* | 若單元測試（Backend/Frontend CI）通過，但 E2E 因**環境配置問題**（非代碼問題）失敗，標註為已知環境問題，建議開發者合併（詳見「已知 CI 環境問題處理」） | — |
 | 3 | **開發者** | Code Review，核准後點擊 Merge | Merge commit |
 | 4 | **GitHub** | 觸發 CD pipeline（如已配置） | 部署 |
-| 5 | **AI 助手** | 將 `02-Dev_Plan.md` 中對應任務標記為 `[x] Completed` | Dev Plan 更新 |
-| 5a | **AI 助手** | 若 PR 內容涉及規格變更（如新增/修改 API、變更資料模型、調整功能行為），同步更新對應規格文件（PRD/SRD/API Spec）並更新版本修訂記錄 | 規格文件同步 |
-| 6 | **AI 助手** | 更新看板狀態為 `Done`，並在 Issue 發佈完成 Comment | 狀態更新 |
-| 7 | **AI 助手** | 提醒開發者：若該任務有對應的手動驗證 Issues，現在可交由審查角色開始驗證 | 驗證提醒 |
+| 5 | **AI 助手** | 合併後作業（詳見「合併後作業清單」） | — |
 
 ### Merge 後 Issue Comment
 
@@ -57,6 +55,52 @@ PR 合併後，**AI 助手必須**在對應 Issue 發佈完成 Comment：
 - **Dev Plan**：已更新為 `[x] Completed`
 - **待驗證**：{列出相關驗證 Issues，若無則寫「無」}
 ```
+
+### 合併後作業清單
+
+PR 合併後，**AI 助手必須依序執行**：
+
+1. **切回 main + pull**：`git checkout main && git pull origin main`
+2. **清理本地 feature 分支**：`git branch -d <branch>`（若 `gh pr merge -d` 未自動清理）
+3. **更新 Dev Plan**：將對應任務標記為 `[x] Completed`
+4. **更新看板狀態**：標記 Issue 為 `Done`
+5. **發佈完成 Comment**：含 PR 連結與 Dev Plan 更新
+6. **提示規格文件同步**：若 PR 涉及 API/行為變更（詳見 P3「規格文件回溯規則」）
+7. **詢問是否重建部署**：「PR 已合併，是否重建部署？」
+8. **提醒驗證 Issues**：若有對應的手動驗證 Issues
+
+### 已知 CI 環境問題處理
+
+若 CI 失敗的原因為**環境配置問題**（非代碼邏輯錯誤），AI 可標註為已知問題並建議合併：
+
+**判斷標準**：
+
+| 條件 | 判定 |
+|------|------|
+| Backend CI ✅ + Frontend CI ✅ + E2E ❌（環境錯誤如 DB URL、Docker 配置） | 已知環境問題，可合併 |
+| Backend CI ❌ 或 Frontend CI ❌ | **代碼問題，必須修正** |
+| E2E ❌ 且錯誤訊息涉及業務邏輯（assertion failed、element not found 等） | **代碼問題，必須修正** |
+
+**環境問題特徵**（常見）：
+- `Prisma schema validation` / `P1012` 錯誤
+- `ECONNREFUSED` / 服務未啟動
+- Docker image build 失敗（非 Dockerfile 錯誤）
+- Timeout 在等待服務就緒
+
+**處理方式**：向開發者報告 CI 狀態，標註「E2E 因環境問題失敗（非代碼問題），Backend + Frontend 單元測試全部通過」，建議合併。
+
+### 規格文件同步觸發條件
+
+PR 合併後，若涉及以下改動，AI 應提示開發者是否需要同步更新規格文件：
+
+| 改動類型 | 是否提示更新 | 對應規格文件 |
+|----------|-------------|-------------|
+| 新增 API endpoint | **必須提示** | API Spec (md + yaml) |
+| API 行為或欄位變更 | **必須提示** | API Spec (md + yaml) |
+| UI 流程或頁面調整 | 建議提示 | PRD |
+| 資料模型變更 | 建議提示 | SRD |
+| 基礎設施修正（nginx、timeout） | 不需要 | — |
+| 依賴升級、config 調整 | 不需要 | — |
 
 ## PR 格式規範
 
