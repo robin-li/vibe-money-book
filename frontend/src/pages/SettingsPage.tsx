@@ -53,6 +53,7 @@ function SettingsPage() {
     saving,
     error,
     keyValidationStatus,
+    keyValidationMessage,
     hasDefaultKey,
     providers,
     dynamicModels,
@@ -154,7 +155,12 @@ function SettingsPage() {
 
   const handleModelChange = useCallback(async (modelId: string) => {
     await updateAIModel(modelId)
-  }, [updateAIModel])
+    // Auto-validate with new model if API key exists
+    const key = apiKeys[aiEngine] ?? ''
+    if (key) {
+      await validateApiKey(key, aiEngine, modelId)
+    }
+  }, [updateAIModel, apiKeys, aiEngine, validateApiKey])
 
   const handleBudgetSave = useCallback(() => {
     const val = parseInt(budgetInput, 10)
@@ -242,7 +248,7 @@ function SettingsPage() {
     switch (status) {
       case 'validating': return t('aiEngine.validating')
       case 'valid': return t('aiEngine.valid')
-      case 'invalid': return t('aiEngine.invalid')
+      case 'invalid': return keyValidationMessage || t('aiEngine.invalid')
       default: return null
     }
   }

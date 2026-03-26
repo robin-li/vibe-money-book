@@ -14,6 +14,7 @@
   "transaction_not_found": "Không tìm thấy giao dịch",
   "llm_api_key_missing": "Vui lòng cung cấp LLM API Key (X-LLM-API-Key Header)",
   "llm_api_key_invalid": "Xác thực API Key thất bại, vui lòng kiểm tra lại key",
+  "llm_model_invalid": "Model này không khả dụng, vui lòng chọn model khác",
   "gemini_api_key_invalid": "API Key Gemini không hợp lệ, vui lòng kiểm tra lại API Key",
   "gemini_quota_exhausted": "Đã hết hạn mức Gemini API, vui lòng kiểm tra hạn mức hoặc đổi engine",
   "openai_api_key_invalid": "API Key OpenAI không hợp lệ, vui lòng kiểm tra lại API Key",

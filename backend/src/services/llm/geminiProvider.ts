@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { LLMProvider } from './llmProvider';
+import { LLMProvider, ValidationResult } from './llmProvider';
 import { ParsedTransaction, AIFeedbackContent, ModelInfo } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { createI18nError } from '../../middlewares/errorHandler';
@@ -145,16 +145,23 @@ export class GeminiProvider implements LLMProvider {
     ];
   }
 
-  async validateKey(apiKey: string): Promise<boolean> {
+  async validateKey(apiKey: string, model?: string): Promise<ValidationResult> {
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
-      const genModel = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+      const genModel = genAI.getGenerativeModel({ model: model || GEMINI_MODEL });
       await genModel.generateContent({
         contents: [{ role: 'user', parts: [{ text: 'test' }] }],
       });
-      return true;
-    } catch {
-      return false;
+      return { valid: true };
+    } catch (err: unknown) {
+      const message = (err as Error)?.message ?? '';
+      if (message.includes('API_KEY_INVALID') || message.includes('PERMISSION_DENIED')) {
+        return { valid: false, errorType: 'invalid_key' };
+      }
+      if (message.includes('NOT_FOUND') || message.includes('not found') || message.includes('is not supported')) {
+        return { valid: false, errorType: 'invalid_model' };
+      }
+      return { valid: false, errorType: 'invalid_key' };
     }
   }
 

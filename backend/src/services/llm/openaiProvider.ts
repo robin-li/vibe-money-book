@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { LLMProvider } from './llmProvider';
+import { LLMProvider, ValidationResult } from './llmProvider';
 import { ParsedTransaction, AIFeedbackContent, ModelInfo } from '../../types/llm';
 import { DATA_EXTRACTOR_SYSTEM_PROMPT } from '../../prompts/dataExtractorPrompt';
 import { createI18nError } from '../../middlewares/errorHandler';
@@ -143,17 +143,24 @@ export class OpenAIProvider implements LLMProvider {
     ];
   }
 
-  async validateKey(apiKey: string): Promise<boolean> {
+  async validateKey(apiKey: string, model?: string): Promise<ValidationResult> {
     try {
       const client = this.getClient(apiKey);
       await client.chat.completions.create({
-        model: this.getDefaultModel(),
+        model: model || this.getDefaultModel(),
         messages: [{ role: 'user', content: 'test' }],
         max_completion_tokens: 5,
       });
-      return true;
-    } catch {
-      return false;
+      return { valid: true };
+    } catch (err: unknown) {
+      const message = (err as Error)?.message ?? '';
+      if (message.includes('Incorrect API key') || message.includes('invalid_api_key') || message.includes('Unauthorized')) {
+        return { valid: false, errorType: 'invalid_key' };
+      }
+      if (message.includes('model_not_found') || message.includes('does not exist') || message.includes('invalid_model')) {
+        return { valid: false, errorType: 'invalid_model' };
+      }
+      return { valid: false, errorType: 'invalid_key' };
     }
   }
 

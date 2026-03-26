@@ -39,6 +39,8 @@ interface SettingsState {
 
   /** API Key 驗證狀態 */
   keyValidationStatus: KeyValidationStatus
+  /** 驗證錯誤訊息 */
+  keyValidationMessage: string | null
 
   /** 後端是否配置了預設 API Key（按引擎） */
   hasDefaultKey: Record<string, boolean>
@@ -90,6 +92,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   saving: false,
   error: null,
   keyValidationStatus: 'idle',
+  keyValidationMessage: null,
   hasDefaultKey: {},
   providers: [],
   dynamicModels: {},
@@ -233,7 +236,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   },
 
   validateApiKey: async (apiKey: string, engine?: AIEngine, model?: string) => {
-    set({ keyValidationStatus: 'validating' })
+    set({ keyValidationStatus: 'validating', keyValidationMessage: null })
     try {
       const body: Record<string, string> = {}
       if (engine) body.engine = engine
@@ -241,10 +244,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       await api.post('/ai/validate-key', body, {
         headers: { 'X-LLM-API-Key': apiKey },
       })
-      set({ keyValidationStatus: 'valid' })
+      set({ keyValidationStatus: 'valid', keyValidationMessage: null })
       return true
-    } catch {
-      set({ keyValidationStatus: 'invalid' })
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? null
+      set({ keyValidationStatus: 'invalid', keyValidationMessage: message })
       return false
     }
   },
