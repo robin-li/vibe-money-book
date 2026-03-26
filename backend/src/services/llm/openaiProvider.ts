@@ -94,6 +94,14 @@ export class OpenAIProvider implements LLMProvider {
     return this.callWithRetry(apiKey, systemPrompt, userPrompt, 0, 1024, model);
   }
 
+  protected static readonly EXCLUDE_PATTERNS: RegExp[] = [
+    /instruct/i, /realtime/i, /audio/i, /tts/i, /dall/i,
+    /whisper/i, /embed/i, /search/i, /moderation/i,
+    /babbage/i, /davinci/i, /curie/i, /ada(?!ptive)/i,
+  ];
+
+  protected static readonly INCLUDE_PATTERN = /^(gpt-|o[134]-|chatgpt-)/;
+
   async listModels(apiKey: string): Promise<ModelInfo[]> {
     try {
       const client = this.getClient(apiKey);
@@ -101,9 +109,11 @@ export class OpenAIProvider implements LLMProvider {
       const models: ModelInfo[] = [];
       const defaults = this.getAvailableModels();
       const defaultMap = new Map(defaults.map((m) => [m.id, m]));
+      const excludes = (this.constructor as typeof OpenAIProvider).EXCLUDE_PATTERNS;
+      const include = (this.constructor as typeof OpenAIProvider).INCLUDE_PATTERN;
 
       for await (const model of response) {
-        if (/^(gpt-|o[134]-|chatgpt-)/.test(model.id) && !/instruct|realtime|audio|tts|dall|whisper|embed|search/i.test(model.id)) {
+        if (include.test(model.id) && !excludes.some((p) => p.test(model.id))) {
           const def = defaultMap.get(model.id);
           models.push({
             id: model.id,

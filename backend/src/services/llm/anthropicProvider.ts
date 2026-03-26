@@ -79,9 +79,48 @@ export class AnthropicProvider implements LLMProvider {
     return this.callWithRetry(apiKey, enhancedSystemPrompt, userPrompt, 0, 1024, model);
   }
 
-  async listModels(_apiKey: string): Promise<ModelInfo[]> {
-    // Anthropic does not provide a List Models API
-    return this.getAvailableModels();
+  private static readonly EXCLUDE_PATTERNS = [
+    /^claude-3-haiku/,  // deprecated
+  ];
+
+  async listModels(apiKey: string): Promise<ModelInfo[]> {
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/models?limit=100', {
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) return this.getAvailableModels();
+      const data = await res.json() as { data?: Array<{ id: string; display_name: string; created_at: string }> };
+      if (!data.data?.length) return this.getAvailableModels();
+
+      const defaults = this.getAvailableModels();
+      const defaultMap = new Map(defaults.map((m) => [m.id, m]));
+
+      const models: ModelInfo[] = data.data
+        .filter((m) => !AnthropicProvider.EXCLUDE_PATTERNS.some((p) => p.test(m.id)))
+        .map((m) => {
+          const def = defaultMap.get(m.id);
+          return {
+            id: m.id,
+            name: def?.name ?? m.display_name,
+            description: def?.description ?? '',
+            isDefault: def?.isDefault ?? false,
+          };
+        });
+
+      models.sort((a, b) => {
+        if (a.isDefault !== b.isDefault) return a.isDefault ? -1 : 1;
+        if (defaultMap.has(a.id) !== defaultMap.has(b.id)) return defaultMap.has(a.id) ? -1 : 1;
+        return a.id.localeCompare(b.id);
+      });
+
+      return models.length > 0 ? models : this.getAvailableModels();
+    } catch {
+      return this.getAvailableModels();
+    }
   }
 
   getAvailableModels(): ModelInfo[] {
@@ -89,13 +128,19 @@ export class AnthropicProvider implements LLMProvider {
       {
         id: 'claude-haiku-4-5-20251001',
         name: 'Claude Haiku 4.5',
-        description: 'Fast and cost-effective model for everyday tasks',
+        description: 'Fastest model, ideal for everyday tasks ($1/$5 per MTok)',
         isDefault: true,
       },
       {
-        id: 'claude-sonnet-4-5-20250514',
-        name: 'Claude Sonnet 4.5',
-        description: 'Advanced model with strong reasoning and analysis',
+        id: 'claude-sonnet-4-6',
+        name: 'Claude Sonnet 4.6',
+        description: 'Best speed-intelligence balance ($3/$15 per MTok)',
+        isDefault: false,
+      },
+      {
+        id: 'claude-opus-4-6',
+        name: 'Claude Opus 4.6',
+        description: 'Most intelligent, best for agents and coding ($5/$25 per MTok)',
         isDefault: false,
       },
     ];
