@@ -109,8 +109,8 @@ Combined with "Custom Categories", build your own classification system. Same ca
 | Feature | Description |
 |---------|-------------|
 | 📊 Budget Health Bar | Visualize budget consumption — overspending alerts turn red so you think twice |
-| 🥧 Spending Analysis | Pie chart + category ranking, income/expenses tracked separately — see where your money goes at a glance |
-| 🔄 Dual AI Engine | Gemini / OpenAI, switch freely — use your own Key or the system default |
+| 🥧 Spending Analysis | Pie chart + interactive bar chart drill-down, tap a category to see details, income/expenses tracked separately |
+| 🔄 Four AI Engines | Gemini / OpenAI / Anthropic / xAI, switch freely — per-provider API Key management |
 | 📱 PWA Support | Add to home screen, instant launch, works offline too |
 | 🏷️ Custom Categories | Up to 50 custom categories, same name for income/expense, each with its own budget |
 | 🛡️ Privacy First | API Key stays in your browser only — backend uses it and forgets it, zero trace |
@@ -211,7 +211,7 @@ Combined with "Custom Categories", build your own classification system. Same ca
 |-------|-------------|
 | **Frontend** | React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · Zustand · React Router 7 · Recharts · Web Speech API · PWA · react-i18next |
 | **Backend** | Node.js · Express 5 · TypeScript · Prisma 6 · Zod 4 · JWT · bcrypt · express-rate-limit · i18next |
-| **AI / LLM** | Google Gemini (default) · OpenAI — dual engine, switch freely |
+| **AI / LLM** | OpenAI (default) · Google Gemini · Anthropic Claude · xAI Grok — four engines, switch freely |
 | **Testing** | Vitest · Testing Library · Supertest · Playwright |
 | **Deployment** | Docker · Docker Compose · Cloudflare Tunnel · PostgreSQL |
 
@@ -238,6 +238,22 @@ Combined with "Custom Categories", build your own classification system. Same ca
 | `gpt-5.4-pro` | Highest quality | — |
 | `gpt-4.1` | Previous generation, supports fine-tuning | — |
 | `gpt-4.1-mini` | Previous generation, fast version | — |
+
+#### Anthropic Claude
+
+| Model | Features | Price (per 1M tokens) |
+|-------|----------|---------------------|
+| `claude-haiku-4-5-20251001` ⭐ | Fastest, ideal for everyday tasks (recommended) | $1.00 / $5.00 |
+| `claude-sonnet-4-6` | Best speed-intelligence balance | $3.00 / $15.00 |
+| `claude-opus-4-6` | Most intelligent, best for agents and coding | $5.00 / $25.00 |
+
+#### xAI Grok
+
+| Model | Features | Price (per 1M tokens) |
+|-------|----------|---------------------|
+| `grok-3-mini-fast` ⭐ | Fastest and most cost-effective (recommended) | — |
+| `grok-3-mini` | Balanced with good reasoning | — |
+| `grok-3` | Most capable xAI model | — |
 
 </details>
 
@@ -334,6 +350,10 @@ Set in `backend/.env` (copy from `.env.example`):
 | `JWT_EXPIRE` | Token expiration time | `7d` |
 | `GEMINI_MODEL` | Gemini model name | `gemini-3-flash-preview` |
 | `OPENAI_MODEL` | OpenAI model name | `gpt-5.4-mini` |
+| `ANTHROPIC_MODEL` | Anthropic model name | `claude-haiku-4-5-20251001` |
+| `XAI_MODEL` | xAI model name | `grok-3-mini-fast` |
+| `{PROVIDER}_MODEL_INCLUDE` | Model include filter regex (e.g. `GEMINI_MODEL_INCLUDE`) | — |
+| `{PROVIDER}_MODEL_EXCLUDE` | Model exclude filter regex | — |
 | `LLM_TIMEOUT_MS` | LLM request timeout | `30000` |
 | `PORT` | Server port | `3000` |
 | `NODE_ENV` | Runtime environment | `development` |
@@ -366,6 +386,8 @@ All APIs are prefixed with `/api/v1` and return responses in JSON format.
 | | GET | `/stats/categories` | Spending Statistics by Category |
 | **AI** | POST | `/ai/parse` | Natural Language Parsing (extraction + feedback) |
 | | POST | `/ai/query` | Semantic Search for Transaction Records |
+| | GET | `/ai/providers` | List supported AI providers |
+| | GET | `/ai/models` | List available models for a provider |
 
 ---
 

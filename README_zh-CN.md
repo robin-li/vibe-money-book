@@ -109,8 +109,8 @@
 | 功能 | 说明 |
 |------|------|
 | 📊 预算血条 | 可视化预算消耗，超支即时警示，红到你不敢再花 |
-| 🥧 消费分析 | 饼图 + 类别排行，收入支出分开统计，花钱花在哪一目了然 |
-| 🔄 双 AI 引擎 | Gemini / OpenAI 自由切换，用你的 Key 或系统预设 |
+| 🥧 消费分析 | 饼图 + 条状图交互展开，点击类别查看明细，收入支出分开统计 |
+| 🔄 四 AI 引擎 | Gemini / OpenAI / Anthropic / xAI 自由切换，每个供应商独立 API Key 管理 |
 | 📱 PWA 支持 | 加入手机桌面，秒开即记，离线也能用 |
 | 🏷️ 自定义类别 | 最多 50 个自定义类别，同名可分收入/支出，各设独立预算 |
 | 🛡️ 隐私优先 | API Key 只存浏览器，后端用后即弃，不留痕迹 |
@@ -211,7 +211,7 @@
 |------|------|
 | **前端** | React 19 · TypeScript · Vite 8 · Tailwind CSS 4 · Zustand · React Router 7 · Recharts · Web Speech API · PWA · react-i18next |
 | **后端** | Node.js · Express 5 · TypeScript · Prisma 6 · Zod 4 · JWT · bcrypt · express-rate-limit · i18next |
-| **AI / LLM** | Google Gemini（预设）· OpenAI — 双引擎自由切换 |
+| **AI / LLM** | OpenAI（预设）· Google Gemini · Anthropic Claude · xAI Grok — 四引擎自由切换 |
 | **测试** | Vitest · Testing Library · Supertest · Playwright |
 | **部署** | Docker · Docker Compose · Cloudflare Tunnel · PostgreSQL |
 
@@ -238,6 +238,22 @@
 | `gpt-5.4-pro` | 最高品质 | — |
 | `gpt-4.1` | 上一代，支持 fine-tuning | — |
 | `gpt-4.1-mini` | 上一代快速版 | — |
+
+#### Anthropic Claude
+
+| 模型 | 特点 | 价格 (per 1M tokens) |
+|------|------|---------------------|
+| `claude-haiku-4-5-20251001` ⭐ | 最快，适合日常任务（推荐） | $1.00 / $5.00 |
+| `claude-sonnet-4-6` | 速度与智能最佳平衡 | $3.00 / $15.00 |
+| `claude-opus-4-6` | 最强智能，适合代理与编码 | $5.00 / $25.00 |
+
+#### xAI Grok
+
+| 模型 | 特点 | 价格 (per 1M tokens) |
+|------|------|---------------------|
+| `grok-3-mini-fast` ⭐ | 最快最经济（推荐） | — |
+| `grok-3-mini` | 平衡型，推理能力佳 | — |
+| `grok-3` | xAI 最强模型 | — |
 
 </details>
 
@@ -334,6 +350,10 @@ vibe-money-book/
 | `JWT_EXPIRE` | Token 过期时间 | `7d` |
 | `GEMINI_MODEL` | Gemini 模型名称 | `gemini-3-flash-preview` |
 | `OPENAI_MODEL` | OpenAI 模型名称 | `gpt-5.4-mini` |
+| `ANTHROPIC_MODEL` | Anthropic 模型名称 | `claude-haiku-4-5-20251001` |
+| `XAI_MODEL` | xAI 模型名称 | `grok-3-mini-fast` |
+| `{PROVIDER}_MODEL_INCLUDE` | 模型包含过滤正则（如 `GEMINI_MODEL_INCLUDE`） | — |
+| `{PROVIDER}_MODEL_EXCLUDE` | 模型排除过滤正则 | — |
 | `LLM_TIMEOUT_MS` | LLM 请求超时 | `30000` |
 | `PORT` | 服务器端口 | `3000` |
 | `NODE_ENV` | 运行环境 | `development` |
@@ -366,6 +386,8 @@ vibe-money-book/
 | | GET | `/stats/categories` | 各类别消费统计 |
 | **AI** | POST | `/ai/parse` | 自然语言解析（萃取 + 反馈） |
 | | POST | `/ai/query` | 语义查询交易记录 |
+| | GET | `/ai/providers` | 获取支持的 AI 供应商列表 |
+| | GET | `/ai/models` | 获取指定供应商的可用模型列表 |
 
 ---
 
