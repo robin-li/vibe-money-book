@@ -50,7 +50,7 @@ export const useAppStore = create<AppState>((set) => ({
 
   settings: {
     persona: 'gentle',
-    aiEngine: 'gemini',
+    aiEngine: 'openai',
     monthlyBudget: 0,
     currency: 'TWD',
   },

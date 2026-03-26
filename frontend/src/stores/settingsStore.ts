@@ -81,7 +81,7 @@ interface SettingsState {
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
   persona: 'gentle',
-  aiEngine: 'gemini',
+  aiEngine: 'openai',
   aiModel: null,
   monthlyBudget: 0,
   userName: '',
@@ -138,7 +138,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const language = d.language as SupportedLanguage | undefined
       set({
         persona: d.persona ?? 'gentle',
-        aiEngine: d.ai_engine ?? d.aiEngine ?? 'gemini',
+        aiEngine: d.ai_engine ?? d.aiEngine ?? 'openai',
         aiModel: d.ai_model ?? d.aiModel ?? null,
         monthlyBudget: Number(d.monthly_budget ?? d.monthlyBudget ?? 0),
         userName: d.name ?? '',

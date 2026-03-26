@@ -505,7 +505,7 @@ async function matchTransactions(
     return {
       matched_ids: [],
       total_amount: 0,
-      summary_text: '查詢處理時發生問題，請稍後再試。',
+      summary_text: '沒有找到符合條件的記錄，換個關鍵字試試看吧！',
       emotion_tag: 'neutral',
     };
   }

@@ -194,7 +194,7 @@ export async function listModels(
   next: NextFunction
 ): Promise<void> {
   try {
-    const engine = (req.query.engine as AIEngine) || 'gemini';
+    const engine = (req.query.engine as AIEngine) || 'openai';
     const validEngines: AIEngine[] = ['gemini', 'openai', 'anthropic', 'xai'];
     if (!validEngines.includes(engine)) {
       throw createI18nError('validation_failed', 400);
