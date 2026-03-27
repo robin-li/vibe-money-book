@@ -26,12 +26,12 @@ const ENGINE_OPTIONS: { value: AIEngine; label: string; emoji: string }[] = [
   { value: 'xai', label: 'xAI', emoji: '⚡' },
 ]
 
-/** 語言選項 */
-const LANGUAGE_OPTIONS: { value: SupportedLanguage; labelKey: string }[] = [
-  { value: 'zh-TW', labelKey: 'language.zhTW' },
-  { value: 'en', labelKey: 'language.en' },
-  { value: 'zh-CN', labelKey: 'language.zhCN' },
-  { value: 'vi', labelKey: 'language.vi' },
+/** 語言選項（含國旗 emoji） */
+const LANGUAGE_OPTIONS: { value: SupportedLanguage; labelKey: string; flag: string }[] = [
+  { value: 'zh-TW', labelKey: 'language.zhTW', flag: '🇹🇼' },
+  { value: 'en', labelKey: 'language.en', flag: '🇺🇸' },
+  { value: 'zh-CN', labelKey: 'language.zhCN', flag: '🇨🇳' },
+  { value: 'vi', labelKey: 'language.vi', flag: '🇻🇳' },
 ]
 
 function SettingsPage() {
@@ -313,26 +313,18 @@ function SettingsPage() {
         <h2 className="text-caption text-text-secondary mb-md">
           {t('language.title')}
         </h2>
-        <div className="flex flex-wrap gap-md">
-          {LANGUAGE_OPTIONS.map((opt) => {
-            const selected = language === opt.value
-            return (
-              <button
-                key={opt.value}
-                onClick={() => handleLanguageChange(opt.value)}
-                className={`px-lg py-sm rounded-lg text-body transition-all ${
-                  selected
-                    ? 'bg-primary-light border-2 border-primary font-semibold'
-                    : 'bg-surface shadow-card hover:shadow-card-hover border border-transparent'
-                }`}
-                aria-pressed={selected}
-                aria-label={t(opt.labelKey)}
-              >
-                {t(opt.labelKey)}
-              </button>
-            )
-          })}
-        </div>
+        <select
+          value={language}
+          onChange={(e) => handleLanguageChange(e.target.value as SupportedLanguage)}
+          className="w-full px-lg py-sm rounded-lg text-body bg-surface border-2 border-primary appearance-none cursor-pointer"
+          aria-label={t('language.title')}
+        >
+          {LANGUAGE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.flag} {t(opt.labelKey)}
+            </option>
+          ))}
+        </select>
       </section>
 
       {/* AI 人設選擇 */}
