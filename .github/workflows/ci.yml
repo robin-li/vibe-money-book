@@ -68,6 +68,11 @@ jobs:
           # 導致 browser login 會打到 Cloudflare Tunnel 外部端點而非 CI backend
           sed -i 's|^VITE_API_BASE_URL=.*|VITE_API_BASE_URL=http://localhost:3000/api/v1|' .env
           sed -i 's|^CORS_ORIGIN=.*|CORS_ORIGIN=http://localhost|' .env
+          # 調高 rate limit：E2E 跑 57 個 test，每個 test beforeEach 都會註冊使用者
+          # 預設 RATE_LIMIT_AUTH_PER_MIN=10 會在第 6 個 test 起全數 429
+          sed -i 's|^RATE_LIMIT_AUTH_PER_MIN=.*|RATE_LIMIT_AUTH_PER_MIN=10000|' .env
+          sed -i 's|^RATE_LIMIT_API_PER_MIN=.*|RATE_LIMIT_API_PER_MIN=10000|' .env
+          sed -i 's|^RATE_LIMIT_LLM_PER_MIN=.*|RATE_LIMIT_LLM_PER_MIN=10000|' .env
 
       - name: Start services with docker-compose
         run: docker compose up -d --build
