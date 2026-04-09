@@ -67,6 +67,39 @@ Agent 必須在以下事件發生時更新自己的狀態檔：
 | Vibe Check 通過 | 狀態改 🟢，說明更新為「PR #N 已建立」 |
 | 任務完成（PR 合併） | 從「當前任務」移除，更新「近期待辦」 |
 
+## 版控策略
+
+`/docs/status/` 下的檔案更新頻率高於一般規格文件，需要明確的版控策略避免兩類問題：
+
+1. **全都 commit** → commit 歷史被狀態更新淹沒，有意義的變更難以追蹤
+2. **全都忽略** → 跨機器 / 跨 worktree / 新 session 時找不到當前狀態
+
+本 skill **不預設任何版控策略**，而是要求**每個啟用此 skill 的專案必須從下列三種模式中選定一種，並寫入專案 `CLAUDE.md`**：
+
+| 模式 | 適用情境 | 操作 |
+|------|---------|------|
+| **A：全版控** | 多人協作、重視完整歷史追溯 | `docs/status/**` 全 commit，每次彙整後 commit 一次（commit message 建議帶 `status:` 前綴便於過濾） |
+| **B：全忽略** | 單人單機、STATUS 純本地即時快照 | `.gitignore` 加入 `docs/status/` |
+| **C：混合**（推薦預設） | 單人多機、希望 STATUS 跨機器但不要 Agent 細節噪音 | `docs/status/STATUS.md` 進版控，`A-*.md` 加入 `.gitignore` |
+
+### 落實方式
+
+| 模式 | `.gitignore` 設定 | 備註 |
+|------|-------------------|------|
+| A | 無需額外設定 | 約定「狀態更新獨立 commit 不與其他變更混用」 |
+| B | `docs/status/` | 所有狀態檔純本地 |
+| C | `docs/status/A-*.md` | 僅 `STATUS.md` 進版控 |
+
+### 寫入 CLAUDE.md
+
+專案 CLAUDE.md 的 Vibe-SDLC 章節應包含類似如下的一行宣告：
+
+```
+STATUS.md 版控模式：C（混合）— STATUS.md 進版控、A-*.md 忽略
+```
+
+若專案 CLAUDE.md 未宣告模式，A-Main 在首次執行 `/vibe-sdlc-status` 時應**主動詢問使用者選擇**，並協助寫入 CLAUDE.md 與設定對應的 `.gitignore`，建立基準後再開始彙整。
+
 ## 彙整版 STATUS.md 格式
 
 A-Main 彙整時產出以下格式：
