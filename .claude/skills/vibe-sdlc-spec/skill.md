@@ -23,8 +23,8 @@ user_invocable: true
 
 ## 前置條件
 
-- GitHub 倉庫已建立
-- 專案目錄結構已初始化（含 `/docs` 目錄）
+- 工作目錄已確立（可為空目錄；若本地 git 倉庫、`CLAUDE.md`、`/docs` 目錄皆不存在，skill 會自動進入「空專案初始化」流程）
+- GitHub 倉庫可選（若缺，會在初始化面板中提示由使用者手動建立）
 
 ## 交付物
 
@@ -37,7 +37,8 @@ user_invocable: true
 | 遊戲設計文件 (GDD) | `01-4-GDD.md` | `/docs/01-4-GDD.md` | 領域選用 | 遊戲專案專用：核心機制、數值設計、關卡設計。僅遊戲類專案需要 |
 | API 介面規格 | `01-5-API_Spec.md` | `/docs/01-5-API_Spec.md` | 必要 | API 規格說明 |
 | API 介面合約 | `API_Spec.yaml` | `/docs/API_Spec.yaml` | 必要 | OpenAPI 規格 |
-| UI/UX 設計文件 | `01-6-UI_UX_Design.md` | `/docs/01-6-UI_UX_Design.md` | 選用 | UI/UX 設計規格（視覺風格、互動流程、Design Tokens），若 PRD 衍生 UI/UX 需求時建立 |
+| UI/UX 設計文件 | `01-6-UI_UX_Design.md` | `/docs/01-6-UI_UX_Design.md` | 選用 | UI/UX 設計規格（視覺風格、互動流程、Design Tokens），若 PRD 衍生 UI/UX 需求時建立。撰寫前 **必須** 先讀 [`references/UI_UX_Writing_Guidelines.md`](./references/UI_UX_Writing_Guidelines.md) |
+| UI Wireframe | `ui/{page}.html` | `/docs/ui/*.html` | 選用 | 每個頁面一檔的 HTML + Tailwind CDN 視覺參考，由 `01-6-UI_UX_Design.md` 以 link 引用（規則詳見 UI_UX_Writing_Guidelines.md §9） |
 | 開發執行計畫 | `02-Dev_Plan.md` | `/docs/02-Dev_Plan.md` | 必要 | 里程碑、任務拆解、依賴關係 |
 | 規格審查報告 | `03-Docs_Review_Report.md` | `/docs/03-Docs_Review_Report.md` | 必要 | 交叉比對結果、不一致與遺漏項目 |
 | CI/CD 規格文件 | `04-CI_CD_Spec.md` | `/docs/04-CI_CD_Spec.md` | 選用 | CI Workflow 定義、品質閘門、Docker 部署配置（複雜專案建議獨立，Dev Plan 以連結引用） |
@@ -45,6 +46,21 @@ user_invocable: true
 **重要**：
 - 每項規格都應賦予**規格編號**以利後續追蹤與討論。
 - 每個任務都應賦予**任務編號**以利後續追蹤與討論。
+
+### UI/UX 設計文件撰寫準則
+
+若需建立 `01-6-UI_UX_Design.md`，AI 助手**必須**先讀取 [`references/UI_UX_Writing_Guidelines.md`](./references/UI_UX_Writing_Guidelines.md) 並遵循該指引的 9 條準則撰寫。指引重點：
+
+1. **結構、狀態、欄位、呈現邏輯、元件庫指名**：以 markdown 表格結構化描述（準則 1–8）
+2. **流程圖**：頁面跳轉、對話流、狀態機一律使用 Mermaid flowchart，**不使用** ASCII 箭頭或圖片（準則 2）
+3. **視覺空間感**：使用 **HTML + Tailwind CDN** 獨立檔案，放置於 `/docs/ui/`，由 markdown 規格書以 relative link 引用（準則 9）
+4. 每條準則均附自檢方法，AI 產出後必須對照指引末段 checklist 自檢
+
+**UI/UX 產出物結構**：
+- `/docs/01-6-UI_UX_Design.md` — 規格權威（markdown，AI 實作時以此為準）
+- `/docs/ui/{page}.html` — 視覺參考（每個 §3.x 頁面對應一檔，低保真 wireframe 使用灰階 palette）
+
+**核心原則**：markdown 規格書是實作權威，HTML wireframe 是視覺輔助。兩者衝突時以 markdown 為準。
 
 ### 版本修訂記錄格式規範
 
@@ -384,9 +400,167 @@ flowchart LR
 - [ ] 開發者確認規格定稿
 - [ ] 開發計畫合理可行
 
+## 空專案初始化（Bootstrap）
+
+當使用者呼叫此 skill 時，**必須先偵測專案是否為空**，依下列層次判定並引導：
+
+### 偵測層次
+
+| 層次 | 偵測指令 | 缺什麼 |
+|------|---------|--------|
+| L1 | `test -d .git` | 本地 git 倉庫 |
+| L2 | `git remote -v` 輸出為空 | GitHub / GitLab 遠端 |
+| L3 | `test -f README.md && test -f .gitignore` | 專案基礎檔 |
+| L3.5 | `test -f CLAUDE.md`（且檔案非空） | Claude Code 專案指引 |
+| L4 | `test -d docs` | `/docs` 目錄 |
+| L5 | `test -f docs/00-Docs_Index.md` | Docs Index 與規格文件 |
+
+### 觸發條件
+
+**僅在 L4 與 L5 皆缺失**（即 `/docs` 目錄不存在或完全沒有規格文件）時觸發初始化面板。若使用者已有 `/docs` 內容，直接進入「行為指引」既有流程，不打擾。
+
+### 初始化面板
+
+偵測到空專案時，輸出下列面板並**等待使用者選擇**，禁止自動執行：
+
+```
+🌱 偵測到這是新專案，Vibe-SDLC 可協助初始化以下項目：
+──────────────────────────────────────────────────
+  {✅/❌} L1  git init（本地倉庫）
+  {✅/❌} L2  GitHub remote 設定
+  {✅/❌} L3  .gitignore / README.md
+  {✅/❌} L3.5 CLAUDE.md（專案指引）
+  {✅/❌} L4  /docs 目錄
+  {✅/❌} L5  /docs/00-Docs_Index.md 骨架
+  {✅/❌} 常駐分支 dev/main-agent
+
+請選擇：
+  1️⃣  全部執行（推薦，新專案一鍵 bootstrap）
+  2️⃣  只建立 /docs 骨架 + Docs Index（已有 git 時）
+  3️⃣  我想逐項確認
+  4️⃣  跳過初始化，直接進入規格撰寫流程
+
+請選擇（1/2/3/4）：
+```
+
+`{✅/❌}` 依實際偵測結果填入（已存在為 ✅，缺失為 ❌）。
+
+### 各選項行為
+
+**選項 1 — 全部執行**：依下列順序執行，每一步執行前以一句話備註用途，執行失敗則停下報告：
+
+1. **L1 git init**：若 `.git/` 不存在，執行 `git init` 並建立初始 commit 佔位（空 commit 或含 README）
+2. **L3 基礎檔**：若缺 `.gitignore` 或 `README.md`，建立最小骨架：
+   - `.gitignore`：至少包含 `.env`, `.env.*`, `node_modules/`, `dist/`, `build/`, `*.log`, `.DS_Store`, `docs/status/`（若採用 STATUS 模式 B/C）
+   - `README.md`：含專案名稱 + 一句話描述 + Vibe-SDLC 連結
+3. **L3.5 CLAUDE.md**：呼叫下方「CLAUDE.md 初始化」流程
+4. **L4/L5 docs 骨架**：建立 `/docs/` 目錄，並從 `examples/docs/00-Docs_Index.md` 複製一份作為 `/docs/00-Docs_Index.md`，將「專案名稱」與文件清單改為占位符待使用者填寫
+5. **常駐分支**：`git checkout -b dev/main-agent`（若已有 commit 則從 main 分出；若尚無 commit，先完成 step 1 的初始 commit）
+6. **L2 GitHub remote**：呼叫下方「GitHub Remote 建立流程」，讓使用者選擇由 AI 代為建立或自行手動
+
+完成後輸出下一步建議：「初始化完成，接下來會協助你撰寫 PRD，請先告訴我專案要解決什麼問題。」
+
+**選項 2 — 只建 docs 骨架**：只執行上方步驟 3、4（CLAUDE.md + docs 骨架），跳過 git 與基礎檔相關動作。適合已有 git repo 但剛從別的 SDLC 切換過來的專案。
+
+**選項 3 — 逐項確認**：依序對每個 ❌ 項目詢問「是否執行？(y/N)」，使用者答 y 才執行該項。
+
+**選項 4 — 跳過**：不做任何初始化動作，直接進入既有的「行為指引」流程（由使用者自行決定從哪份規格開始）。
+
+### CLAUDE.md 初始化流程
+
+本 skill 提供骨架模板：`templates/CLAUDE.md.template`（含 `{PROJECT_NAME}`、`{PROJECT_DESCRIPTION}`、`{BACKEND_STACK}` 等占位符）。
+
+**情境 A：CLAUDE.md 不存在**
+
+1. 互動詢問三個最小必要資訊（其餘占位符保留，由使用者後續自行補）：
+   - 「這個專案叫什麼名字？」→ 填入 `{PROJECT_NAME}`
+   - 「一句話描述專案做什麼？」→ 填入 `{PROJECT_DESCRIPTION}`
+   - （技術棧、STATUS 模式為選填，若使用者當下想好就填，否則保留占位符）
+2. 從 `templates/CLAUDE.md.template` 讀取內容，置換占位符
+3. 寫入 `<project_root>/CLAUDE.md`
+4. 提示使用者「技術棧與 STATUS 版控策略的占位符請後續補上」
+
+**情境 B：CLAUDE.md 已存在但缺少 Vibe-SDLC 區塊**
+
+偵測方式：grep CLAUDE.md 是否包含 `/vibe-sdlc` 字串。若不包含：
+
+1. 提示：「偵測到 CLAUDE.md 未引用 Vibe-SDLC 流程，是否要 append 相關區塊？(y/N)」
+2. 使用者同意後，從 `templates/CLAUDE.md.template` 擷取「## Vibe-SDLC 流程」整段（包含核心原則），以 append 方式寫入既有 CLAUDE.md 末尾
+3. **不覆蓋既有內容**，只附加
+
+**情境 C：CLAUDE.md 已存在且已含 Vibe-SDLC 區塊**
+
+跳過，不動它。
+
+### GitHub Remote 建立流程
+
+**前置檢查**：先執行 `git remote -v`，若已有 `origin` 指向有效遠端（非占位），則直接跳過整段流程。
+
+若本地 git 有 commit 但無 remote，輸出下列選擇面板並**等待使用者選擇**：
+
+```
+🔗 GitHub Remote 尚未設定
+──────────────────────────
+選擇建立方式：
+  A 由 AI 代為建立（執行 gh repo create，需要 gh 已登入）
+  B 我要自己手動建立
+  C 先跳過，稍後再設定
+
+請選擇（A/B/C）：
+```
+
+**選項 A — AI 代為建立**：
+
+1. **先檢查 gh 是否可用**：
+   - `gh auth status` 若失敗，提示使用者先執行 `gh auth login`，然後改選 B 或 C
+   - 若 gh 未安裝，直接改選 B
+2. **互動確認四個資訊**：
+   - Repo 名稱（預設為 `basename $(pwd)`，可覆寫）
+   - Owner：帳號 or organization（預設為 `gh api user --jq .login` 取得的當前使用者，可覆寫）
+   - 可見性：`private` / `public` / `internal`（預設 `private`）
+   - 是否立即推送 main 與 dev/main-agent（預設 y）
+3. **顯示即將執行的指令並請使用者最終確認**，例如：
+   ```
+   即將執行：
+     gh repo create <owner>/<name> --private --source=. --remote=origin --push
+     git push -u origin dev/main-agent
+
+   執行？(y/N)：
+   ```
+4. **使用者答 y 後執行**；答 N 則改走選項 B（輸出手動指令）
+5. 執行失敗（名稱衝突、權限不足等）時停下報告錯誤，並提供修正建議（改名稱 / 換 owner / 檢查 gh 權限）
+
+**選項 B — 使用者手動建立**：
+
+輸出完整指令清單供使用者複製：
+
+```
+請依序執行以下指令（可依需求調整參數）：
+
+# 1. 建立 GitHub repo（擇一）
+#   方式 A：使用 gh CLI
+gh repo create <name> --private --source=. --remote=origin --push
+
+#   方式 B：在 GitHub 網頁建立空 repo 後手動加 remote
+git remote add origin git@github.com:<owner>/<name>.git
+git branch -M main
+git push -u origin main
+
+# 2. 將常駐分支推上遠端
+git push -u origin dev/main-agent
+
+設定完成後告訴我一聲，我會繼續後續流程。
+```
+
+輸出後**暫停流程等待使用者回報**，不進入後續 PRD 撰寫。
+
+**選項 C — 先跳過**：
+
+記錄「稍後再設定 remote」，繼續後續流程（進入 PRD 撰寫）。提醒使用者：「Phase 2 建立 Issues 時必須要有 remote，請在那之前完成 remote 設定。」
+
 ## 行為指引
 
-當使用者呼叫此 skill 時：
+**初始化完成後**（或偵測到非空專案時），依下列流程協助使用者：
 
 1. 先檢查 `/docs` 目錄是否存在，以及已有哪些規格文件
 2. 若 `/docs/00-Docs_Index.md` 不存在：建議先建立文件入口，作為後續文件的導航索引
@@ -400,5 +574,18 @@ flowchart LR
    - SRD 與 SDD 是否職責分離（SRD 僅含需求，SDD 含設計）
    - SDD 的架構設計是否與 API Spec 的端點定義一致
    - UI/UX 設計文件是否反向參考 PRD、SRD、API Spec
+   - UI/UX 設計文件是否遵循 [`references/UI_UX_Writing_Guidelines.md`](./references/UI_UX_Writing_Guidelines.md) 的 9 條準則（逐條列出符合/違反，違反項必須寫入審查報告）：
+     - [ ] §1 結構分層正確（設計原則 → 頁面清單 → 單頁佈局）
+     - [ ] §2 頁面跳轉／對話流／狀態機使用 Mermaid flowchart（無 ASCII 箭頭藝術或圖片）
+     - [ ] §3 元件描述使用語意，無純方位詞（左上角／右側／下方等）
+     - [ ] §4 互動元件列出完整狀態（default / hover / disabled / loading / error 等）
+     - [ ] §5 表單欄位使用結構化表格（名稱 / 類型 / 必填 / 驗證規則 / 錯誤訊息 / 說明）
+     - [ ] §6 呈現（樣式）與顯示邏輯（條件渲染）分開描述
+     - [ ] §7 文件自足，無「如圖所示」類外部依賴描述
+     - [ ] §8 已指名使用的 UI 元件庫與元件名稱（若專案使用元件庫）
+     - [ ] §9 每個 §3.x 頁面有對應 `/docs/ui/*.html` wireframe 且 markdown 已 link 引用
+     - [ ] §9.6 每個視覺型 §3.x.y 子元件章節有對應 `ui/{page}.html#{anchor}` link；HTML 對應 `<section>` 有 `id` 屬性
+   - `/docs/ui/*.html` wireframe 是否包含 `<meta name="fidelity">` 與 `<meta name="spec-ref">` 標籤
+   - UI/UX 規格書與 HTML wireframe 是否保持一致（Design Tokens、欄位、狀態描述無衝突）
 8. 若為遊戲類專案，提醒開發者是否需要建立 GDD（`01-4-GDD.md`）
 9. 審查完成且無遺漏後，提示開發者可進入 Phase 2（`/vibe-sdlc-issues`）

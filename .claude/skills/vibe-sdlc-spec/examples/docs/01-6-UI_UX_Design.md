@@ -134,6 +134,8 @@
 
 ### 3.1 首頁 `/`（記帳主頁）
 
+> 視覺參考：[ui/home.html](./ui/home.html)（當前保真度：wireframe）
+
 首頁為應用核心頁面，採用垂直堆疊佈局，從上至下分為五個區域。
 
 #### 整體結構
@@ -159,6 +161,8 @@
 
 #### 3.1.1 Header
 
+> 視覺參考：[ui/home.html#header](./ui/home.html#header)
+
 ```
 ┌──────────────────────────────────────┐
 │ [🟢 icon] Vibe Money Book     [⚙️]  │
@@ -175,6 +179,8 @@
 | 設定按鈕 | 24×24px 齒輪 icon、`--color-text-secondary`、點擊跳轉 `/settings` |
 
 #### 3.1.2 預算卡片 (Budget Card)
+
+> 視覺參考：[ui/home.html#budget-card](./ui/home.html#budget-card)
 
 ```
 ┌──────────────────────────────────────┐
@@ -206,6 +212,8 @@
 
 #### 3.1.3 AI 回饋卡片 (AI Feedback Card)
 
+> 視覺參考：[ui/home.html#ai-feedback](./ui/home.html#ai-feedback)
+
 ```
 ┌──────────────────────────────────────┐
 │ [💬]  溫柔管家 的即時回饋                │
@@ -230,6 +238,8 @@
 | `guilt_trip` | 心疼天使 🥺 | 愛心 |
 
 #### 3.1.4 最近帳目列表 (Recent Transactions)
+
+> 視覺參考：[ui/home.html#recent-transactions](./ui/home.html#recent-transactions)
 
 ```
 ┌──────────────────────────────────────┐
@@ -257,6 +267,8 @@
 
 #### 3.1.5 輸入區 (Input Bar) — 固定底部
 
+> 視覺參考：[ui/home.html#input-bar](./ui/home.html#input-bar)
+
 ```
 ┌──────────────────────────────────────┐
 │ [例如：中午吃拉麵 280 元    ] [🎤] [➤]│
@@ -273,6 +285,8 @@
 
 #### 3.1.6 Footer
 
+> 視覺參考：[ui/home.html#footer](./ui/home.html#footer)
+
 ```
 ┌──────────────────────────────────────┐
 │ POWERED BY AI · 精準記帳 · 情緒滿分        │
@@ -287,6 +301,10 @@
 ---
 
 ### 3.2 統計頁 `/stats`
+
+> 視覺參考：[ui/stats.html](./ui/stats.html)（當前保真度：wireframe）
+>
+> 元件 anchor：[時間篩選](./ui/stats.html#time-filter) · [總支出摘要](./ui/stats.html#summary-card) · [消費分佈圓餅圖](./ui/stats.html#pie-chart) · [類別排行](./ui/stats.html#category-ranking)
 
 #### 整體結構
 
@@ -361,6 +379,10 @@
 
 ### 3.3 記錄頁 `/history`
 
+> 視覺參考：[ui/history.html](./ui/history.html)（當前保真度：wireframe）
+>
+> 元件 anchor：[篩選區](./ui/history.html#filter-bar) · [記錄列表](./ui/history.html#history-list) · [交易詳情展開](./ui/history.html#transaction-detail)
+
 #### 整體結構
 
 ```
@@ -414,6 +436,10 @@
 ---
 
 ### 3.4 設定頁 `/settings`
+
+> 視覺參考：[ui/settings.html](./ui/settings.html)（當前保真度：wireframe）
+>
+> 元件 anchor：[使用者資訊](./ui/settings.html#user-info) · [人設選擇](./ui/settings.html#persona-select) · [月預算](./ui/settings.html#monthly-budget) · [類別預算](./ui/settings.html#category-budget) · [AI 引擎](./ui/settings.html#ai-engine) · [其他設定](./ui/settings.html#other-settings) · [登出](./ui/settings.html#logout)
 
 #### 整體結構
 
@@ -472,6 +498,8 @@
 
 ### 3.5 底部 Tab Bar
 
+> **視覺參考**：底部 Tab Bar 為**共享元件**，已整合在各頁面 wireframe 底部（見 `ui/home.html`、`ui/stats.html`、`ui/history.html`、`ui/settings.html`）。實作時應抽離為單一共用元件，各頁面透過 `aria-current="page"` 與 `data-active` 標記當前 tab。
+
 ```
 ┌──────────────────────────────────────┐
 │  [🏠 首頁]  [📊 統計]  [📋 記錄]  [⚙️ 設定] │
@@ -498,31 +526,58 @@
 
 ### 3.6 登入頁 `/login` 與註冊頁 `/register`
 
-#### 整體結構
+> 視覺參考：[ui/login.html](./ui/login.html) · [ui/register.html](./ui/register.html)（當前保真度：wireframe）
 
-```
-┌──────────────────────────────────────┐
-│                                      │
-│         [🟢 App Icon 64×64]          │
-│         Vibe Money Book               │
-│         語音記帳教練                   │
-│                                      │
-│  Email    [                    ]      │
-│  密碼     [                    ]      │
-│                                      │
-│  [        登入 / 註冊         ]       │
-│                                      │
-│  還沒有帳號？立即註冊                  │
-│  （或：已有帳號？返回登入）             │
-└──────────────────────────────────────┘
-```
+**元件庫**：本頁使用 shadcn/ui 的 `Input`、`Label`、`Button`、`Form` 元件。
 
-| 元素 | 規格 |
+#### 3.6.1 整體佈局結構
+
+> 視覺參考：[ui/login.html#logo](./ui/login.html#logo) · [ui/register.html#logo](./ui/register.html#logo)
+
+| 區塊 | 角色 | 佈局規則 |
+|------|------|---------|
+| Logo 區 | Brand identity | flex column、居中、`margin-top: 20vh` |
+| 表單區 | 認證輸入 | flex column、gap `--space-lg`、`padding: 0 --space-2xl` |
+| 主按鈕 | Primary CTA | 全寬、高度 48px |
+| 模式切換連結 | 次要導覽 | 置中、`margin-top: --space-lg` |
+
+#### 3.6.2 表單欄位契約
+
+> 視覺參考：[ui/login.html#auth-form](./ui/login.html#auth-form) · [ui/register.html#auth-form](./ui/register.html#auth-form)
+
+| 欄位名稱 | 類型 | 必填 | 驗證規則 | 錯誤訊息 | 說明 |
+|---------|------|------|---------|---------|------|
+| `email` | `email` | ✅ | RFC 5322 格式 / 最大 254 字元 | 「請輸入有效的 Email 格式」 | 作為帳號識別與通知管道 |
+| `password` | `password` | ✅ | 長度 8–64 / 需同時包含英文字母與數字 | 「密碼需 8 碼以上並包含英文字母與數字」 | 提交前 input type 保持 `password`（不明文）；登入頁不顯示此規則提示，僅註冊頁顯示 |
+| `confirm_password` | `password` | ✅（註冊頁） | 必須等於 `password` 欄位值 | 「兩次輸入的密碼不一致」 | 僅註冊頁顯示 |
+
+#### 3.6.3 元件呈現規格
+
+> 視覺參考：[ui/login.html#auth-form](./ui/login.html#auth-form) · [ui/register.html#auth-form](./ui/register.html#auth-form)
+
+| 元件 | shadcn/ui 元件 | 樣式 Token | 備註 |
+|------|---------------|-----------|------|
+| Email/密碼輸入框 | `<Input>` | 高度 48px、radius `--radius-md`、padding `--space-lg`、border 1px `--color-border` | 錯誤狀態 border 改為 `--color-danger` |
+| 主按鈕 | `<Button variant="default" size="lg">` | 全寬、高度 48px、`--color-primary` 背景、文字白色、font-weight 600 | loading 狀態顯示 spinner |
+| 模式切換連結 | `<Button variant="link">` | `--font-caption`、`--color-primary`、text-decoration: underline | 點擊切換 `/login` ↔ `/register` |
+
+#### 3.6.4 按鈕狀態
+
+| 狀態 | 視覺 | 互動 |
+|------|------|------|
+| `default` | `--color-primary` 背景、白色文字「登入」/「註冊」 | 可點擊 |
+| `hover` | `--color-primary-dark` 背景 | 游標指標 |
+| `disabled` | `--color-text-tertiary` 背景 | 未通過表單驗證時 |
+| `loading` | spinner 取代文字 | 點擊後送出請求期間，禁止重複點擊 |
+| `error` | — | 表單下方顯示 toast「登入失敗，請檢查帳號密碼」 |
+
+#### 3.6.5 顯示邏輯（登入頁 vs 註冊頁）
+
+| 條件 | 顯示 |
 |------|------|
-| Logo 區 | 居中、margin-top 20% 螢幕高度 |
-| 輸入框 | 全寬、高度 48px、radius `--radius-md`、padding `--space-lg`、border 1px `--color-border` |
-| 主按鈕 | 全寬、高度 48px、背景 `--color-primary`、文字白色、radius `--radius-md`、font-weight 600 |
-| 切換連結 | `--font-caption`、`--color-primary`、text-decoration: underline |
+| 路由為 `/login` | 2 個欄位（email、password）、主按鈕「登入」、切換連結「還沒有帳號？立即註冊」 |
+| 路由為 `/register` | 3 個欄位（email、password、confirm_password）、密碼規則提示顯示於 password 下方、主按鈕「註冊」、切換連結「已有帳號？返回登入」 |
+| `user.logged_in === true` | 直接重導向至 `/`，不顯示本頁 |
 
 ---
 
@@ -621,82 +676,57 @@
 
 當 AI 偵測到使用者的消費無法歸入現有類別時，觸發以下對話流程：
 
+```mermaid
+flowchart TD
+    Start([使用者輸入「帶毛毛去看獸醫 1200」]) --> Parse[AI 解析<br/>is_new_category=true<br/>suggested_category=寵物]
+    Parse --> Bubble[顯示 AI 對話泡泡<br/>「我覺得這筆消費屬於寵物，<br/>要新增寵物類別嗎？」<br/>提供三個操作按鈕]
+    Bubble --> Choice{使用者選擇}
+    Choice -->|A. 確認| BranchA[新增寵物類別<br/>is_custom=true]
+    Choice -->|B. 修改名稱| BranchB[底部 Sheet 開啟<br/>類別名稱輸入框]
+    Choice -->|C. 選現有| BranchC[底部 Sheet 開啟<br/>既有類別選單]
+
+    BranchA --> ReplyA[AI 回覆：已新增寵物類別<br/>$1,200 記入寵物]
+    BranchB --> ValidateB{名稱 2–50 字元?}
+    ValidateB -->|是| SaveB[儲存修改後類別名稱<br/>完成記帳]
+    ValidateB -->|否| BranchB
+    BranchC --> SelectExisting[使用者選擇既有類別<br/>例如 醫療]
+    SelectExisting --> RecordC[以選擇的類別完成記帳]
+
+    ReplyA --> End([記帳完成])
+    SaveB --> End
+    RecordC --> End
 ```
-使用者：「帶毛毛去看獸醫 1200」
 
-                    ┌─ AI 解析 ─┐
-                    │ is_new_category: true
-                    │ suggested_category: "寵物"
-                    └────────────┘
-
-AI（對話泡泡）：
-┌──────────────────────────────────────┐
-│ [💖] 我覺得這筆消費屬於「寵物」🐾，   │
-│      但你的類別中沒有這項。            │
-│                                      │
-│      要新增「寵物」類別嗎？            │
-│                                      │
-│  ┌──────┐  ┌──────────┐  ┌────────┐ │
-│  │ 確認  │  │ 修改名稱  │  │ 選現有 │ │
-│  └──────┘  └──────────┘  └────────┘ │
-└──────────────────────────────────────┘
-```
-
-### 5.2 三個操作分支
+### 5.2 三個分支的文字內容與互動規則
 
 #### 分支 A：確認新增
 
-```
-使用者點擊 [確認]
-  ↓
-系統新增「寵物」類別（is_custom: true）
-  ↓
-AI 回覆：
-┌──────────────────────────────────────┐
-│ [💖] 已新增「寵物」類別 🐾             │
-│      這筆 $1,200 已記入寵物類別。      │
-│      「毛毛的醫療費辛苦了，           │
-│       希望毛毛健健康康的！」           │
-└──────────────────────────────────────┘
-```
+- **觸發**：使用者點擊 [確認] 按鈕
+- **系統行為**：新增 `{suggested_category}` 類別（`is_custom=true`）
+- **AI 回覆訊息**：
+  > [💖] 已新增「寵物」類別 🐾  
+  > 這筆 $1,200 已記入寵物類別。  
+  > 「毛毛的醫療費辛苦了，希望毛毛健健康康的！」
 
 #### 分支 B：修改名稱
 
-```
-使用者點擊 [修改名稱]
-  ↓
-底部彈出輸入 Sheet：
-┌──────────────────────────────────────┐
-│  修改類別名稱                         │
-│  ┌──────────────────────────────┐    │
-│  │ 寵物醫療                      │    │
-│  └──────────────────────────────┘    │
-│  ⚠️ 類別名稱 2–50 字元                 │
-│                                      │
-│  [取消]              [確認新增]       │
-└──────────────────────────────────────┘
-  ↓
-系統新增修改後的類別名稱並完成記帳
-```
+- **觸發**：使用者點擊 [修改名稱] 按鈕
+- **系統行為**：底部彈出輸入 Sheet，預設值為 `{suggested_category}`
+- **Sheet 欄位**：
+
+  | 欄位名稱 | 類型 | 必填 | 驗證規則 | 錯誤訊息 | 說明 |
+  |---------|------|------|---------|---------|------|
+  | `category_name` | `text` | ✅ | 長度 2–50 / 不可與既有類別重複 | 「類別名稱需 2–50 字元」/「此類別名稱已存在」 | 使用者可修改 AI 建議的類別名稱 |
+
+- **Sheet 動作按鈕**：[取消]（關閉 Sheet）、[確認新增]（通過驗證後儲存並完成記帳）
 
 #### 分支 C：選擇現有類別
 
-```
-使用者點擊 [選現有]
-  ↓
-底部彈出選擇 Sheet：
-┌──────────────────────────────────────┐
-│  選擇類別                             │
-│                                      │
-│  [🍽️ 飲食] [🚌 交通] [🎬 娛樂]       │
-│  [🛍️ 購物] [🧴 日用品] [🏥 醫療]     │
-│  [📚 教育] [📦 其他]                  │
-│                                      │
-│  [取消]                               │
-└──────────────────────────────────────┘
-  ↓
-使用者選擇「醫療」→ 系統以「醫療」類別完成記帳
-```
+- **觸發**：使用者點擊 [選現有] 按鈕
+- **系統行為**：底部彈出選擇 Sheet，顯示全部現有類別（含 emoji icon）
+- **Sheet 內容**：既有類別清單以標籤形式排列（`🍽️ 飲食`、`🚌 交通`、`🎬 娛樂`、`🛍️ 購物`、`🧴 日用品`、`🏥 醫療`、`📚 教育`、`📦 其他`）
+- **互動規則**：點選任一類別 → 系統以該類別完成記帳 → Sheet 關閉
+- **Sheet 動作按鈕**：[取消]（關閉 Sheet，不記帳）
 
 ### 5.3 對話泡泡設計規格
 

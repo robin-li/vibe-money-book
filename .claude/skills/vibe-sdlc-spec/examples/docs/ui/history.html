@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="fidelity" content="wireframe">
+  <meta name="spec-ref" content="../01-6-UI_UX_Design.md#33-記錄頁-history">
+  <title>記錄 - Vibe Money Book Wireframe</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#9CA3AF',
+            'primary-light': '#F3F4F6',
+            'primary-dark': '#6B7280',
+          },
+          borderRadius: { 'sm': '8px', 'md': '12px', 'lg': '16px', 'xl': '20px' },
+          spacing: { 'xs': '4px', 'sm': '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px' }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-700">
+
+  <!-- 此為低保真 wireframe。實作以 01-6-UI_UX_Design.md §3.3 為權威。 -->
+
+  <div class="max-w-md mx-auto bg-white min-h-screen shadow-sm pb-20">
+
+    <!-- Header -->
+    <header id="header" class="h-14 border-b border-gray-200 flex items-center justify-between px-2xl bg-white">
+      <h1 class="text-base font-semibold text-gray-800">記錄</h1>
+      <button class="w-8 h-8 flex items-center justify-center text-gray-500" aria-label="搜尋">🔍</button>
+    </header>
+
+    <!-- 篩選區 -->
+    <div id="filter-bar" class="flex gap-sm px-2xl py-md bg-white border-b border-gray-100">
+      <button class="flex-1 h-9 rounded-xl bg-gray-100 text-xs text-gray-700 flex items-center justify-center gap-1">
+        <span>全部類別</span><span class="text-gray-400">▼</span>
+      </button>
+      <button class="flex-1 h-9 rounded-xl bg-gray-100 text-xs text-gray-700 flex items-center justify-center gap-1">
+        <span>本月</span><span class="text-gray-400">▼</span>
+      </button>
+    </div>
+
+    <main id="history-list">
+
+      <!-- 日期分組：今天 -->
+      <div class="sticky top-0 bg-gray-50 px-2xl py-md text-xs font-semibold text-gray-500 border-b border-gray-100">
+        2026/03/17（今天）
+      </div>
+      <div class="bg-white divide-y divide-gray-100">
+        <div class="flex items-center gap-md p-md px-2xl">
+          <div class="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center shrink-0">🍜</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold text-gray-800">拉麵</div>
+            <div class="text-xs text-gray-500">
+              <span class="inline-block bg-gray-100 rounded-sm px-2 py-0.5 mr-2">飲食</span>
+              <span>01:07</span>
+            </div>
+          </div>
+          <div class="text-base font-semibold text-gray-700">-$250</div>
+        </div>
+        <div class="flex items-center gap-md p-md px-2xl">
+          <div class="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center shrink-0">🚌</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold text-gray-800">捷運</div>
+            <div class="text-xs text-gray-500">
+              <span class="inline-block bg-gray-100 rounded-sm px-2 py-0.5 mr-2">交通</span>
+              <span>08:30</span>
+            </div>
+          </div>
+          <div class="text-base font-semibold text-gray-700">-$35</div>
+        </div>
+      </div>
+
+      <!-- 日期分組：昨天 -->
+      <div class="sticky top-0 bg-gray-50 px-2xl py-md text-xs font-semibold text-gray-500 border-y border-gray-100">
+        2026/03/16（昨天）
+      </div>
+      <div class="bg-white divide-y divide-gray-100">
+        <div class="flex items-center gap-md p-md px-2xl">
+          <div class="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center shrink-0">☕</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold text-gray-800">咖啡</div>
+            <div class="text-xs text-gray-500">
+              <span class="inline-block bg-gray-100 rounded-sm px-2 py-0.5 mr-2">飲食</span>
+              <span>09:15</span>
+            </div>
+          </div>
+          <div class="text-base font-semibold text-gray-700">-$120</div>
+        </div>
+        <div class="flex items-center gap-md p-md px-2xl">
+          <div class="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center shrink-0">🎬</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-sm font-semibold text-gray-800">電影票</div>
+            <div class="text-xs text-gray-500">
+              <span class="inline-block bg-gray-100 rounded-sm px-2 py-0.5 mr-2">娛樂</span>
+              <span>19:30</span>
+            </div>
+          </div>
+          <div class="text-base font-semibold text-gray-700">-$320</div>
+        </div>
+      </div>
+
+      <!-- 交易詳情展開面板（範例，點擊交易項目時展開） -->
+      <details id="transaction-detail" class="bg-white border-b border-gray-100">
+        <summary class="p-md px-2xl text-xs text-gray-400 cursor-pointer select-none">▼ 交易詳情展開面板（範例）</summary>
+        <div class="p-lg border-t border-gray-100 space-y-md">
+          <div class="flex justify-between items-baseline">
+            <div class="text-sm font-semibold text-gray-800">拉麵</div>
+            <div class="text-base font-semibold text-gray-700">-$250</div>
+          </div>
+          <div class="text-xs text-gray-500">飲食 · 2026/03/17 01:07</div>
+          <hr class="border-gray-100">
+          <div class="text-xs space-y-sm">
+            <div><span class="text-gray-500">原始輸入：</span><span class="text-gray-700">「半夜吃拉麵 250」</span></div>
+            <div><span class="text-gray-500">AI 評論：</span><span class="text-gray-700">「享受美味是很重要的...」</span></div>
+            <div><span class="text-gray-500">情緒標籤：</span><span class="inline-block bg-gray-100 rounded-sm px-2 py-0.5">鼓勵</span></div>
+          </div>
+          <hr class="border-gray-100">
+          <button class="w-full h-10 rounded-md border border-gray-300 text-xs text-gray-600">刪除此筆記錄</button>
+        </div>
+      </details>
+
+    </main>
+
+    <!-- 底部 Tab Bar -->
+    <nav id="tab-bar" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-14 bg-white border-t border-gray-200 flex" aria-label="底部導覽">
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">🏠</span><span class="mt-0.5">首頁</span>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">📊</span><span class="mt-0.5">統計</span>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-800" aria-current="page">
+        <span class="text-lg">📋</span><span class="mt-0.5">記錄</span>
+        <div class="w-1 h-1 rounded-full bg-gray-800 mt-0.5"></div>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">⚙️</span><span class="mt-0.5">設定</span>
+      </button>
+    </nav>
+
+  </div>
+
+</body>
+</html>
