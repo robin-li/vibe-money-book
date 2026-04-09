@@ -1,5 +1,5 @@
 ---
-name: vibe-sdlc-p4-pr
+name: vibe-sdlc-pr
 description: >
   Vibe-SDLC Phase 4：CI 監控、失敗修正與合併後作業。處理 CI 結果、修正失敗、Merge 後更新 Dev Plan。
   使用時機：PR 已建立（由 Phase 3 自動建立），需要監控 CI、處理失敗、或執行合併後作業。
@@ -60,14 +60,30 @@ PR 合併後，**AI 助手必須**在對應 Issue 發佈完成 Comment：
 
 PR 合併後，**AI 助手必須依序執行**：
 
-1. **切回 main + pull**：`git checkout main && git pull origin main`
-2. **清理本地 feature 分支**：`git branch -d <branch>`（若 `gh pr merge -d` 未自動清理）
+1. **同步 main 並切換至常駐分支**：
+   ```bash
+   git fetch origin
+   git checkout main && git pull origin main
+   git checkout dev/main-agent && git rebase origin/main
+   git push --force-with-lease origin dev/main-agent
+   ```
+2. **清理已合併分支**（依分支類型不同處理）：
+   - **若合併的是 feature 分支** (`feat/<agent>/issue-N-簡述`)：刪除本地與遠端分支
+     ```bash
+     git branch -d feat/<agent>/issue-N-簡述
+     git push origin --delete feat/<agent>/issue-N-簡述
+     ```
+   - **若合併的是 `dev/main-agent`**：⛔ **不刪除**（常駐分支），上一步的 rebase 已完成更新
 3. **更新 Dev Plan**：將對應任務標記為 `[x] Completed`
 4. **更新看板狀態**：標記 Issue 為 `Done`
 5. **發佈完成 Comment**：含 PR 連結與 Dev Plan 更新
-6. **提示規格文件同步**：若 PR 涉及 API/行為變更（詳見 P3「規格文件回溯規則」）
-7. **詢問是否重建部署**：「PR 已合併，是否重建部署？」
-8. **提醒驗證 Issues**：若有對應的手動驗證 Issues
+6. **更新 Agent 狀態檔**：將已完成任務從「當前任務」移除，更新「近期待辦」
+7. **彙整 STATUS.md**：呼叫 `/vibe-sdlc-status` 彙整全局現況至 `/docs/status/STATUS.md`
+8. **TG 推播完成通知**：若有設定 TG 推播，發送 `✅ {agent} #{N} 完成，PR #{M} 已合併`
+9. **提示規格文件同步**：若 PR 涉及 API/行為變更（詳見「規格文件同步觸發條件」）
+10. **詢問是否重建部署**：「PR 已合併，是否重建部署？」
+11. **提醒驗證 Issues**：若有對應的手動驗證 Issues
+12. **里程碑收尾判斷**：檢查當前里程碑是否所有 Issues（開發 + 驗證）皆已關閉，若是則執行「里程碑收尾作業」
 
 ### 已知 CI 環境問題處理
 
@@ -122,13 +138,30 @@ Closes #N
 - 本地驗證：✅ Vibe Check 通過
 ```
 
+## 追加 Commit 至既有 PR 的安全檢查
+
+> **⚠️ 重要：向已有 PR 的分支推送新 commit 前，必須先確認 PR 仍為 OPEN。已合併的 PR 不會包含後續推送的 commit。**
+
+若需對已建立 PR 的分支追加 commit（例如修正 CI 失敗、回應 Code Review 意見），**必須**在推送前執行：
+
+```bash
+# 檢查 PR 狀態
+gh pr view <PR-NUMBER> -R <OWNER>/<REPO> --json state -q '.state'
+```
+
+| PR 狀態 | 處理方式 |
+|---------|---------|
+| `OPEN` | 正常推送至該分支，commit 會自動加入 PR |
+| `MERGED` | **禁止推送至該分支**。必須從最新 `main` 建立新分支、建立新 PR |
+| `CLOSED` | 確認是否需要重新開啟，或建立新分支與新 PR |
+
 ## Multi Sub Agent PR 流程
 
 當 Dev Plan 採用多 Sub Agent 並行開發時，PR 流程擴展為雙層審查：
 
 ### 分支命名規範
 
-Sub Agent 建立的分支必須遵循：`feat/<agent>/<issue-N>-<簡述>`
+Sub Agent 建立的分支必須遵循：`feat/<agent>/issue-N-簡述`
 
 例如：`feat/backend/issue-12-auth-api`、`feat/frontend/issue-15-login-ui`
 
@@ -159,7 +192,7 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
 | A-Backend | `/backend/**` |
 | A-Frontend | `/frontend/**` |
 | A-QA | `/tests/**` |
-| A-DevOps | `.github/**`, `docker/**` |
+| A-DevOps | `.github/**`, `docker/**`, `Dockerfile`, `docker-compose.yml` |
 | A-Main | 全專案 (整合用) |
 
 ### 合併衝突處理
@@ -168,12 +201,61 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
 - 合併後若其他 PR 產生衝突，由 **A-Main** 負責 rebase 解決。
 - Sub Agent **不得** 自行解決跨目錄衝突。
 
+## 里程碑收尾作業
+
+當合併後作業第 12 步判定**當前里程碑所有 Issues（開發 + 驗證）皆已關閉**時，AI 應在該次合併後作業中一併執行以下收尾：
+
+### 里程碑完成確認報告
+
+```markdown
+# 里程碑完成確認報告
+
+## 里程碑資訊
+- 里程碑：M[N] - [名稱]
+- 完成日期：[日期]
+
+## 任務完成狀態
+| Issue | 標題 | 狀態 | 合併日期 |
+|-------|------|------|----------|
+
+## Dev Plan 對應狀態
+- 總任務數：N
+- 已完成：N
+- 未完成：0
+
+## 部署狀態
+- 測試環境：[已部署 / 未部署]
+- 部署版本：[版本號或 commit hash]
+```
+
+### 規格文件盤點
+
+盤點本輪迭代中**所有已合併 PR**（含議題收集選項 1 透過 `dev/main-agent` 提交的小改動），檢查是否有遺漏的規格文件更新：
+
+1. 列出本輪迭代已合併的所有 PR
+2. 檢查是否有涉及 API endpoint 新增/變更、UI 流程調整、資料模型變更
+3. 比對規格文件是否已同步更新
+4. 若有遺漏，列出清單提醒開發者確認後補充
+
+> **注意**：基礎設施修正（nginx config、timeout 調整）不需要更新規格文件。
+
+### 引導下一步
+
+根據專案狀態引導開發者：
+
+| 條件 | 引導 |
+|------|------|
+| 有部署環境（docker-compose 或 CI/CD 配置） | 進入 Phase 5（`/vibe-sdlc-release`）— 完整流程：回饋收集 → Release 發佈 → 迭代規劃 |
+| 無部署環境（純規範 / Library 專案） | 進入 Phase 5 快速模式（`/vibe-sdlc-release`）— 直接問：是否發佈 Release？有無回饋？ |
+| 開發者選擇跳過 | 直接回 Phase 2（`/vibe-sdlc-issues`）— 繼續下一輪迭代 |
+
 ## 完成條件
 
 - [ ] CI 全部通過（綠燈）
 - [ ] 開發者 Code Review 核准
 - [ ] PR 已合併至 `main`
 - [ ] Dev Plan 對應任務已標記完成
+- [ ] 若為里程碑最後一個 Issue：里程碑完成報告已產出、規格盤點已完成
 
 ## 行為指引
 
@@ -181,7 +263,7 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
 
 1. 先確認前置條件：
    - 是否有已建立的 open PR？（由 Phase 3 自動建立）
-   - 若無 open PR，提示使用者先完成 Phase 3（`/vibe-sdlc-p3-dev`）
+   - 若無 open PR，提示使用者先完成 Phase 3（`/vibe-sdlc-dev`）
 2. 列出所有 open PR，使用 `gh pr list` 查看
 3. 監控 CI 結果：
    - 使用 `gh pr checks <PR-number>` 查看 CI 狀態
@@ -192,7 +274,9 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
      - `MERGED` → 禁止推送，從最新 main 建新分支與新 PR
      - `CLOSED` → 確認是否需重新開啟或建新 PR
 4. 開發者 Merge 後：
-   - **先同步工作目錄**：`git fetch origin && git rebase origin/main`（確保包含剛合併的變更）
+   - **先同步 main 與常駐分支**：`git fetch origin && git checkout main && git pull origin main && git checkout dev/main-agent && git rebase origin/main && git push --force-with-lease origin dev/main-agent`
+   - **若合併的是 feature 分支**：刪除本地與遠端的 feature 分支
+   - **若合併的是 `dev/main-agent`**：⛔ **不刪除**（常駐分支），上一步的 rebase 已完成更新
    - 讀取 `/docs/02-Dev_Plan.md`
    - 找到對應任務，將 `- [ ]` 改為 `- [x]`
    - 提交更新並推送
@@ -203,6 +287,6 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
    - 若有：提醒開發者通知對應的審查角色（H-Reviewer / H-UxReviewer）開始驗證
    - 列出相關驗證 Issues 的編號與標題
 7. 提示開發者：
-   - 若還有待處理的開發 Issue → 回到 Phase 3（`/vibe-sdlc-p3-dev`）
+   - 若還有待處理的開發 Issue → 回到 Phase 3（`/vibe-sdlc-dev`）
    - 若當前里程碑的開發 Issues 已全部完成，但仍有未關閉的驗證 Issues → 提醒等待驗證完成
-   - 若當前里程碑所有 Issues（開發 + 驗證）皆已關閉 → 進入 Phase 5（`/vibe-sdlc-p5-release`）
+   - 若當前里程碑所有 Issues（開發 + 驗證）皆已關閉 → 執行「里程碑收尾作業」（產出里程碑完成報告 + 規格盤點 + 引導下一步）

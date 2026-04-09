@@ -1,7 +1,7 @@
 ---
-name: vibe-sdlc-p1-spec
+name: vibe-sdlc-spec
 description: >
-  Vibe-SDLC Phase 1：定義規格文件與計畫，協助撰寫與審查 PRD、SRD、API Spec、Dev Plan。
+  Vibe-SDLC Phase 1：定義規格文件與計畫，協助撰寫與審查 PRD、SRD、SDD、API Spec、Dev Plan。
   使用時機：專案啟動需要建立規格文件與計畫，或需要審查既有規格的完整性與一致性。
 user_invocable: true
 ---
@@ -28,15 +28,19 @@ user_invocable: true
 
 ## 交付物
 
-| 文件 | 檔名 | 存放路徑 | 說明 |
-|------|------|----------|------|
-| 產品需求文件 (PRD) | `01-1-PRD.md` | `/docs/01-1-PRD.md` | 偏重產品面或客戶的需求及要求，可能衍生 UI/UX 需求 |
-| 系統需求文件 (SRD) | `01-2-SRD.md` | `/docs/01-2-SRD.md` | 偏重技術棧、框架以及系統在安全及性能上的要求 |
-| API 介面規格 | `01-3-API_Spec.md` | `/docs/01-3-API_Spec.md` | API 規格說明 |
-| API 介面合約 | `API_Spec.yaml` | `/docs/API_Spec.yaml` | OpenAPI 規格 |
-| 開發執行計畫 | `02-Dev_Plan.md` | `/docs/02-Dev_Plan.md` | 里程碑、任務拆解、依賴關係 |
-| 規格審查報告 | `03-Docs_Review_Report.md` | `/docs/03-Docs_Review_Report.md` | 交叉比對結果、不一致與遺漏項目 |
-| CI/CD 規格文件（選用） | `04-CI_CD_Spec.md` | `/docs/04-CI_CD_Spec.md` | CI Workflow 定義、品質閘門、Docker 部署配置（複雜專案建議獨立，Dev Plan 以連結引用） |
+| 文件 | 檔名 | 存放路徑 | 類型 | 說明 |
+|------|------|----------|------|------|
+| 文件入口與導航 | `00-Docs_Index.md` | `/docs/00-Docs_Index.md` | 必要 | 規格文件導航索引，列出所有文件清單、建立/更新時機、依賴關係 |
+| 產品需求文件 (PRD) | `01-1-PRD.md` | `/docs/01-1-PRD.md` | 必要 | 偏重產品面或客戶的需求及要求，可能衍生 UI/UX 需求 |
+| 系統需求文件 (SRD) | `01-2-SRD.md` | `/docs/01-2-SRD.md` | 必要 | 非功能性需求（NFR）、部署要求、約束與安全合規 |
+| 系統設計文件 (SDD) | `01-3-SDD.md` | `/docs/01-3-SDD.md` | 必要 | 系統架構、元件設計、數據模型、技術決策記錄（ADR） |
+| 遊戲設計文件 (GDD) | `01-4-GDD.md` | `/docs/01-4-GDD.md` | 領域選用 | 遊戲專案專用：核心機制、數值設計、關卡設計。僅遊戲類專案需要 |
+| API 介面規格 | `01-5-API_Spec.md` | `/docs/01-5-API_Spec.md` | 必要 | API 規格說明 |
+| API 介面合約 | `API_Spec.yaml` | `/docs/API_Spec.yaml` | 必要 | OpenAPI 規格 |
+| UI/UX 設計文件 | `01-6-UI_UX_Design.md` | `/docs/01-6-UI_UX_Design.md` | 選用 | UI/UX 設計規格（視覺風格、互動流程、Design Tokens），若 PRD 衍生 UI/UX 需求時建立 |
+| 開發執行計畫 | `02-Dev_Plan.md` | `/docs/02-Dev_Plan.md` | 必要 | 里程碑、任務拆解、依賴關係 |
+| 規格審查報告 | `03-Docs_Review_Report.md` | `/docs/03-Docs_Review_Report.md` | 必要 | 交叉比對結果、不一致與遺漏項目 |
+| CI/CD 規格文件 | `04-CI_CD_Spec.md` | `/docs/04-CI_CD_Spec.md` | 選用 | CI Workflow 定義、品質閘門、Docker 部署配置（複雜專案建議獨立，Dev Plan 以連結引用） |
 
 **重要**：
 - 每項規格都應賦予**規格編號**以利後續追蹤與討論。
@@ -92,13 +96,19 @@ user_invocable: true
 
 | 步驟 | 執行者 | 操作 | 產出 |
 |------|--------|------|------|
-| 1 | **開發者** | 撰寫 PRD：定義功能清單、使用者故事、資料欄位，並與開發者討論並優化PRD。 | `01-1-PRD.md` |
-| 2 | **開發者** | 撰寫 SRD：當PRD定義完成後，可以開始定義系統架構、技術棧、安全性要求、效能指標，並與開發者討論並優化SRD。 | `01-2-SRD.md` |
-| 3 | **開發者** | 定義 API Spec：以 OpenAPI 格式定義所有端點、請求/回應結構 | `01-3-API_Spec.md`, `API_Spec.yaml` |
-| 4 | **開發者** | 撰寫 Dev Plan：當 PRD、SRD、API Spec 定義完成後，可以開始拆解里程碑、任務清單、任務間依賴關係，並與開發者討論並優化Dev Plan。 | `02-Dev_Plan.md` |
-| 5 | **開發者** | 確認以上文件均已提交至 `/docs` 目錄並推送至倉庫 | Git commit & push to Github (or Gitlab) |
-| 6 | **AI 助手** | 交叉比對 `/docs` 下規格文件，產出完整性審查報告 | 審查報告 |
-| 7 | **開發者** | 審閱報告，修正規格缺漏後重新提交 | 最終版規格 |
+| 0 | **開發者** | 建立文件入口：初始化 Docs Index，登錄預計建立的文件清單 | `00-Docs_Index.md` |
+| 1 | **開發者** | 撰寫 PRD：定義功能清單、使用者故事、資料欄位，並與開發者討論並優化 PRD | `01-1-PRD.md` |
+| 2 | **開發者** | 撰寫 SRD：當 PRD 定義完成後，定義非功能性需求（NFR）、部署要求、約束與安全合規 | `01-2-SRD.md` |
+| 3 | **開發者** | 撰寫 SDD：當 SRD 定義完成後，定義系統架構、技術棧選型、數據模型、設計決策記錄（ADR） | `01-3-SDD.md` |
+| 4 | **開發者** | 定義 API Spec：以 OpenAPI 格式定義所有端點、請求/回應結構 | `01-5-API_Spec.md`, `API_Spec.yaml` |
+| 5 | **開發者** | 撰寫 Dev Plan：當 PRD、SRD、SDD、API Spec 定義完成後，拆解里程碑、任務清單、任務間依賴關係 | `02-Dev_Plan.md` |
+| 6 | **開發者** | 確認以上文件均已提交至 `/docs` 目錄並推送至倉庫 | Git commit & push to Github (or Gitlab) |
+| 7 | **AI 助手** | 交叉比對 `/docs` 下規格文件，產出完整性審查報告 | 審查報告 |
+| 8 | **開發者** | 審閱報告，修正規格缺漏後重新提交 | 最終版規格 |
+
+> **SRD 與 SDD 的分工**：SRD 定義「系統應該達到的需求與約束」（如性能目標、安全要求），SDD 負責描述「如何設計系統來滿足這些需求」（如架構選型、元件設計）。
+>
+> **領域專用文件**：遊戲類專案應在步驟 1 之後額外建立 `01-4-GDD.md`（遊戲設計文件），定義核心機制、數值設計與關卡設計。其他領域專用文件（如資料設計文件）可視需求於適當步驟加入。
 
 ## Dev Plan 格式規範
 
@@ -114,7 +124,7 @@ user_invocable: true
 
 ### 文件結構 (必須包含以下章節)
 
-1. **角色定義 (Role Registry)**：全文唯一角色定義來源
+1. **角色定義 (Role Registry)**：全文唯一角色定義來源（含 GitHub 帳號與認證配置）
 2. **項目概況與時間表**：里程碑 Gantt 圖 (Mermaid)、工作量估算
 3. **里程碑定義**：每個 Milestone 的目標、AI 執行策略、交付物、人類決策點
 4. **任務清單**：任務總覽表格 + 任務詳細描述 + 並行群組視覺化 (Mermaid)
@@ -125,20 +135,22 @@ user_invocable: true
 
 ### 角色定義格式
 
-必須在文件最開頭以表格定義所有角色，包含：角色代號、角色名稱、類別 (🧑 人類 / 🤖 AI)、說明。後續全文引用角色時必須使用此處定義的代號，**禁止前後不一致**。
+必須在文件最開頭以表格定義所有角色，包含：角色代號、角色名稱、類別 (🧑 人類 / 🤖 AI)、**GitHub 帳號**、**Git Author**、說明。後續全文引用角色時必須使用此處定義的代號，**禁止前後不一致**。
 
 建議角色配置：
 
-| 類別 | 建議角色 | 說明 |
-|------|---------|------|
-| 🧑 人類 | H-Director (導演) | 最高決策、規格審查、Milestone 驗收、PR 合併 |
-| 🧑 人類 | H-Reviewer (審查員) | 特定領域審查（安全/合規性），可由 Director 兼任 |
-| 🧑 人類 | H-UxReviewer (UX 審查員) | UX 相關審查（視覺效果、互動體驗、裝置相容性），可由 Director 兼任或由具備 UX 能力的 AI Agent 代理執行 |
-| 🤖 AI | A-Main (主代理) | 統籌拆解 Issue、協調 Sub Agents、整合驗證 |
-| 🤖 AI | A-Backend (後端子代理) | 專注後端 API、DB、ORM |
-| 🤖 AI | A-Frontend (前端子代理) | 專注 UI 組件、頁面、狀態管理 |
-| 🤖 AI | A-QA (測試子代理) | E2E 測試、覆蓋率 |
-| 🤖 AI | A-DevOps (部署子代理) | CI/CD、Docker、監控 |
+| 類別 | 建議角色 | GitHub 帳號 | 說明 |
+|------|---------|------------|------|
+| 🧑 人類 | H-Director (導演) | `@owner` | 最高決策、規格審查、Milestone 驗收、PR 合併 |
+| 🧑 人類 | H-Reviewer (審查員) | *(同 Director 或獨立帳號)* | 特定領域審查（安全/合規性），可由 Director 兼任 |
+| 🧑 人類 | H-UxReviewer (UX 審查員) | *(同 Director 或獨立帳號)* | UX 相關審查，可由 Director 兼任或由 AI Agent 代理 |
+| 🤖 AI | A-Main (主代理) | *(同 Director 或獨立帳號)* | 統籌拆解 Issue、協調 Sub Agents、整合驗證 |
+| 🤖 AI | A-Backend (後端子代理) | `@ext-dev 或 @owner` | 專注後端 API、DB、ORM |
+| 🤖 AI | A-Frontend (前端子代理) | `@ext-dev 或 @owner` | 專注 UI 組件、頁面、狀態管理 |
+| 🤖 AI | A-QA (測試子代理) | *(同 Director 或獨立帳號)* | E2E 測試、覆蓋率 |
+| 🤖 AI | A-DevOps (部署子代理) | *(同 Director 或獨立帳號)* | CI/CD、Docker、監控 |
+
+> **多帳號協作**：多個角色可共用同一 GitHub 帳號（單人專案），也可每個角色使用獨立帳號（多人或外部成員協作）。角色表中需填寫 `GitHub 帳號` 與 `Git Author`，並在 §1.5 中配置認證方式與 Repo 權限。詳細配置步驟請參考 [帳號配置指南](./references/multi-account-setup.md)。
 
 ### 任務總覽表格格式
 
@@ -266,14 +278,24 @@ user_invocable: true
 
 #### 分支命名規範
 
-```
-feat/<agent>/<issue-N>-<簡述>
-```
+**⛔ 嚴格禁止直接 push 至 main**，所有變更一律透過分支 + PR 流程。`main` 為唯讀基準分支，`dev/main-agent` 為常駐工作分支。
 
-範例：
+| 條件 | 分支命名 | 生命週期 | 說明 |
+|------|---------|---------|------|
+| **有 Issue** | `feat/<agent>/issue-N-簡述` | 短期 | 所有 Issue-based 開發，PR 合併後刪除 |
+| **無 Issue（小修）** | `dev/main-agent` | **常駐** | 固定名稱常駐分支，PR 合併後 rebase 到最新 main，不刪除 |
+| **任務間停車** | `dev/main-agent` | **常駐** | 任務結束後預設停留位置，main 誤改的收容所 |
+
+Per-issue 分支範例：
 - `feat/backend/issue-12-auth-api`
 - `feat/frontend/issue-15-login-ui`
 - `feat/devops/issue-20-docker-setup`
+
+**`dev/main-agent` 常駐分支生命週期**：
+- 首次建立：`git checkout -b dev/main-agent origin/main && git push -u origin dev/main-agent`
+- 累積小修 → 達自然停止點 → 提交 PR
+- PR 合併後：`git checkout dev/main-agent && git rebase origin/main && git push --force-with-lease`（**不刪除分支**）
+- 持續作為任務間停車場與小修累積處
 
 #### Bootstrap 階段（CI 建立前的 PR 處理）
 
@@ -334,7 +356,7 @@ flowchart LR
 # 規格完整性審查報告
 
 ## 審查範圍
-- 比對文件：01-1-PRD.md, 01-2-SRD.md, 01-3-API_Spec.md, 02-Dev_Plan.md, ...
+- 比對文件：00-Docs_Index.md, 01-1-PRD.md, 01-2-SRD.md, 01-3-SDD.md, 01-5-API_Spec.md, 02-Dev_Plan.md, ...
 
 ## 不一致項目
 | 編號 | 文件   | 不一致描述 | 建議修正 |
@@ -354,7 +376,9 @@ flowchart LR
 
 ## 完成條件
 
-- [ ] 規格文件皆已提交至 `/docs`
+- [ ] `/docs/00-Docs_Index.md` 已建立，且所有文件皆已登錄
+- [ ] 所有「必要」類型規格文件皆已提交至 `/docs`
+- [ ] SRD 與 SDD 職責分離：SRD 僅含需求與約束，SDD 含架構設計與技術決策
 - [ ] 所有規格文件皆包含版本修訂記錄（版本號 + 最後更新日期 + 修訂說明表格）
 - [ ] AI 審查報告無未解決的遺漏項目
 - [ ] 開發者確認規格定稿
@@ -365,12 +389,16 @@ flowchart LR
 當使用者呼叫此 skill 時：
 
 1. 先檢查 `/docs` 目錄是否存在，以及已有哪些規格文件
-2. 若規格文件尚未建立：詢問開發者想從哪份文件開始，協助撰寫
-3. 若規格文件已存在：詢問開發者是要修改規格還是進行交叉比對審查
-4. **修改既有規格文件時**，必須同步更新該文件的版本號、最後更新日期與版本修訂說明表格（詳見「版本修訂記錄格式規範」）
-5. 執行審查時，逐一讀取所有規格文件，系統性比對後產出報告
-5. 檢查規格文件間的交互參考是否完整：
+2. 若 `/docs/00-Docs_Index.md` 不存在：建議先建立文件入口，作為後續文件的導航索引
+3. 若規格文件尚未建立：詢問開發者想從哪份文件開始，協助撰寫
+4. 若規格文件已存在：詢問開發者是要修改規格還是進行交叉比對審查
+5. **修改既有規格文件時**，必須同步更新該文件的版本號、最後更新日期與版本修訂說明表格（詳見「版本修訂記錄格式規範」）
+6. 執行審查時，逐一讀取所有規格文件，系統性比對後產出報告
+7. 檢查規格文件間的交互參考是否完整：
+   - Docs Index 是否已登錄所有已建立的文件
    - PRD 各功能需求是否標注對應的 UI/UX 設計章節參考（如有 UI/UX 設計文件）
-   - SRD 前端技術棧是否參考 UI/UX 的 Design Tokens
+   - SRD 與 SDD 是否職責分離（SRD 僅含需求，SDD 含設計）
+   - SDD 的架構設計是否與 API Spec 的端點定義一致
    - UI/UX 設計文件是否反向參考 PRD、SRD、API Spec
-6. 審查完成且無遺漏後，提示開發者可進入 Phase 2（`/vibe-sdlc-p2-issues`）
+8. 若為遊戲類專案，提醒開發者是否需要建立 GDD（`01-4-GDD.md`）
+9. 審查完成且無遺漏後，提示開發者可進入 Phase 2（`/vibe-sdlc-issues`）
