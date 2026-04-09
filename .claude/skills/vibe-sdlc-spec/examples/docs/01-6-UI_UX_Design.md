@@ -1,4 +1,4 @@
-# 01-4 UI/UX 設計規格文件
+# 01-6 UI/UX 設計規格文件
 
 > **專案名稱**：Vibe Money Book — 語音記帳應用
 > **版本**：v1.0
@@ -25,7 +25,7 @@
 |------|------|
 | [`01-1-PRD.md`](./01-1-PRD.md) | 產品功能需求（本文件的 UI 規格依據） |
 | [`01-2-SRD.md`](./01-2-SRD.md) | 技術架構與資料模型（前端技術棧、API 設計） |
-| [`01-3-API_Spec.md`](./01-3-API_Spec.md) | API 端點規格（前端串接依據） |
+| [`01-5-API_Spec.md`](./01-5-API_Spec.md) | API 端點規格（前端串接依據） |
 | [`API_Spec.yaml`](./API_Spec.yaml) | OpenAPI 合約 |
 
 ---

@@ -17,11 +17,11 @@ user_invocable: true
 3. 每個階段有明確的前置條件與完成條件，未達成不得跳過
 4. **規格文件版本化管理**：任何對 `/docs` 規格文件的修改，都必須同步更新該文件的版本號、最後更新日期、版本修訂說明表格，確保修訂軌跡可追溯
 5. **臨時需求即時同步**：開發過程中若有臨時新增需求、Bug 修正導致規格變更、或新增 Issue，應即時回溯修改對應的規格文件與 Dev Plan，而非等到迭代結束才統一更新
-6. **即時回報分流機制**：當開發者在對話中直接回報 Bug、功能修改、改善建議等，AI 必須先詢問處理方式（詳見「即時回報分流」章節），再依選擇執行
+6. **議題收集與處置流程機制**：當開發者在對話中直接回報 Bug、功能修改、改善建議等，AI 必須先詢問處理方式（詳見「議題收集與處置流程」章節），再依選擇執行
 
-## 即時回報分流
+## 議題收集與處置流程
 
-當開發者在對話中**直接描述 Bug、功能需求、改善建議**（而非透過 `/vibe-sdlc-p3-dev` 領取既有 Issue）時，**AI 必須立即停止，禁止修改任何檔案或撰寫程式碼**，先提供以下三個選項，**等待開發者選擇後才可開始實作**：
+當開發者在對話中**直接描述 Bug、功能需求、改善建議**（而非透過 `/vibe-sdlc-dev` 領取既有 Issue）時，**AI 必須立即停止，禁止修改任何檔案或撰寫程式碼**，先提供以下選項，**等待開發者選擇後才可開始實作**：
 
 ```
 📋 Issue 追蹤選項
@@ -32,17 +32,21 @@ user_invocable: true
   1️⃣  小問題，直接修正（不建 Issue）
   2️⃣  建立 Issue 後立即修正
   3️⃣  先記下來，待會一起建立 Issues
+  4️⃣  議題收集完成，彙整成 Issues 並開始開發
+  5️⃣  議題收集完成，彙整成 Issues 並等待指示
 
-請選擇（1/2/3）：
+請選擇（1/2/3/4/5）：
 ```
 
 **各選項行為**：
 
 | 選項 | 行為 |
 |------|------|
-| **1 — 直接修正** | 不建 Issue，直接進入開發修正流程。適合 typo、文案調整、簡單 config 變更等小修。 |
+| **1 — 直接修正** | 不建 Issue，在 `dev/main-agent` 分支上修正（若分支不存在則從最新 main 建立）。修正完成後達到自然停止點時提交 PR。適合 typo、文案調整、簡單 config 變更等小修。 |
 | **2 — 建 Issue 再修正** | 先以 `gh issue create` 建立 Issue（含標題、描述、標籤），然後立即進入 P3 開發流程修正。若有對應 Milestone 應掛載。 |
 | **3 — 收集後批量建立** | 將此回報暫存於對話上下文中（使用清單格式追蹤）。當開發者說「建立 Issues」或「整理回報」時，一次性列出所有已收集的回報，確認後批量建立 Issues。 |
+| **4 — 彙整並開發** | 結束收集階段，將所有暫存回報批量建立 Issues（逐一確認標題、標籤、Milestone），建立完成後**立即進入 P3 開發流程**，依優先順序逐一領取 Issue 開始開發。 |
+| **5 — 彙整並等待** | 結束收集階段，將所有暫存回報批量建立 Issues（逐一確認標題、標籤、Milestone），建立完成後**不自動開發**，等待開發者的下一步指示。 |
 
 **暫存回報格式**（選項 3 適用）：
 
@@ -68,20 +72,21 @@ user_invocable: true
 - 開發者提出改善建議（如「XX 可以優化」「XX 體驗不好」）
 - 任何會導致新增或修改程式碼的請求（除非符合下方「不觸發」條件）
 
-以下情境**不觸發**（直接執行）：
-- 透過 `/vibe-sdlc-p3-dev` 領取既有 Issue 進行開發
-- 開發者明確說「直接改」「快速修一下」等表達不需追蹤的意圖
+以下情境**不觸發**（直接執行開發，但仍需透過 PR 提交，嚴禁直接 push main）：
+- 透過 `/vibe-sdlc-dev` 領取既有 Issue 進行開發
+- 開發者明確說「直接改」「快速修一下」等表達**不需事前追蹤為正式 Issue** 的意圖（仍在 `dev/main-agent` 分支上開發並提交 PR）
 - 純粹的程式碼問答、架構討論（無實際修改需求）
 
 ## 流程階段
 
 | Phase | 名稱 | Skill 指令 | 觸發時機 |
 |-------|------|-----------|----------|
-| 1 | 定義規格文件與計畫 | `/vibe-sdlc-p1-spec` | 專案啟動，需撰寫或審查規格 |
-| 2 | 任務掛載 (Plan → Issues) | `/vibe-sdlc-p2-issues` | 規格定稿，需建立 GitHub Issues |
-| 3 | 開發循環 (Execution Loop) | `/vibe-sdlc-p3-dev` | 日常開發，領取 Issue 進行實作，Vibe Check 通過後自動建 PR |
-| 4 | CI 監控與合併後作業 | `/vibe-sdlc-p4-pr` | PR 已建立，需監控 CI、處理失敗、或 Merge 後更新 Dev Plan |
-| 5 | 交付與迭代 (Release) | `/vibe-sdlc-p5-release` | 里程碑完成，需部署與收集回饋 |
+| 1 | 定義規格文件與計畫 | `/vibe-sdlc-spec` | 專案啟動，需撰寫或審查規格 |
+| 2 | 任務掛載 (Plan → Issues) | `/vibe-sdlc-issues` | 規格定稿，需建立 GitHub Issues |
+| 3 | 開發循環 (Execution Loop) | `/vibe-sdlc-dev` | 日常開發，領取 Issue 進行實作，Vibe Check 通過後自動建 PR |
+| 4 | CI 監控與合併後作業 | `/vibe-sdlc-pr` | PR 已建立，需監控 CI、處理失敗、或 Merge 後更新 Dev Plan |
+| 5 | 回饋收集、Release 與迭代 | `/vibe-sdlc-release` | 里程碑收尾完成（由 P4 觸發），需收集回饋、發佈 Release |
+| — | Agent 狀態查詢與彙整 | `/vibe-sdlc-status` | 查詢各 Agent 工作狀態、彙整 STATUS.md |
 
 ## 角色定義
 
@@ -93,7 +98,7 @@ user_invocable: true
 ### AI 助手（執行者）— 你的角色
 - 交叉比對規格文件，產出差異報告
 - 根據 Dev Plan 建立 GitHub Issues
-- 在 feature 分支上實作程式碼與測試
+- 在對應分支上實作程式碼與測試（per-issue 分支或 `dev/main-agent`）
 - Vibe Check 通過後自動建立 PR（無需等待人類核准）
 - 處理 CI 失敗修正、更新 Dev Plan 任務狀態
 - 遇到問題優先自行調查與解決，無法解決時才上報開發者
@@ -111,7 +116,7 @@ user_invocable: true
 |------|------|--------|
 | PRD | `/docs/01-1-PRD.md` | 開發者 |
 | SRD | `/docs/01-2-SRD.md` | 開發者 |
-| API Spec (說明) | `/docs/01-3-API_Spec.md` | 開發者 |
+| API Spec (說明) | `/docs/01-5-API_Spec.md` | 開發者 |
 | API Spec (合約) | `/docs/API_Spec.yaml` | 開發者 |
 | Dev Plan | `/docs/02-Dev_Plan.md` | 開發者建立、AI 更新狀態 |
 | 審查報告 | `/docs/03-Docs_Review_Report.md` | AI 產出、開發者審閱 |
@@ -122,39 +127,72 @@ user_invocable: true
 
 ### 步驟 0：同步工作目錄
 
-在收集任何數據之前，若工作目錄已經建立本地git倉庫及遠端 Github (或 Gitlab) 倉庫，則應先確保本地工作目錄與遠端同步：
+在收集任何數據之前，若工作目錄已經建立本地 git 倉庫及遠端 Github (或 Gitlab) 倉庫，則應先確保本地工作目錄與遠端同步：
+
+> **核心原則**：`{main}` 為唯讀基準分支，**任何修改都不應出現在 `{main}` 上**。Vibe-SDLC 使用常駐分支 `dev/main-agent` 作為任務間的「停車場」與小修累積處，所有未在 feature 分支上的工作都應在 `dev/main-agent` 上進行。
 
 1. 執行 `git fetch origin` 取得遠端最新狀態
 2. 偵測主線分支名稱（`main` 或 `master`，以下統稱 `{main}`）
-3. **若當前分支為 `{main}`**：執行 `git pull origin {main}` 拉取最新變更
-4. **若當前分支非 `{main}`**（人類正在操作 feature 分支）：
-   - 執行 `git status --short` 檢查工作目錄狀態
-   - **工作目錄乾淨**（無修改）：提示使用者目前所在分支，建議切回 `{main}`，但**不強制**。詢問是否切換，若使用者不想切換則直接在當前分支繼續（儀表板數據可能與 `{main}` 略有差異）
-   - **工作目錄有未提交變更**（unstaged/staged/untracked）：以下列格式警告，並**暫停等待使用者指示**，不繼續後續步驟：
+3. **確保常駐分支 `dev/main-agent` 存在**：
+   ```bash
+   # 檢查本地是否存在 dev/main-agent
+   git show-ref --verify --quiet refs/heads/dev/main-agent
+   # 若不存在，從 origin/{main} 建立
+   git checkout -b dev/main-agent origin/{main}
+   git push -u origin dev/main-agent
+   ```
+   若遠端已存在但本地不存在，則 `git checkout -b dev/main-agent origin/dev/main-agent`。
 
-     ```
-     ⚠️ 非主線分支且有未提交變更
-     ├─ 當前分支：{branch-name}
-     ├─ 未提交變更：
-     │  {git status --short 輸出，逐行列出}
-     └─ 建議操作：
-        1. 提交變更 → 推送分支 → 建立 PR → 切回 {main}
-        2. 暫存變更（git stash）→ 切回 {main}
-        3. 忽略，直接在當前分支查看儀表板（數據可能與 {main} 不同步）
+4. 執行 `git status --short` 檢查工作目錄狀態，根據當前分支與工作目錄狀態，採取對應流程：
 
-     請選擇操作（1/2/3），或輸入其他指示：
-     ```
+#### 情境 A：當前在 `dev/main-agent`（常駐分支，正常狀態）
 
-     若使用者選擇 **1**，依序執行：
-     1. `git add` 相關檔案（排除 `.env` 等敏感檔案）
-     2. 引導使用者確認 commit message 後執行 `git commit`
-     3. `git push origin {branch-name}`
-     4. 檢查該分支是否已有 open PR，若無則提示是否建立 PR
-     5. `git checkout {main} && git pull origin {main}`
+- **工作目錄乾淨**：執行 `git fetch origin && git rebase origin/{main}` 將 `dev/main-agent` 同步至最新 `{main}`
+- **工作目錄有未提交變更**（小修累積中，正常）：跳過 rebase，提示使用者當前有未提交變更，繼續後續儀表板流程
 
-     若使用者選擇 **2**，執行 `git stash` → `git checkout {main}` → `git pull origin {main}`
+#### 情境 B：當前在 `{main}` 分支（應避免）
 
-     若使用者選擇 **3**，繼續後續步驟（不切換分支）
+- **工作目錄乾淨**：執行 `git pull origin {main}` 後切換至 `dev/main-agent`：`git checkout dev/main-agent && git rebase origin/{main}`
+- **工作目錄有未提交變更**（⚠️ 異常狀態）：以下列格式警告，並**暫停等待使用者指示**：
+
+  ```
+  ⚠️ 主線分支有未提交變更（{main} 應為唯讀，禁止 commit）
+  ├─ 當前分支：{main}
+  ├─ 未提交變更：
+  │  {git status --short 輸出，逐行列出}
+  └─ 建議操作：
+     1. 搬移至常駐分支 dev/main-agent（推薦，自動接管未提交變更）
+     2. 暫存變更（git stash）→ 拉取最新 {main} → 切到 dev/main-agent → stash pop
+     3. 捨棄全部變更（⚠️ 不可逆，慎用）
+
+  請選擇操作（1/2/3），或輸入其他指示：
+  ```
+
+  - 選擇 **1**：`git checkout dev/main-agent`（未提交變更會自動帶至 `dev/main-agent`，因為兩分支共享 working tree）
+  - 選擇 **2**：`git stash` → `git pull origin {main}` → `git checkout dev/main-agent` → `git rebase origin/{main}` → `git stash pop`
+  - 選擇 **3**：再次確認後 `git checkout -- . && git clean -fd` → `git pull origin {main}` → `git checkout dev/main-agent && git rebase origin/{main}`
+
+#### 情境 C：當前在 feature 分支（`feat/<agent>/issue-N-簡述`）
+
+- **工作目錄乾淨**：提示使用者目前所在 feature 分支，詢問是否切回 `dev/main-agent`，若使用者不想切換則直接在當前分支繼續（儀表板數據以當前分支為準）
+- **工作目錄有未提交變更**：以下列格式警告，並**暫停等待使用者指示**：
+
+  ```
+  ⚠️ 非主線分支且有未提交變更
+  ├─ 當前分支：{branch-name}
+  ├─ 未提交變更：
+  │  {git status --short 輸出，逐行列出}
+  └─ 建議操作：
+     1. 提交變更 → 推送分支 → 建立/更新 PR → 切回 dev/main-agent
+     2. 暫存變更（git stash）→ 切回 dev/main-agent
+     3. 忽略，直接在當前分支查看儀表板
+
+  請選擇操作（1/2/3），或輸入其他指示：
+  ```
+
+  - 選擇 **1**：`git add` 相關檔案（排除 `.env`）→ 引導 commit → `git push` → 檢查 PR → `git checkout dev/main-agent && git rebase origin/{main}`
+  - 選擇 **2**：`git stash` → `git checkout dev/main-agent && git rebase origin/{main}`
+  - 選擇 **3**：繼續後續步驟（不切換分支）
 
 5. 檢查是否有已合併的本地分支、遠端已合併分支或無用的 worktree，若有則列出清單提醒開發者可清理（詳細清理流程見 P3 skill「清理已合併分支與 Worktree」章節）
 
@@ -163,6 +201,7 @@ user_invocable: true
 | 類型 | 分支名稱 |
 |------|---------|
 | 主線 | `main`, `master` |
+| 常駐工作 | `dev/main-agent`（Vibe-SDLC 任務間停車場與小修累積處） |
 | 開發 | `develop`, `dev` |
 | 測試 | `testing`, `test` |
 | 預發 | `staging`, `uat` |
@@ -172,7 +211,7 @@ user_invocable: true
 
 ```bash
 # 受保護分支的 grep 排除模式（本地與遠端共用）
-PROTECTED='main$\|master$\|develop$\|dev$\|testing$\|test$\|staging$\|uat$\|release/'
+PROTECTED='main$\|master$\|dev/main-agent$\|develop$\|dev$\|testing$\|test$\|staging$\|uat$\|release/'
 
 # 5a. 已合併至 main 的本地分支（排除受保護分支）
 git branch --merged main | grep -v "^\*\|$PROTECTED"
@@ -225,6 +264,9 @@ gh pr checks {PR-number} -R {owner}/{repo}
 
 # 5. 部署現況偵測（若專案有部署腳本）
 #    見「步驟 1a：偵測部署現況」
+
+# 6. Agent 狀態（讀取 /docs/status/A-*.md）
+#    若無狀態檔，從 GitHub Issues 推斷（見 /vibe-sdlc-status）
 ```
 
 ### 步驟 1a：偵測部署現況
@@ -320,6 +362,13 @@ Tunnel 狀態獨立判定：
 │    - #{num} {title}                          │
 └──────────────────────────────────────────────┘
 
+┌─ Agent 活動 ──────────────────────────────────┐
+│ {🟢/🟡/🔴/⚪} {Agent}  #{N} {簡述} ({耗時})  │
+│ {🟢/🟡/🔴/⚪} {Agent}  #{N} {簡述} ({狀態})  │
+│                                               │
+│ 💡 詳細資訊：/vibe-sdlc-status                │
+└───────────────────────────────────────────────┘
+
 ┌─ 部署現況 ───────────────────────────────────┐
 │ 🐳 Docker：{🟢 運行中 / 🟡 部分運行 / 🔴 未運行 / ⚪ 未配置}  │
 │    - {service_name}: {status} (port: {port})  │
@@ -360,12 +409,13 @@ Tunnel 狀態獨立判定：
 
 | 條件 | 判定 Phase | 建議 |
 |------|-----------|------|
-| `/docs` 下缺少規格文件 | Phase 1 | 呼叫 `/vibe-sdlc-p1-spec` |
-| 規格文件齊全但無 Issues | Phase 2 | 呼叫 `/vibe-sdlc-p2-issues` |
-| 有 open Issues 且無 open PR | Phase 3 | 呼叫 `/vibe-sdlc-p3-dev` 領取 Issue |
-| 有 open PR 待審 | Phase 4 | 審閱 PR，決定 Merge 或要求修改 |
-| 某 Milestone 所有 Issue closed | Phase 5 | 呼叫 `/vibe-sdlc-p5-release` 驗收 |
-| 有待驗證 Issue（`verification` 標籤） | Phase 5 | 提醒進行手動驗證 |
+| `/docs` 下缺少規格文件 | Phase 1 | 呼叫 `/vibe-sdlc-spec` |
+| 規格文件齊全但無 Issues | Phase 2 | 呼叫 `/vibe-sdlc-issues` |
+| 有 open Issues 且無 open PR | Phase 3 | 呼叫 `/vibe-sdlc-dev` 領取 Issue |
+| 有 open Issues 且有 open PR | Phase 3 + 4 並行 | 先處理 Phase 4（監控 PR CI / Code Review），同時可領取下一個 Issue 進入 Phase 3 |
+| 有 open PR 待審（無 open Issues） | Phase 4 | 審閱 PR，決定 Merge 或要求修改 |
+| 某 Milestone 所有 Issue closed | Phase 4 收尾 → Phase 5 | 若尚未產出里程碑完成報告，先執行 P4 收尾；否則呼叫 `/vibe-sdlc-release` |
+| 有待驗證 Issue（`verification` 標籤） | Phase 4 | 提醒進行手動驗證 |
 
 
 ### 步驟 5：Context 管理建議
