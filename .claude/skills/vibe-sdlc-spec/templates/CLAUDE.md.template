@@ -1,0 +1,81 @@
+# CLAUDE.md
+
+本檔案提供 Claude Code（claude.ai/code）在此專案中工作時的運作指引。
+
+## 專案概述
+
+**{PROJECT_NAME}**：{PROJECT_DESCRIPTION}
+
+本專案採用 **Vibe-SDLC** 管理開發流程，所有規格文件以 `/docs` 為唯一真相來源（Single Source of Truth）。
+
+## 通用要求
+
+### 一般要求
+
+1. 回覆時請儘量使用**繁體中文**，專有名詞可保留原文
+2. 文件格式偏好 Markdown，若需描述流程圖或架構圖請用 Mermaid 格式
+3. 執行前會影響系統狀態的指令前，請先用繁體中文備註目的（備註不超過 200 字）
+4. `.env` 含有敏感資訊，嚴格禁止 commit 或傳輸
+
+### Performance & Execution Efficiency
+
+- **輸出持久化**：若某指令（`curl`、`java`、`python`、`sql` 等）的輸出需要多次分析，務必先儲存至暫存檔
+- **避免重複執行**：參數未變更時，請勿重複執行相同腳本，先檢查既有輸出檔案
+- **偏好流程**：高成本指令 → 輸出至檔案 → 多次分析 → 作業結束後清理
+
+## Vibe-SDLC 流程
+
+本專案使用 Vibe-SDLC 的 Slash Commands 管理開發生命週期：
+
+| Phase | 名稱 | 指令 | 使用時機 |
+|:-----:|------|------|---------|
+| — | 進度儀表板 | `/vibe-sdlc` | 不確定下一步時 |
+| 1 | 定義規格文件與計畫 | `/vibe-sdlc-spec` | 撰寫 / 審查 PRD、SRD、SDD、API Spec、Dev Plan |
+| 2 | 任務掛載 | `/vibe-sdlc-issues` | 規格定稿後建立 GitHub Issues |
+| 3 | 開發循環 | `/vibe-sdlc-dev` | 領取 Issue → 實作 → 測試 → 自動建 PR |
+| 4 | CI 監控與合併 | `/vibe-sdlc-pr` | 監控 CI → 修正失敗 → Merge 後更新進度 |
+| 5 | 回饋收集與 Release | `/vibe-sdlc-release` | 里程碑收尾、Release 發佈、啟動下一輪迭代 |
+| — | Agent 狀態查詢 | `/vibe-sdlc-status` | 查詢 Agent 狀態、彙整 STATUS.md |
+
+### 核心原則
+
+1. **人類決策、AI 執行、GitHub 管控**
+2. 所有開發工作皆以 `/docs` 中的規格文件為唯一真相來源
+3. 每個階段有明確的前置條件與完成條件，未達成不得跳過
+4. **規格文件版本化管理**：修改 `/docs` 規格文件時，必須同步更新版本號、最後更新日期與版本修訂說明表格
+5. **臨時需求即時同步**：開發過程中的臨時需求、Bug 修正導致的規格變更，應即時回溯修改對應的規格文件，而非等到迭代結束
+6. **議題收集與處置流程**：開發者直接回報 Bug / 需求時，AI 必須先詢問處理方式（直接修 / 建 Issue / 暫存），再依選擇執行
+
+## 技術棧
+
+<!-- 初始化後請由開發者補充 -->
+
+- **後端**：{BACKEND_STACK}
+- **前端**：{FRONTEND_STACK}
+- **資料庫**：{DATABASE}
+- **部署**：{DEPLOY_STACK}
+
+## 分支策略
+
+⛔ **嚴格禁止直接 push 至 `main`**，所有變更透過分支 + PR 流程：
+
+| 條件 | 分支命名 | 生命週期 |
+|------|---------|---------|
+| 有 Issue | `feat/<agent>/issue-N-簡述` | 短期，PR 合併後刪除 |
+| 無 Issue（小修） | `dev/main-agent` | 常駐，PR 合併後 rebase 到 main，不刪除 |
+
+## STATUS.md 版控策略
+
+<!-- 初始化後請由開發者選定 -->
+
+- [ ] **A：全版控** — 多人協作、重視完整歷史追溯
+- [ ] **B：全忽略** — 單人單機、STATUS 純本地即時快照
+- [ ] **C：混合**（推薦預設）— 單人多機、僅 `STATUS.md` 進版控
+
+若未宣告，A-Main 首次執行 `/vibe-sdlc-status` 時會主動詢問並協助配置。
+
+## 參考文件
+
+- 本專案 Vibe-SDLC 完整 SOP：https://github.com/anthropics/vibe-sdlc
+- 規格文件存放位置：`/docs/`
+- 開發計畫：`/docs/02-Dev_Plan.md`

@@ -125,6 +125,35 @@ user_invocable: true
 
 當使用者呼叫此 skill 時，**必須產出進度儀表板**，步驟如下：
 
+### 步驟 0-pre：空專案偵測（Bootstrap 分流）
+
+在做任何同步動作之前，先偵測工作目錄是否為**完全空的新專案**：
+
+| 偵測項 | 指令 |
+|--------|------|
+| 本地 git 倉庫 | `test -d .git` |
+| `/docs` 目錄 | `test -d docs` |
+| `CLAUDE.md` | `test -f CLAUDE.md` |
+
+**若三者皆缺失**（git、docs、CLAUDE.md 全都沒有），判定為「完全空的新專案」，輸出以下提示並**直接引導使用者改呼叫 `/vibe-sdlc-spec`**（由 Phase 1 skill 處理初始化，避免本 skill 與 Phase 1 重複處理）：
+
+```
+🌱 偵測到這是一個完全空的新專案
+──────────────────────────────
+  ❌ 本地 git 倉庫
+  ❌ /docs 目錄
+  ❌ CLAUDE.md
+
+Vibe-SDLC 的 Phase 1 skill (/vibe-sdlc-spec) 具備空專案初始化能力，
+可協助建立 git repo、CLAUDE.md、/docs 骨架、常駐分支 dev/main-agent 等。
+
+請改呼叫：/vibe-sdlc-spec
+```
+
+輸出後**立即結束本次 `/vibe-sdlc` 呼叫**，不執行後續儀表板流程（因為完全沒有數據可收集）。
+
+若只缺其中一兩項（例如有 git 但缺 docs），**繼續往下執行**步驟 0 的同步流程，並在步驟 4 的 Phase 判斷階段給出「建議呼叫 `/vibe-sdlc-spec` 補完」的提示。
+
 ### 步驟 0：同步工作目錄
 
 在收集任何數據之前，若工作目錄已經建立本地 git 倉庫及遠端 Github (或 Gitlab) 倉庫，則應先確保本地工作目錄與遠端同步：
@@ -409,6 +438,7 @@ Tunnel 狀態獨立判定：
 
 | 條件 | 判定 Phase | 建議 |
 |------|-----------|------|
+| 缺 `CLAUDE.md` 或 `/docs` 目錄（部分缺） | Phase 1（Bootstrap） | 呼叫 `/vibe-sdlc-spec`，該 skill 會偵測並引導補完 CLAUDE.md / docs 骨架 |
 | `/docs` 下缺少規格文件 | Phase 1 | 呼叫 `/vibe-sdlc-spec` |
 | 規格文件齊全但無 Issues | Phase 2 | 呼叫 `/vibe-sdlc-issues` |
 | 有 open Issues 且無 open PR | Phase 3 | 呼叫 `/vibe-sdlc-dev` 領取 Issue |

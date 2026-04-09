@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="fidelity" content="wireframe">
+  <meta name="spec-ref" content="../01-6-UI_UX_Design.md#32-統計頁-stats">
+  <title>統計 - Vibe Money Book Wireframe</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#9CA3AF',
+            'primary-light': '#F3F4F6',
+            'primary-dark': '#6B7280',
+          },
+          borderRadius: { 'sm': '8px', 'md': '12px', 'lg': '16px', 'xl': '20px' },
+          spacing: { 'xs': '4px', 'sm': '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px' }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-700">
+
+  <!-- 此為低保真 wireframe。實作以 01-6-UI_UX_Design.md §3.2 為權威。 -->
+
+  <div class="max-w-md mx-auto bg-white min-h-screen shadow-sm pb-20">
+
+    <!-- Header -->
+    <header id="header" class="h-14 border-b border-gray-200 flex items-center px-2xl bg-white">
+      <button class="w-8 h-8 flex items-center justify-center text-gray-500" aria-label="返回">←</button>
+      <h1 class="flex-1 text-center text-base font-semibold text-gray-800">統計</h1>
+      <div class="w-8"></div>
+    </header>
+
+    <main class="p-2xl space-y-lg">
+
+      <!-- 時間篩選列（Segmented Control） -->
+      <div id="time-filter" class="flex bg-gray-100 rounded-full p-1" role="tablist" aria-label="時間篩選">
+        <button class="flex-1 h-9 rounded-full text-xs text-gray-500" role="tab">本週</button>
+        <button class="flex-1 h-9 rounded-full bg-white shadow-sm text-xs font-semibold text-gray-800" role="tab" aria-selected="true">本月</button>
+        <button class="flex-1 h-9 rounded-full text-xs text-gray-500" role="tab">自訂</button>
+      </div>
+
+      <!-- 總支出摘要卡片 -->
+      <section id="summary-card" class="bg-white rounded-lg shadow-sm p-lg" aria-label="總支出摘要">
+        <div class="text-xs text-gray-500">本月總支出</div>
+        <div class="flex items-baseline justify-between mt-xs">
+          <div class="text-4xl font-bold text-gray-800">$12,580</div>
+          <div class="text-xs text-gray-500">/ $20,000</div>
+        </div>
+        <div class="h-2 bg-gray-200 rounded-full overflow-hidden mt-md">
+          <div class="h-full bg-gray-500 rounded-full" style="width: 63%"></div>
+        </div>
+      </section>
+
+      <!-- 消費分佈圓餅圖（wireframe 占位） -->
+      <section id="pie-chart" class="bg-white rounded-lg shadow-sm p-lg" aria-label="消費分佈">
+        <div class="text-sm font-semibold text-gray-800 mb-md">消費分佈</div>
+        <div class="flex flex-col items-center py-md">
+          <!-- Recharts PieChart 占位：wireframe 用虛線圓圈 -->
+          <div class="w-48 h-48 rounded-full border-4 border-dashed border-gray-300 flex items-center justify-center">
+            <div class="text-center">
+              <div class="text-xs text-gray-400">總金額</div>
+              <div class="text-xl font-bold text-gray-700 mt-1">$12,580</div>
+            </div>
+          </div>
+        </div>
+        <!-- 圖例 -->
+        <div class="flex flex-wrap gap-sm mt-md text-xs">
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-400"></span>飲食 40%</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-500"></span>交通 15%</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-600"></span>娛樂 20%</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-gray-300"></span>其他 25%</span>
+        </div>
+      </section>
+
+      <!-- 類別排行列表 -->
+      <section id="category-ranking" aria-label="類別排行">
+        <h2 class="text-sm font-semibold text-gray-800 mb-md">類別排行</h2>
+        <div class="bg-white rounded-lg divide-y divide-gray-100">
+          <div class="flex items-center gap-md p-md">
+            <div class="w-6 text-xs font-semibold text-gray-500">1</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-baseline mb-1">
+                <span class="text-sm font-semibold text-gray-800">飲食</span>
+                <span class="text-sm text-gray-700">$5,032</span>
+              </div>
+              <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-gray-500 rounded-full" style="width: 80%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-md p-md">
+            <div class="w-6 text-xs font-semibold text-gray-500">2</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-baseline mb-1">
+                <span class="text-sm font-semibold text-gray-800">娛樂</span>
+                <span class="text-sm text-gray-700">$2,516</span>
+              </div>
+              <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-gray-500 rounded-full" style="width: 40%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-md p-md">
+            <div class="w-6 text-xs font-semibold text-gray-500">3</div>
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-baseline mb-1">
+                <span class="text-sm font-semibold text-gray-800">交通</span>
+                <span class="text-sm text-gray-700">$1,887</span>
+              </div>
+              <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-gray-500 rounded-full" style="width: 30%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- 底部 Tab Bar -->
+    <nav id="tab-bar" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-14 bg-white border-t border-gray-200 flex" aria-label="底部導覽">
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">🏠</span><span class="mt-0.5">首頁</span>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-800" aria-current="page">
+        <span class="text-lg">📊</span><span class="mt-0.5">統計</span>
+        <div class="w-1 h-1 rounded-full bg-gray-800 mt-0.5"></div>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">📋</span><span class="mt-0.5">記錄</span>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">⚙️</span><span class="mt-0.5">設定</span>
+      </button>
+    </nav>
+
+  </div>
+
+</body>
+</html>

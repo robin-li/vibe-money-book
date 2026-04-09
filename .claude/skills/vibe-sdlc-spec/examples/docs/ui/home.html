@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="fidelity" content="wireframe">
+  <meta name="spec-ref" content="../01-6-UI_UX_Design.md#31-首頁-記帳主頁">
+  <title>首頁 - Vibe Money Book Wireframe</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // 從 01-6-UI_UX_Design.md §2 Design Tokens 同步
+    // wireframe 階段：僅保留必要 tokens 用於 CTA 標示，其餘使用 gray-* 灰階
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#9CA3AF',        // wireframe 灰階（mockup 階段改為 #00C896）
+            'primary-light': '#F3F4F6',
+            'primary-dark': '#6B7280',
+          },
+          borderRadius: {
+            'sm': '8px',
+            'md': '12px',
+            'lg': '16px',
+            'xl': '20px',
+          },
+          spacing: {
+            'xs': '4px',
+            'sm': '8px',
+            'md': '12px',
+            'lg': '16px',
+            'xl': '20px',
+            '2xl': '24px',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* wireframe 階段自訂：虛線邊框標示佔位區塊 */
+    .placeholder-box { border: 1px dashed #D1D5DB; }
+  </style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-700">
+
+  <!-- 說明：此為低保真 wireframe，用於傳達佈局與層級。實作以 01-6-UI_UX_Design.md 為權威。 -->
+
+  <div class="max-w-md mx-auto bg-white min-h-screen shadow-sm pb-32">
+
+    <!-- §3.1.1 Header -->
+    <header id="header" class="h-14 border-b border-gray-200 flex items-center justify-between px-2xl bg-white">
+      <div class="flex items-center gap-sm">
+        <div class="w-8 h-8 bg-gray-300 rounded-sm flex items-center justify-center text-white text-sm">💰</div>
+        <div>
+          <div class="text-base font-semibold text-gray-800">Vibe Money Book</div>
+          <div class="text-xs text-gray-500 tracking-widest">語音記帳教練</div>
+        </div>
+      </div>
+      <button class="w-6 h-6 text-gray-500" aria-label="設定">⚙️</button>
+    </header>
+
+    <main class="p-2xl space-y-lg">
+
+      <!-- §3.1.2 預算卡片 -->
+      <section id="budget-card" class="bg-white rounded-lg shadow-sm p-lg" aria-label="預算卡片">
+        <div class="flex justify-between items-start mb-sm">
+          <div>
+            <div class="text-xs text-gray-500">預算剩餘</div>
+            <div class="text-4xl font-bold text-gray-800 mt-1">99%</div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-gray-500">本月支出</div>
+            <div class="text-2xl font-bold text-gray-700 mt-1">$250</div>
+          </div>
+        </div>
+        <!-- 進度條（wireframe：灰階；mockup 改為 --color-success/warning/danger） -->
+        <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div class="h-full bg-gray-500 rounded-full" style="width: 99%"></div>
+        </div>
+        <div class="flex justify-between mt-xs text-xs text-gray-500">
+          <span>$0</span>
+          <span>目標：$20,000</span>
+        </div>
+      </section>
+
+      <!-- §3.1.3 AI 回饋卡片 -->
+      <section id="ai-feedback" class="bg-primary-light rounded-lg p-lg" aria-label="AI 回饋卡片">
+        <div class="flex items-start gap-md">
+          <div class="w-9 h-9 bg-gray-400 rounded-full flex items-center justify-center text-white text-sm shrink-0">💬</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs text-gray-500 mb-1">溫柔管家 的即時回饋</div>
+            <div class="text-sm text-gray-700 leading-relaxed">
+              「享受美味是很重要的。預算目前仍很充裕，請繼續保持...」
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- §3.1.4 最近帳目列表 -->
+      <section id="recent-transactions" aria-label="最近帳目">
+        <div class="flex justify-between items-center mb-md">
+          <h2 class="text-base font-semibold text-gray-800">🕐 最近帳目</h2>
+        </div>
+        <div class="bg-white rounded-lg divide-y divide-gray-100">
+          <!-- 交易項目（template，實作時迭代渲染） -->
+          <div class="flex items-center gap-md p-md">
+            <div class="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center shrink-0">🍜</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold text-gray-800">拉麵</div>
+              <div class="text-xs text-gray-500">
+                <span class="inline-block bg-gray-100 rounded-sm px-2 py-0.5 mr-2">飲食</span>
+                <span>上午 01:07</span>
+              </div>
+            </div>
+            <div class="text-base font-semibold text-gray-700">-$250</div>
+          </div>
+          <div class="flex items-center gap-md p-md">
+            <div class="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center shrink-0">🚌</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-sm font-semibold text-gray-800">捷運</div>
+              <div class="text-xs text-gray-500">
+                <span class="inline-block bg-gray-100 rounded-sm px-2 py-0.5 mr-2">交通</span>
+                <span>上午 08:30</span>
+              </div>
+            </div>
+            <div class="text-base font-semibold text-gray-700">-$35</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- §3.1.6 Footer -->
+      <footer id="footer" class="text-center py-sm">
+        <div class="text-xs text-gray-400 tracking-wider">POWERED BY AI · 精準記帳 · 情緒滿分</div>
+      </footer>
+    </main>
+
+    <!-- §3.1.5 輸入區（固定於 Tab Bar 上方） -->
+    <div id="input-bar" class="fixed bottom-14 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 p-md">
+      <div class="flex items-center gap-sm">
+        <input
+          type="text"
+          placeholder="例如：中午吃拉麵 280 元"
+          class="flex-1 h-11 rounded-xl bg-gray-100 border border-gray-200 px-lg text-sm placeholder:text-gray-400"
+          aria-label="記帳輸入"
+        >
+        <button class="w-9 h-9 text-gray-500" aria-label="語音輸入">🎤</button>
+        <button class="w-10 h-10 rounded-full bg-gray-500 text-white flex items-center justify-center" aria-label="送出">
+          ➤
+        </button>
+      </div>
+    </div>
+
+    <!-- §3.5 底部 Tab Bar -->
+    <nav id="tab-bar" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-14 bg-white border-t border-gray-200 flex" aria-label="底部導覽">
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-800" aria-current="page">
+        <span class="text-lg">🏠</span>
+        <span class="mt-0.5">首頁</span>
+        <div class="w-1 h-1 rounded-full bg-gray-800 mt-0.5"></div>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">📊</span>
+        <span class="mt-0.5">統計</span>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">📋</span>
+        <span class="mt-0.5">記錄</span>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">⚙️</span>
+        <span class="mt-0.5">設定</span>
+      </button>
+    </nav>
+
+  </div>
+
+</body>
+</html>
