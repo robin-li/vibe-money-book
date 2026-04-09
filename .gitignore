@@ -9,3 +9,6 @@ node_modules/
 test-results/
 playwright-report/
 launchd.log
+
+# vibe-sdlc-status：Agent 個別狀態檔屬本地即時資訊，STATUS.md 進版控
+docs/status/A-*.md

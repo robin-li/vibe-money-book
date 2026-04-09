@@ -93,9 +93,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | 指令 | 說明 |
 |------|------|
-| `/vibe-sdlc` | 查看目前所在 Phase |
-| `/vibe-sdlc-p1-spec` | Phase 1：規格文件撰寫與審查 |
-| `/vibe-sdlc-p2-issues` | Phase 2：將 Dev Plan 轉為 GitHub Issues |
-| `/vibe-sdlc-p3-dev` | Phase 3：開發循環（Sub Agents 並行） |
-| `/vibe-sdlc-p4-pr` | Phase 4：PR 審查與合併 |
-| `/vibe-sdlc-p5-release` | Phase 5：Release 準備 |
+| `/vibe-sdlc` | 查看目前所在 Phase 與進度儀表板 |
+| `/vibe-sdlc-spec` | Phase 1：規格文件撰寫與審查 |
+| `/vibe-sdlc-issues` | Phase 2：將 Dev Plan 轉為 GitHub Issues |
+| `/vibe-sdlc-dev` | Phase 3：開發循環（Sub Agents 並行） |
+| `/vibe-sdlc-pr` | Phase 4：CI 監控、失敗修正與合併後作業 |
+| `/vibe-sdlc-release` | Phase 5：回饋收集、Release 與迭代規劃 |
+| `/vibe-sdlc-status` | Agent 狀態查詢與彙整（產出 `docs/status/STATUS.md`） |
+
+### STATUS.md 版控模式
+
+本專案採 **C（混合）** 模式：
+
+- `docs/status/STATUS.md` **進版控**（跨機器可見、有歷史追溯）
+- `docs/status/A-*.md` **加入 `.gitignore`**（Agent 個別狀態檔屬本地即時資訊，不納入版控）
+
+詳見 `.claude/skills/vibe-sdlc-status/skill.md` §版控策略。
