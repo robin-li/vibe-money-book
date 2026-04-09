@@ -1,9 +1,9 @@
-# 01-3 API 規範文件
+# 01-5 API 規範文件
 
 > **專案名稱**：Vibe Money Book — 語音記帳應用
 > **API 版本**：v1.0
-> **文檔版本**：v1.6
-> **最後更新**：2026-03-27
+> **文檔版本**：v1.7
+> **最後更新**：2026-04-09
 
 ---
 
@@ -918,7 +918,7 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>  # 可選
 ---
 
 **文檔責任人**：技術架構團隊
-**最後修訂日期**：2026-03-27
+**最後修訂日期**：2026-04-09
 
 ---
 
@@ -933,3 +933,4 @@ X-LLM-API-Key: <使用者自行提供的 LLM API Key>  # 可選
 | v1.4 | 2026-03-25 | M7 新增功能：§4.3 新增 `GET /ai/providers` 端點（供應商與模型列表）；`POST /ai/validate-key` 擴展支援 engine/model body 參數；`GET /ai/config` 擴展回傳 anthropic/xai 預設 Key 狀態；`PUT /users/profile` 新增 `ai_model` 可選參數、`ai_engine` 擴展為四供應商 |
 | v1.5 | 2026-03-27 | Add `GET /ai/models` endpoint; `validate-key` distinguishes key vs model errors (400/403); add `LLM_MODEL_INVALID` error code |
 | v1.6 | 2026-03-27 | M7 Release 規格同步：補充 GET /ai/models 至 YAML、補充 ai_instructions 欄位、修正 engine 參數為非必填 |
+| v1.7 | 2026-04-09 | 規格文件改名對齊新版 vibe-sdlc-spec：本檔由 `01-3-API_Spec.md` 改名為 `01-5-API_Spec.md`，標題同步更新 |
