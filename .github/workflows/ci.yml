@@ -61,7 +61,13 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Create .env for docker-compose
-        run: cp .env.example .env
+        run: |
+          cp .env.example .env
+          # E2E 專用 override：避免 frontend build 時注入 production URL
+          # 原因：.env.example 的 VITE_API_BASE_URL / CORS_ORIGIN 指向 production
+          # 導致 browser login 會打到 Cloudflare Tunnel 外部端點而非 CI backend
+          sed -i 's|^VITE_API_BASE_URL=.*|VITE_API_BASE_URL=http://localhost:3000/api/v1|' .env
+          sed -i 's|^CORS_ORIGIN=.*|CORS_ORIGIN=http://localhost|' .env
 
       - name: Start services with docker-compose
         run: docker compose up -d --build
