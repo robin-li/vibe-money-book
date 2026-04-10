@@ -26,17 +26,18 @@
 <body class="bg-gray-100 min-h-screen font-sans text-gray-700">
 
   <!-- 此為低保真 wireframe。實作以 01-6-UI_UX_Design.md §3.4 為權威。 -->
+  <!-- v1.4 對齊 M6 (PRD-F-015 i18n) 與 M7 (PRD-F-017 多供應商 + 模型選擇) -->
 
   <div class="max-w-md mx-auto bg-white min-h-screen shadow-sm pb-20">
 
-    <!-- Header -->
+    <!-- §3.4.1 Header -->
     <header id="header" class="h-14 border-b border-gray-200 flex items-center px-2xl bg-white">
-      <h1 class="text-base font-semibold text-gray-800">設定</h1>
+      <h1 class="text-base font-semibold text-gray-800">⚙️ 設定</h1>
     </header>
 
     <main class="divide-y divide-gray-100">
 
-      <!-- 使用者資訊區 -->
+      <!-- §3.4.2 使用者資訊區 -->
       <section id="user-info" class="p-lg px-2xl flex items-center gap-md" aria-label="使用者資訊">
         <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl">👤</div>
         <div class="flex-1 min-w-0">
@@ -45,7 +46,23 @@
         </div>
       </section>
 
-      <!-- AI 人設選擇 -->
+      <!-- §3.4.3 語言設定 (PRD-F-015, T-606) -->
+      <section id="language" class="p-lg px-2xl" aria-label="語言設定">
+        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">語言</div>
+        <div class="relative">
+          <select
+            class="w-full h-11 rounded-lg border-2 border-gray-500 bg-white pl-lg pr-10 text-sm text-gray-800 appearance-none cursor-pointer"
+            aria-label="選擇介面語言">
+            <option>🇹🇼 繁體中文</option>
+            <option>🇺🇸 English</option>
+            <option>🇨🇳 简体中文</option>
+            <option>🇻🇳 Tiếng Việt</option>
+          </select>
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▼</span>
+        </div>
+      </section>
+
+      <!-- §3.4.4 AI 人設選擇 -->
       <section id="persona-select" class="p-lg px-2xl" aria-label="AI 人設選擇">
         <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">AI 人設</div>
         <div class="grid grid-cols-3 gap-md">
@@ -65,97 +82,149 @@
         </div>
       </section>
 
-      <!-- 月預算設定 -->
+      <!-- §3.4.5 AI 指示 (User Prompt) -->
+      <section id="ai-instructions" class="p-lg px-2xl" aria-label="AI 指示">
+        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">AI 指示</div>
+        <textarea
+          rows="5"
+          placeholder="讓 AI 了解你的個性、飲食偏好、記帳風格等..."
+          class="w-full rounded-md border border-gray-200 bg-gray-50 px-lg py-md text-sm text-gray-700 resize-none focus:outline-none focus:border-gray-500"
+          aria-label="AI 指示輸入框"></textarea>
+        <div class="flex items-center justify-between mt-sm">
+          <span class="text-xs text-gray-500">0/1000</span>
+          <button class="hidden h-9 px-lg rounded-md bg-gray-500 text-white text-xs font-semibold" aria-label="儲存 AI 指示">儲存</button>
+        </div>
+      </section>
+
+      <!-- §3.4.6 月預算設定 -->
       <section id="monthly-budget" class="p-lg px-2xl" aria-label="月預算設定">
         <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">月預算</div>
-        <div class="flex items-center justify-between">
-          <label for="monthly-budget-input" class="text-sm text-gray-700">每月預算</label>
-          <div class="relative">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">$</span>
-            <input id="monthly-budget-input" type="text" value="20,000" class="w-32 h-9 rounded-md border border-gray-200 pl-7 pr-3 text-right text-sm">
-          </div>
+        <div class="flex items-center gap-sm">
+          <span class="text-sm font-semibold text-gray-800">$</span>
+          <input
+            id="monthly-budget-input"
+            type="text"
+            value="20,000"
+            class="flex-1 h-12 rounded-md border border-gray-200 bg-gray-50 px-lg text-right text-sm text-gray-800"
+            aria-label="每月預算">
         </div>
+        <p class="text-xs text-gray-500 mt-sm">當前設定：$20,000</p>
       </section>
 
-      <!-- 類別預算管理 -->
-      <section id="category-budget" class="p-lg px-2xl" aria-label="類別預算管理">
-        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">類別預算</div>
-        <div class="space-y-md">
-          <div class="flex items-center justify-between gap-md">
-            <div class="flex items-center gap-sm flex-1">
-              <span class="text-sm text-gray-700">飲食</span>
-              <span class="text-xs bg-gray-100 text-gray-500 rounded-sm px-2 py-0.5">預設</span>
-            </div>
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">$</span>
-              <input type="text" value="5,000" class="w-28 h-9 rounded-md border border-gray-200 pl-7 pr-3 text-right text-sm">
-            </div>
-          </div>
-          <div class="flex items-center justify-between gap-md">
-            <div class="flex items-center gap-sm flex-1">
-              <span class="text-sm text-gray-700">交通</span>
-              <span class="text-xs bg-gray-100 text-gray-500 rounded-sm px-2 py-0.5">預設</span>
-            </div>
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">$</span>
-              <input type="text" value="2,000" class="w-28 h-9 rounded-md border border-gray-200 pl-7 pr-3 text-right text-sm">
-            </div>
-          </div>
-          <div class="flex items-center justify-between gap-md">
-            <div class="flex items-center gap-sm flex-1">
-              <span class="text-sm text-gray-700">寵物</span>
-              <span class="text-xs bg-gray-200 text-gray-700 rounded-sm px-2 py-0.5">自訂</span>
-            </div>
-            <div class="flex items-center gap-sm">
-              <div class="relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">$</span>
-                <input type="text" value="1,000" class="w-28 h-9 rounded-md border border-gray-200 pl-7 pr-3 text-right text-sm">
-              </div>
-              <button class="w-8 h-8 flex items-center justify-center text-gray-400" aria-label="刪除寵物類別">🗑️</button>
-            </div>
-          </div>
-          <button class="w-full h-10 rounded-md border border-dashed border-gray-300 text-xs text-gray-500">+ 新增類別</button>
-        </div>
-      </section>
-
-      <!-- AI 引擎設定（PRD-F-013） -->
+      <!-- §3.4.7 / §6 AI 引擎設定（PRD-F-013 + PRD-F-017） -->
       <section id="ai-engine" class="p-lg px-2xl" aria-label="AI 引擎設定">
-        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">AI 引擎（PRD-F-013）</div>
-        <div class="grid grid-cols-2 gap-md mb-md">
-          <button class="h-14 rounded-lg border-2 border-gray-500 bg-gray-100 flex items-center justify-center gap-1 relative" aria-pressed="true">
+        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">AI 引擎（PRD-F-013 + PRD-F-017）</div>
+
+        <!-- 4 供應商網格 -->
+        <div class="grid grid-cols-2 gap-md mb-lg">
+          <button class="h-20 rounded-lg border-2 border-gray-500 bg-gray-100 flex flex-col items-center justify-center gap-1 relative" aria-pressed="true">
             <span class="absolute top-1 right-1 text-xs text-gray-700">✓</span>
-            <span class="text-sm">✨</span>
-            <span class="text-xs font-semibold text-gray-800">Gemini</span>
+            <span class="text-lg">🤖</span>
+            <span class="text-sm font-semibold text-gray-800">OpenAI</span>
+            <span class="text-xs text-gray-500">(預設)</span>
           </button>
-          <button class="h-14 rounded-lg border border-gray-200 bg-white flex items-center justify-center gap-1">
-            <span class="text-sm">🤖</span>
-            <span class="text-xs text-gray-500">OpenAI</span>
+          <button class="h-20 rounded-lg border border-gray-200 bg-white flex flex-col items-center justify-center gap-1">
+            <span class="text-lg">✨</span>
+            <span class="text-sm text-gray-500">Gemini</span>
+          </button>
+          <button class="h-20 rounded-lg border border-gray-200 bg-white flex flex-col items-center justify-center gap-1">
+            <span class="text-lg">🧠</span>
+            <span class="text-sm text-gray-500">Anthropic</span>
+          </button>
+          <button class="h-20 rounded-lg border border-gray-200 bg-white flex flex-col items-center justify-center gap-1">
+            <span class="text-lg">⚡</span>
+            <span class="text-sm text-gray-500">xAI</span>
           </button>
         </div>
-        <div class="space-y-sm">
-          <label for="api-key" class="text-xs text-gray-500">API Key</label>
+
+        <!-- API Key 輸入與測試 -->
+        <div class="mb-lg">
+          <label for="api-key" class="text-xs text-gray-500 mb-sm block">OpenAI API Key</label>
+          <div class="flex items-center gap-sm">
+            <div class="relative flex-1">
+              <input
+                id="api-key"
+                type="password"
+                value="••••••••••••••••"
+                class="w-full h-12 rounded-md border border-gray-200 bg-gray-50 px-lg pr-10 text-sm text-gray-800">
+              <button class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400" aria-label="顯示/隱藏 API Key">👁️</button>
+            </div>
+            <button class="h-12 px-lg rounded-md bg-gray-500 text-white text-xs font-semibold" aria-label="測試 API Key">測試</button>
+          </div>
+          <p class="text-xs text-gray-600 mt-sm" role="status">✅ 金鑰有效</p>
+        </div>
+
+        <!-- §6.4 模型選擇下拉 -->
+        <div id="model-select" class="mt-lg">
+          <label class="text-xs text-gray-500 mb-sm block">模型</label>
           <div class="relative">
-            <input id="api-key" type="password" value="••••••••••••••••" class="w-full h-10 rounded-md border border-gray-200 px-lg pr-10 text-sm">
-            <button class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400" aria-label="顯示/隱藏 API Key">👁️</button>
+            <select
+              class="w-full h-12 rounded-md border border-gray-200 bg-gray-50 px-lg text-sm text-gray-800 appearance-none cursor-pointer"
+              aria-label="選擇 AI 模型">
+              <option>gpt-4o-mini (推薦)</option>
+              <option>gpt-4o</option>
+              <option>gpt-4-turbo</option>
+              <option>gpt-3.5-turbo</option>
+            </select>
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">▼</span>
           </div>
-          <div class="text-xs text-gray-500">狀態：<span class="text-gray-700">✅ 金鑰有效</span></div>
+          <p class="text-xs text-gray-500 mt-sm">Fast, cheap, good for chat-style record entry</p>
         </div>
       </section>
 
-      <!-- 其他設定 -->
-      <section id="other-settings" class="p-lg px-2xl" aria-label="其他設定">
-        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">其他</div>
-        <div class="space-y-md">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-700">幣別</span>
-            <span class="text-xs text-gray-500">TWD（新台幣）</span>
+      <!-- §3.4.8 類別管理 (v1.4: 由「類別預算」更正為「類別管理」，無金額欄位) -->
+      <section id="category-management" class="p-lg px-2xl" aria-label="類別管理">
+        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">類別管理</div>
+
+        <!-- 支出類別 -->
+        <div class="mb-lg">
+          <div class="text-sm font-semibold text-gray-700 mb-sm">支出類別</div>
+          <div class="flex flex-wrap gap-sm">
+            <span class="px-md py-xs rounded-md text-xs bg-gray-50 text-gray-700">飲食</span>
+            <span class="px-md py-xs rounded-md text-xs bg-gray-50 text-gray-700">交通</span>
+            <span class="px-md py-xs rounded-md text-xs bg-gray-50 text-gray-700">娛樂</span>
+            <span class="px-md py-xs rounded-md text-xs bg-gray-50 text-gray-700">購物</span>
+            <span class="px-md py-xs rounded-md text-xs bg-gray-100 text-gray-700 inline-flex items-center gap-xs">
+              寵物
+              <button class="text-gray-400 font-bold" aria-label="刪除寵物類別">✕</button>
+            </span>
+          </div>
+        </div>
+
+        <!-- 收入類別 -->
+        <div class="mb-lg">
+          <div class="text-sm font-semibold text-gray-700 mb-sm">收入類別</div>
+          <div class="flex flex-wrap gap-sm">
+            <span class="px-md py-xs rounded-md text-xs bg-gray-50 text-gray-700">薪資</span>
+            <span class="px-md py-xs rounded-md text-xs bg-gray-50 text-gray-700">獎金</span>
+            <span class="px-md py-xs rounded-md text-xs bg-gray-100 text-gray-700 inline-flex items-center gap-xs">
+              副業
+              <button class="text-gray-400 font-bold" aria-label="刪除副業類別">✕</button>
+            </span>
+          </div>
+        </div>
+
+        <!-- 新增類別 -->
+        <div class="border-t border-gray-100 pt-md">
+          <p class="text-xs text-gray-500 mb-sm">新增自訂類別</p>
+          <div class="flex gap-sm items-center">
+            <select class="h-9 flex-shrink-0 rounded-md border border-gray-200 px-sm text-xs" aria-label="新類別類型">
+              <option>支出</option>
+              <option>收入</option>
+            </select>
+            <input
+              type="text"
+              placeholder="類別名稱"
+              class="flex-1 min-w-0 h-9 rounded-md border border-gray-200 px-sm text-sm"
+              aria-label="新類別名稱">
+            <button class="h-9 px-lg flex-shrink-0 min-w-[80px] whitespace-nowrap rounded-md bg-gray-500 text-white text-xs font-semibold" aria-label="新增類別">+ 新增</button>
           </div>
         </div>
       </section>
 
-      <!-- 登出 -->
+      <!-- §3.4.9 登出按鈕 -->
       <section id="logout" class="p-lg px-2xl">
-        <button class="w-full h-11 rounded-md border border-gray-300 text-sm font-semibold text-gray-600">登出</button>
+        <button class="w-full h-12 rounded-md bg-white shadow-sm text-sm font-semibold text-red-600 border border-gray-100" aria-label="登出">登出</button>
       </section>
 
     </main>
