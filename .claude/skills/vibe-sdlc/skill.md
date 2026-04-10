@@ -181,6 +181,8 @@ Vibe-SDLC 的 Phase 1 skill (/vibe-sdlc-spec) 具備空專案初始化能力，
 - **工作目錄乾淨**：執行 `git fetch origin && git reset --hard origin/dev/main-agent` 對齊遠端快照（**不要 rebase**）。儀表板僅讀取資料，不修改此分支歷史
 - **工作目錄有未提交變更**（⚠️ 異常：快照分支不該有未提交變更）：提示使用者並建議將變更搬移至 `chore/main-agent/<date>-*` 短命分支後再執行儀表板流程
 
+> **⛔ 禁止顯示 ahead/behind**：不得在儀表板或任何輸出中顯示 `dev/main-agent` 相對於 `main` 的 `ahead/behind` commit 數量。原因：快照分支每次 `main` 合入新 PR 後都會自動「落後」，這是設計上的預期行為，不是需要同步的警告；歷次實測中使用者會把 `behind: N` 誤讀為警告並反覆追問。若需要表達快照時效，**唯一允許**的方式是相對時間字串（如「2 小時前」），取得方式：`git log -1 --format='%cr' dev/main-agent`。詳見步驟 3 的「快照分支顯示規則」。
+
 #### 情境 B：當前在 `{main}` 分支（應避免）
 
 - **工作目錄乾淨**：執行 `git pull origin {main}` 後切回快照分支：`git checkout dev/main-agent && git reset --hard origin/dev/main-agent`
@@ -428,6 +430,26 @@ Tunnel 狀態獨立判定：
 - 「上次部署 commit」：比對目前正在運行的容器 image 與本地最新 commit，若無法取得容器資訊則顯示最近一次與部署相關的 commit（搜尋關鍵字：`deploy`, `部署`, `release`, `docker`, `tunnel`）
 - 公網端點：從 `docker-compose.yml` 的環境變數（如 `CORS_ORIGIN`、`VITE_API_BASE_URL`）或啟動腳本中解析；若無公網端點則省略該行
 - 健康檢查逾時設為 5 秒（`curl --max-time 5`）
+
+**快照分支顯示規則**（非常重要，違反會造成使用者困擾）：
+
+| 顯示類型 | 允許 | 原因 |
+|----------|:----:|------|
+| `dev/main-agent` vs `main` 的 `ahead/behind` commit 數量 | ❌ | 快照分支在 main 合入新 PR 後天生會「落後」，這是預期行為；顯示數字會被誤讀為「需要同步的警告」 |
+| 「dev/main-agent 落後 main N 個 commit」「需要 rebase」類語句 | ❌ | 誤導使用者，與 `/vibe-sdlc-status` 的設計合約衝突 |
+| `git rev-list --left-right --count origin/main...HEAD` 的原始輸出 | ❌ | 同上；這類數據對快照分支無意義 |
+| 相對時間字串的快照時效（如「2 小時前」「昨天」） | ✅ | 語意直觀，沒有「需要動作」的暗示 |
+| 最新的快照 commit hash + 時效 | ✅ | 作為「A-Main 上次工作的時間點」參考 |
+
+若需要在儀表板顯示快照時效，**在「Agent 活動」區塊底部**加一行（而非獨立區塊）：
+
+```
+│ 📸 A-Main 快照時效：{相對時間}（{short_hash}）
+```
+
+取得方式：`git log -1 --format='%cr %h' dev/main-agent`（範例輸出：`2 hours ago 7f7f32c`）。若快照時效超過 24 小時，可在 `建議下一步` 加一句「建議呼叫 `/vibe-sdlc-status` 刷新快照」，但**不得**呈現為警告。
+
+> 此規則同時適用於 Claude 在儀表板以外的自由輸出 —— 不要在任何地方把快照分支的 git ahead/behind 當成需要處理的狀態來報告。
 
 **同步 Dev Plan 狀態**
 
