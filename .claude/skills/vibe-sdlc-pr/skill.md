@@ -60,20 +60,27 @@ PR 合併後，**AI 助手必須**在對應 Issue 發佈完成 Comment：
 
 PR 合併後，**AI 助手必須依序執行**：
 
-1. **同步 main 並切換至常駐分支**：
+1. **同步 main 並回到快照分支**（**不對 dev/main-agent rebase**）：
    ```bash
    git fetch origin
    git checkout main && git pull origin main
-   git checkout dev/main-agent && git rebase origin/main
-   git push --force-with-lease origin dev/main-agent
+   git checkout dev/main-agent && git reset --hard origin/dev/main-agent
    ```
+
+   > `dev/main-agent` 的歷史由 `/vibe-sdlc-status` 管理，這裡只對齊遠端。**禁止** rebase 或 force push。
+
 2. **清理已合併分支**（依分支類型不同處理）：
    - **若合併的是 feature 分支** (`feat/<agent>/issue-N-簡述`)：刪除本地與遠端分支
      ```bash
      git branch -d feat/<agent>/issue-N-簡述
      git push origin --delete feat/<agent>/issue-N-簡述
      ```
-   - **若合併的是 `dev/main-agent`**：⛔ **不刪除**（常駐分支），上一步的 rebase 已完成更新
+   - **若合併的是 `chore/main-agent/*`**：同樣刪除本地與遠端分支
+     ```bash
+     git branch -d chore/main-agent/<date>-<簡述>
+     git push origin --delete chore/main-agent/<date>-<簡述>
+     ```
+   - **`dev/main-agent` 不會出現在合併路徑上**（不再承接工作 PR）
 3. **更新 Dev Plan**：將對應任務標記為 `[x] Completed`
 4. **更新看板狀態**：標記 Issue 為 `Done`
 5. **發佈完成 Comment**：含 PR 連結與 Dev Plan 更新
@@ -230,7 +237,7 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
 
 ### 規格文件盤點
 
-盤點本輪迭代中**所有已合併 PR**（含議題收集選項 1 透過 `dev/main-agent` 提交的小改動），檢查是否有遺漏的規格文件更新：
+盤點本輪迭代中**所有已合併 PR**（含議題收集選項 1 透過 `chore/main-agent/*` 提交的小改動），檢查是否有遺漏的規格文件更新：
 
 1. 列出本輪迭代已合併的所有 PR
 2. 檢查是否有涉及 API endpoint 新增/變更、UI 流程調整、資料模型變更
@@ -274,9 +281,10 @@ Sub Agent 的 PR **禁止** 修改其負責範圍以外的檔案：
      - `MERGED` → 禁止推送，從最新 main 建新分支與新 PR
      - `CLOSED` → 確認是否需重新開啟或建新 PR
 4. 開發者 Merge 後：
-   - **先同步 main 與常駐分支**：`git fetch origin && git checkout main && git pull origin main && git checkout dev/main-agent && git rebase origin/main && git push --force-with-lease origin dev/main-agent`
+   - **先同步 main 與快照分支**（**不對 dev/main-agent rebase / force push**）：`git fetch origin && git checkout main && git pull origin main && git checkout dev/main-agent && git reset --hard origin/dev/main-agent`
    - **若合併的是 feature 分支**：刪除本地與遠端的 feature 分支
-   - **若合併的是 `dev/main-agent`**：⛔ **不刪除**（常駐分支），上一步的 rebase 已完成更新
+   - **若合併的是 `chore/main-agent/*`**：同樣刪除本地與遠端分支
+   - **PR 合併後 HEAD 收尾**：依 `/vibe-sdlc-dev` 的「PR 合併後的 HEAD 收尾檢查」執行 `git branch --show-current`，若停在 main 則立刻切回 `dev/main-agent`
    - 讀取 `/docs/02-Dev_Plan.md`
    - 找到對應任務，將 `- [ ]` 改為 `- [x]`
    - 提交更新並推送

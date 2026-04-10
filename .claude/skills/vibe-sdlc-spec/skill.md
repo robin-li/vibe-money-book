@@ -294,24 +294,28 @@ user_invocable: true
 
 #### 分支命名規範
 
-**⛔ 嚴格禁止直接 push 至 main**，所有變更一律透過分支 + PR 流程。`main` 為唯讀基準分支，`dev/main-agent` 為常駐工作分支。
+**⛔ 嚴格禁止直接 push 至 main**，所有變更一律透過分支 + PR 流程。`main` 為唯讀基準分支，`dev/main-agent` 為 A-Main 的快照分支（不承接任何工作 commit）。
 
 | 條件 | 分支命名 | 生命週期 | 說明 |
 |------|---------|---------|------|
 | **有 Issue** | `feat/<agent>/issue-N-簡述` | 短期 | 所有 Issue-based 開發，PR 合併後刪除 |
-| **無 Issue（小修）** | `dev/main-agent` | **常駐** | 固定名稱常駐分支，PR 合併後 rebase 到最新 main，不刪除 |
-| **任務間停車** | `dev/main-agent` | **常駐** | 任務結束後預設停留位置，main 誤改的收容所 |
+| **無 Issue（小修）** | `chore/main-agent/<YYYYMMDD>-<簡述>` | 短期 | typo、文案、聯調連續小修；從 `origin/main` 建出，PR 合併後刪除 |
+| **A-Main 快照** | `dev/main-agent` | 永久（允許 force-update） | 由 `/vibe-sdlc-status` 管理，僅承載 STATUS / dashboard 快照 commit。**嚴禁**承接工作 commit 或從其分出新分支 |
 
 Per-issue 分支範例：
 - `feat/backend/issue-12-auth-api`
 - `feat/frontend/issue-15-login-ui`
 - `feat/devops/issue-20-docker-setup`
 
-**`dev/main-agent` 常駐分支生命週期**：
+Chore 分支範例：
+- `chore/main-agent/20260410-typo-readme`
+- `chore/main-agent/20260410-integration-fixes`
+
+**`dev/main-agent` 快照分支生命週期**：
 - 首次建立：`git checkout -b dev/main-agent origin/main && git push -u origin dev/main-agent`
-- 累積小修 → 達自然停止點 → 提交 PR
-- PR 合併後：`git checkout dev/main-agent && git rebase origin/main && git push --force-with-lease`（**不刪除分支**）
-- 持續作為任務間停車場與小修累積處
+- 後續維護：由 `/vibe-sdlc-status` 在彙整 STATUS 時 `git reset --hard origin/main` + 重新 commit + `git push --force-with-lease`
+- **永遠不刪除**，但**不保證歷史線性**（這是設計上的合約）
+- 詳細規則見 `/vibe-sdlc-status` 的「A-Main 快照分支」章節與 `/vibe-sdlc-dev` 的「分支策略」
 
 #### Bootstrap 階段（CI 建立前的 PR 處理）
 
@@ -432,7 +436,7 @@ flowchart LR
   {✅/❌} L3.5 CLAUDE.md（專案指引）
   {✅/❌} L4  /docs 目錄
   {✅/❌} L5  /docs/00-Docs_Index.md 骨架
-  {✅/❌} 常駐分支 dev/main-agent
+  {✅/❌} A-Main 快照分支 dev/main-agent
 
 請選擇：
   1️⃣  全部執行（推薦，新專案一鍵 bootstrap）
@@ -455,7 +459,7 @@ flowchart LR
    - `README.md`：含專案名稱 + 一句話描述 + Vibe-SDLC 連結
 3. **L3.5 CLAUDE.md**：呼叫下方「CLAUDE.md 初始化」流程
 4. **L4/L5 docs 骨架**：建立 `/docs/` 目錄，並從 `examples/docs/00-Docs_Index.md` 複製一份作為 `/docs/00-Docs_Index.md`，將「專案名稱」與文件清單改為占位符待使用者填寫
-5. **常駐分支**：`git checkout -b dev/main-agent`（若已有 commit 則從 main 分出；若尚無 commit，先完成 step 1 的初始 commit）
+5. **快照分支**：`git checkout -b dev/main-agent`（A-Main 快照分支，從 main 分出；若尚無 commit，先完成 step 1 的初始 commit）。建立後不立即在其上做任何 commit；後續由 `/vibe-sdlc-status` 管理
 6. **L2 GitHub remote**：呼叫下方「GitHub Remote 建立流程」，讓使用者選擇由 AI 代為建立或自行手動
 
 完成後輸出下一步建議：「初始化完成，接下來會協助你撰寫 PRD，請先告訴我專案要解決什麼問題。」

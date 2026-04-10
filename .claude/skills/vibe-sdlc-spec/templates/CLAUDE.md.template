@@ -62,7 +62,10 @@
 | 條件 | 分支命名 | 生命週期 |
 |------|---------|---------|
 | 有 Issue | `feat/<agent>/issue-N-簡述` | 短期，PR 合併後刪除 |
-| 無 Issue（小修） | `dev/main-agent` | 常駐，PR 合併後 rebase 到 main，不刪除 |
+| 無 Issue（小修） | `chore/main-agent/<YYYYMMDD>-<簡述>` | 短期，PR 合併後刪除 |
+| A-Main 快照 | `dev/main-agent` | 永久（允許 force-update），由 `/vibe-sdlc-status` 管理，**不承接工作 commit** |
+
+> 詳細規則見 `/vibe-sdlc-dev` 的「分支策略」與 `/vibe-sdlc-status` 的「A-Main 快照分支」。
 
 ## STATUS.md 版控策略
 
