@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="fidelity" content="wireframe">
+  <meta name="spec-ref" content="../01-6-UI_UX_Design.md#34-設定頁-settings">
+  <title>設定 - Vibe Money Book Wireframe</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#9CA3AF',
+            'primary-light': '#F3F4F6',
+            'primary-dark': '#6B7280',
+          },
+          borderRadius: { 'sm': '8px', 'md': '12px', 'lg': '16px', 'xl': '20px' },
+          spacing: { 'xs': '4px', 'sm': '8px', 'md': '12px', 'lg': '16px', 'xl': '20px', '2xl': '24px' }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans text-gray-700">
+
+  <!-- 此為低保真 wireframe。實作以 01-6-UI_UX_Design.md §3.4 為權威。 -->
+
+  <div class="max-w-md mx-auto bg-white min-h-screen shadow-sm pb-20">
+
+    <!-- Header -->
+    <header id="header" class="h-14 border-b border-gray-200 flex items-center px-2xl bg-white">
+      <h1 class="text-base font-semibold text-gray-800">設定</h1>
+    </header>
+
+    <main class="divide-y divide-gray-100">
+
+      <!-- 使用者資訊區 -->
+      <section id="user-info" class="p-lg px-2xl flex items-center gap-md" aria-label="使用者資訊">
+        <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-xl">👤</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-sm font-semibold text-gray-800">使用者名稱</div>
+          <div class="text-xs text-gray-500">user@email.com</div>
+        </div>
+      </section>
+
+      <!-- AI 人設選擇 -->
+      <section id="persona-select" class="p-lg px-2xl" aria-label="AI 人設選擇">
+        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">AI 人設</div>
+        <div class="grid grid-cols-3 gap-md">
+          <button class="aspect-square rounded-lg border border-gray-200 bg-white flex flex-col items-center justify-center gap-1">
+            <span class="text-2xl">🔥</span>
+            <span class="text-xs text-gray-500">毒舌</span>
+          </button>
+          <button class="aspect-square rounded-lg border-2 border-gray-500 bg-gray-100 flex flex-col items-center justify-center gap-1 relative" aria-pressed="true">
+            <span class="absolute top-1 right-1 text-xs text-gray-700">✓</span>
+            <span class="text-2xl">💖</span>
+            <span class="text-xs font-semibold text-gray-800">溫柔</span>
+          </button>
+          <button class="aspect-square rounded-lg border border-gray-200 bg-white flex flex-col items-center justify-center gap-1">
+            <span class="text-2xl">🥺</span>
+            <span class="text-xs text-gray-500">情勒</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 月預算設定 -->
+      <section id="monthly-budget" class="p-lg px-2xl" aria-label="月預算設定">
+        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">月預算</div>
+        <div class="flex items-center justify-between">
+          <label for="monthly-budget-input" class="text-sm text-gray-700">每月預算</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">$</span>
+            <input id="monthly-budget-input" type="text" value="20,000" class="w-32 h-9 rounded-md border border-gray-200 pl-7 pr-3 text-right text-sm">
+          </div>
+        </div>
+      </section>
+
+      <!-- 類別預算管理 -->
+      <section id="category-budget" class="p-lg px-2xl" aria-label="類別預算管理">
+        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">類別預算</div>
+        <div class="space-y-md">
+          <div class="flex items-center justify-between gap-md">
+            <div class="flex items-center gap-sm flex-1">
+              <span class="text-sm text-gray-700">飲食</span>
+              <span class="text-xs bg-gray-100 text-gray-500 rounded-sm px-2 py-0.5">預設</span>
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">$</span>
+              <input type="text" value="5,000" class="w-28 h-9 rounded-md border border-gray-200 pl-7 pr-3 text-right text-sm">
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-md">
+            <div class="flex items-center gap-sm flex-1">
+              <span class="text-sm text-gray-700">交通</span>
+              <span class="text-xs bg-gray-100 text-gray-500 rounded-sm px-2 py-0.5">預設</span>
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">$</span>
+              <input type="text" value="2,000" class="w-28 h-9 rounded-md border border-gray-200 pl-7 pr-3 text-right text-sm">
+            </div>
+          </div>
+          <div class="flex items-center justify-between gap-md">
+            <div class="flex items-center gap-sm flex-1">
+              <span class="text-sm text-gray-700">寵物</span>
+              <span class="text-xs bg-gray-200 text-gray-700 rounded-sm px-2 py-0.5">自訂</span>
+            </div>
+            <div class="flex items-center gap-sm">
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">$</span>
+                <input type="text" value="1,000" class="w-28 h-9 rounded-md border border-gray-200 pl-7 pr-3 text-right text-sm">
+              </div>
+              <button class="w-8 h-8 flex items-center justify-center text-gray-400" aria-label="刪除寵物類別">🗑️</button>
+            </div>
+          </div>
+          <button class="w-full h-10 rounded-md border border-dashed border-gray-300 text-xs text-gray-500">+ 新增類別</button>
+        </div>
+      </section>
+
+      <!-- AI 引擎設定（PRD-F-013） -->
+      <section id="ai-engine" class="p-lg px-2xl" aria-label="AI 引擎設定">
+        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">AI 引擎（PRD-F-013）</div>
+        <div class="grid grid-cols-2 gap-md mb-md">
+          <button class="h-14 rounded-lg border-2 border-gray-500 bg-gray-100 flex items-center justify-center gap-1 relative" aria-pressed="true">
+            <span class="absolute top-1 right-1 text-xs text-gray-700">✓</span>
+            <span class="text-sm">✨</span>
+            <span class="text-xs font-semibold text-gray-800">Gemini</span>
+          </button>
+          <button class="h-14 rounded-lg border border-gray-200 bg-white flex items-center justify-center gap-1">
+            <span class="text-sm">🤖</span>
+            <span class="text-xs text-gray-500">OpenAI</span>
+          </button>
+        </div>
+        <div class="space-y-sm">
+          <label for="api-key" class="text-xs text-gray-500">API Key</label>
+          <div class="relative">
+            <input id="api-key" type="password" value="••••••••••••••••" class="w-full h-10 rounded-md border border-gray-200 px-lg pr-10 text-sm">
+            <button class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-gray-400" aria-label="顯示/隱藏 API Key">👁️</button>
+          </div>
+          <div class="text-xs text-gray-500">狀態：<span class="text-gray-700">✅ 金鑰有效</span></div>
+        </div>
+      </section>
+
+      <!-- 其他設定 -->
+      <section id="other-settings" class="p-lg px-2xl" aria-label="其他設定">
+        <div class="text-xs font-semibold text-gray-500 mb-md uppercase tracking-wider">其他</div>
+        <div class="space-y-md">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-700">幣別</span>
+            <span class="text-xs text-gray-500">TWD（新台幣）</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 登出 -->
+      <section id="logout" class="p-lg px-2xl">
+        <button class="w-full h-11 rounded-md border border-gray-300 text-sm font-semibold text-gray-600">登出</button>
+      </section>
+
+    </main>
+
+    <!-- 底部 Tab Bar -->
+    <nav id="tab-bar" class="fixed bottom-0 left-0 right-0 max-w-md mx-auto h-14 bg-white border-t border-gray-200 flex" aria-label="底部導覽">
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">🏠</span><span class="mt-0.5">首頁</span>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">📊</span><span class="mt-0.5">統計</span>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-400">
+        <span class="text-lg">📋</span><span class="mt-0.5">記錄</span>
+      </button>
+      <button class="flex-1 flex flex-col items-center justify-center text-xs text-gray-800" aria-current="page">
+        <span class="text-lg">⚙️</span><span class="mt-0.5">設定</span>
+        <div class="w-1 h-1 rounded-full bg-gray-800 mt-0.5"></div>
+      </button>
+    </nav>
+
+  </div>
+
+</body>
+</html>
