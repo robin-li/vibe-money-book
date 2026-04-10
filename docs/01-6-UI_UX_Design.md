@@ -134,6 +134,10 @@
 
 ### 3.1 首頁 `/`（記帳主頁）
 
+> 視覺參考：[ui/home.html](./ui/home.html)（當前保真度：wireframe）
+>
+> 元件 anchor：[Header](./ui/home.html#header) · [預算卡片](./ui/home.html#budget-card) · [AI 回饋卡片](./ui/home.html#ai-feedback) · [最近帳目](./ui/home.html#recent-transactions) · [輸入區](./ui/home.html#input-bar) · [Footer](./ui/home.html#footer) · [底部 Tab Bar](./ui/home.html#tab-bar)
+
 首頁為應用核心頁面，採用垂直堆疊佈局，從上至下分為五個區域。
 
 #### 整體結構
@@ -288,6 +292,10 @@
 
 ### 3.2 統計頁 `/stats`
 
+> 視覺參考：[ui/stats.html](./ui/stats.html)（當前保真度：wireframe）
+>
+> 元件 anchor：[時間篩選](./ui/stats.html#time-filter) · [總支出摘要](./ui/stats.html#summary-card) · [消費分佈圓餅圖](./ui/stats.html#pie-chart) · [類別排行](./ui/stats.html#category-ranking)
+
 #### 整體結構
 
 ```
@@ -361,6 +369,10 @@
 
 ### 3.3 記錄頁 `/history`
 
+> 視覺參考：[ui/history.html](./ui/history.html)(當前保真度：wireframe)
+>
+> 元件 anchor：[篩選區](./ui/history.html#filter-bar) · [記錄列表](./ui/history.html#history-list) · [交易詳情展開](./ui/history.html#transaction-detail)
+
 #### 整體結構
 
 ```
@@ -414,6 +426,10 @@
 ---
 
 ### 3.4 設定頁 `/settings`
+
+> 視覺參考：[ui/settings.html](./ui/settings.html)（當前保真度：wireframe）
+>
+> 元件 anchor：[使用者資訊](./ui/settings.html#user-info) · [人設選擇](./ui/settings.html#persona-select) · [月預算](./ui/settings.html#monthly-budget) · [類別預算](./ui/settings.html#category-budget) · [AI 引擎](./ui/settings.html#ai-engine) · [其他設定](./ui/settings.html#other-settings) · [登出](./ui/settings.html#logout)
 
 #### 整體結構
 
@@ -472,6 +488,8 @@
 
 ### 3.5 底部 Tab Bar
 
+> **視覺參考**：底部 Tab Bar 為**共享元件**，已整合在各頁面 wireframe 底部（見 [ui/home.html#tab-bar](./ui/home.html#tab-bar)、[ui/stats.html#tab-bar](./ui/stats.html#tab-bar)、[ui/history.html#tab-bar](./ui/history.html#tab-bar)、[ui/settings.html#tab-bar](./ui/settings.html#tab-bar)）。實作時應抽離為單一共用元件，各頁面透過 `aria-current="page"` 與 `data-active` 標記當前 tab。
+
 ```
 ┌──────────────────────────────────────┐
 │  [🏠 首頁]  [📊 統計]  [📋 記錄]  [⚙️ 設定] │
@@ -497,6 +515,10 @@
 ---
 
 ### 3.6 登入頁 `/login` 與註冊頁 `/register`
+
+> 視覺參考：[ui/login.html](./ui/login.html) · [ui/register.html](./ui/register.html)（當前保真度：wireframe）
+>
+> 元件 anchor：[Logo](./ui/login.html#logo) · [認證表單（登入）](./ui/login.html#auth-form) · [認證表單（註冊）](./ui/register.html#auth-form)
 
 #### 整體結構
 
@@ -867,8 +889,8 @@ AI 回覆：
 
 ---
 
-**文檔版本**: v1.1
-**最後修訂**: 2026-04-09
+**文檔版本**: v1.2
+**最後修訂**: 2026-04-10
 
 ---
 
@@ -878,3 +900,4 @@ AI 回覆：
 |------|------|---------|
 | v1.0 | 2026-03-17 | 初版定稿（M1-M4 UI/UX 設計規格、Design Tokens、頁面佈局、互動動畫、響應式設計、無障礙設計） |
 | v1.1 | 2026-04-09 | 規格文件改名對齊新版 vibe-sdlc-spec：本檔由 `01-4-UI_UX_Design.md` 改名為 `01-6-UI_UX_Design.md`、關聯文件表更新 API Spec 連結為 `01-5-API_Spec.md`、標題同步更新；首次建立完整版本修訂說明區塊 |
+| v1.2 | 2026-04-10 | 對齊 vibe-sdlc-spec UI/UX Writing Guidelines §9：為 §3.1–§3.6 全部頁面章節補上 `ui/*.html` wireframe 視覺參考與元件層級 anchor link；新增 `/docs/ui/` 目錄含 6 個低保真 HTML + Tailwind wireframe（home/stats/history/settings/login/register）。markdown 規格書仍為實作權威，HTML wireframe 為視覺輔助（issue #209） |
