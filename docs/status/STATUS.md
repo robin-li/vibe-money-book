@@ -1,10 +1,10 @@
 # 專案現況
 
-> **更新時間**：2026-04-09 22:20 (UTC+8)
-> **彙整者**：A-Main
+> **更新時間**：2026-04-10 16:59 (UTC+8)
+> **彙整者**：A-Main（透過 `/vibe-sdlc-status` 觸發）
 > **專案**：robin-li/vibe-money-book
-> **當前分支**：`dev/main-agent`（同步至 `origin/main`）
-> **最新 commit**：`32640bc` fix(ci): override VITE_API_BASE_URL & CORS_ORIGIN for E2E job (#205)
+> **當前分支**：`dev/main-agent`（已重置至 `origin/main` `b19300e`，準備 commit 本份 STATUS 更新）
+> **最新 commit**：`b19300e` feat(skills): add bootstrap flow & UI/UX writing guidelines (#207)
 
 ---
 
@@ -30,14 +30,14 @@
 
 | Agent | 狀態 | 當前任務 | 備註 |
 |-------|------|---------|------|
-| A-Main | ⚪ idle | — | 本日處理完 5 個 PR（#200-#205），正常收尾 |
+| A-Main | ⚪ idle | — | 上一輪 (#200~#207) 收尾完成，等待下一個指派 |
 
 ---
 
 ## 3. 注意事項
 
 ### ❌ 待處理
-- **#206 [Tech Debt] E2E 測試維護：15 個過時測試需更新**（今日新建，P2）
+- **#206 [Tech Debt] E2E 測試維護：15 個過時測試需更新**（P2）
   - 分布：`ai-engine-settings` (3) + `ai-query` (3) + `history` (3) + `i18n` (5) + `stats-drilldown` (1)
   - 本質是 M5/M6/M7 迭代期間 feature 改動但 E2E 沒同步
   - 修復不緊急，可穿插在後續迭代內逐個處理
@@ -61,17 +61,18 @@
 
 ---
 
-## 5. 最近動態（今日 2026-04-09）
+## 5. 最近動態
 
 | PR | 標題 | 合併時間 (UTC+8) |
 |----|------|-------|
-| ✅ #205 | fix(ci): override VITE_API_BASE_URL & CORS_ORIGIN + rate limit | 22:19 |
-| ✅ #204 | docs(skills): add STATUS.md versioning policy & declare project mode | 21:24 |
-| ✅ #202 | fix(ci): correct DATABASE_URL in .env.example to PostgreSQL | 19:37 |
-| ✅ #201 | chore(skills): restructure vibe-sdlc skill suite (drop pN- prefix) | 15:43 |
-| ✅ #200 | docs: align spec file naming with updated vibe-sdlc-spec | 15:43 |
+| ✅ #207 | feat(skills): add bootstrap flow & UI/UX writing guidelines | 2026-04-10 05:42 |
+| ✅ #205 | fix(ci): override VITE_API_BASE_URL & CORS_ORIGIN + rate limit | 2026-04-09 22:19 |
+| ✅ #204 | docs(skills): add STATUS.md versioning policy & declare project mode | 2026-04-09 21:24 |
+| ✅ #202 | fix(ci): correct DATABASE_URL in .env.example to PostgreSQL | 2026-04-09 19:37 |
+| ✅ #201 | chore(skills): restructure vibe-sdlc skill suite (drop pN- prefix) | 2026-04-09 15:43 |
+| ✅ #200 | docs: align spec file naming with updated vibe-sdlc-spec | 2026-04-09 15:43 |
 
-### 本日完成的工作摘要
+### 上一輪 session 完成的工作摘要
 
 1. **規格文件對齊新版 vibe-sdlc-spec**（#200）
    - `01-3-API_Spec.md` → `01-5-API_Spec.md`、`01-4-UI_UX_Design.md` → `01-6-UI_UX_Design.md`（git rename 99% / 98%）
@@ -93,24 +94,23 @@
    - 本專案採 C 模式：STATUS.md 進版控、`A-*.md` 忽略
    - 首次建立 `docs/status/STATUS.md` 作為版控基準
 
-5. **環境清理**
-   - 本地清掉 8 個已合併 feature 分支
-   - 遠端清掉 5 個 stale 分支
-   - 修正並關閉 #203（原診斷錯誤，根因被改寫多次）
-   - 新建 #206 追蹤測試維護
+5. **Bootstrap flow & UI/UX 撰寫指引**（#207，+1956 / -148，13 files）
+   - 為 vibe-sdlc skill 套件新增專案啟動流程與 UI/UX 寫作規範
+   - 完成本輪 skill 重構收尾
 
 ---
 
-## 6. 部署現況（本機）
+## 6. 部署現況
 
 | 項目 | 狀態 |
 |------|------|
-| 🐳 Docker | 🔴 未運行（daemon 未啟動） |
-| 🔗 Cloudflare Tunnel | 🟡 cloudflared 進程運行中（PID 684），但後端不在故公網回 502 |
-| 🌐 公網端點 | `moneybook.smart-codings.com` → 502 / `moneybook-api.smart-codings.com/health` → 502 |
+| 🐳 本機 Docker | 🔴 未運行（daemon 未啟動） |
+| 🔗 本機 Cloudflare Tunnel | 🔴 未偵測到 cloudflared 進程 |
+| 🌐 公網端點 — `moneybook.smart-codings.com` | 🟢 200 OK（2026-04-10 16:59 重測） |
+| 🌐 公網端點 — `moneybook-api.smart-codings.com/health` | 🟢 200 OK（2026-04-10 16:59 重測） |
 | 🏷 最新 release tag | `v1.4.3` |
 
-> 本日所有工作皆為 CI 環境 / 規格文件 / skill 維護，未影響 production 部署。若要恢復對外服務需啟動 Docker 再執行 `scripts/start.sh`。
+> 公網服務持續正常運作中，但**部署不在本機**（本機 Docker 未啟動、無 cloudflared 進程）。production 應部署於另一台主機或容器服務。
 
 ---
 
@@ -118,21 +118,23 @@
 
 | 分支 | Backend CI | Frontend CI | E2E Tests |
 |------|-----------|-------------|-----------|
-| main (`32640bc`) | ✅ pass | ✅ pass | 🟡 42/57 (74%) pass，15 過時測試失敗 → #206 |
+| main (`b19300e`) | ✅ pass | ✅ pass | 🟡 42/57 (74%) pass，15 過時測試失敗 → #206 |
 
-### CI E2E 修復里程碑
-
-| 時間 | E2E 狀態 | 根因 |
-|------|---------|------|
-| 2026-03-26 ~ | ❌ 全部 timeout（1h15m） | L1: DATABASE_URL=SQLite |
-| #202 合併後 | ❌ 全部 timeout | L2: frontend 打 production URL |
-| #205 第一次 commit | 🟡 前 5 個 pass，其餘 429 | L3: rate limit |
-| **#205 合併後** | 🟡 **42/57 pass** | L4: 測試過時 → #206 |
-
-> 從「0% pass 連續 10+ commit 紅燈」到「74% pass」是今日最大技術成就。剩下 15 個是可控的測試維護工作，非阻塞性故障。
+> 從「0% pass 連續 10+ commit 紅燈」恢復至「74% pass」是 04-09 最大技術成就。剩下 15 個是可控的測試維護工作，非阻塞性故障。
 
 ---
 
 ## 8. Session 備註
 
-本次 session 規模較大（~250k context），處理了從規格對齊、skill 重構、CI 多層修復到狀態規範的完整鏈條。建議下次從 `/vibe-sdlc` 或 `docs/status/STATUS.md` 快速恢復脈絡。
+本次 session 透過 `/vibe-sdlc-status` 重新彙整，無新增實作工作。
+
+**分支整理紀錄**（2026-04-10 16:59）：
+- 上一輪 session 在 `main` 上直接編輯 `STATUS.md`（違反 main 唯讀原則）
+- 同時 `dev/main-agent` 累積了 2 個漂移 commits（`5c6ddb2` 為 #207 squash 前的原始版本、`1d6f87c` status update）
+- 處置：將 STATUS 變更搬至 `dev/main-agent`，並 `git reset --hard origin/main` 對齊 → 重 apply STATUS 更新 → commit & force-push
+
+下一步建議（擇一）：
+- 從 `/vibe-sdlc` 確認當前 phase 與待辦
+- 若要動 #206（E2E 維護）→ 走 `/vibe-sdlc-dev` 領取
+- 若要規劃 M8 → 走 `/vibe-sdlc-spec`
+- 若要解封 #172 / #162（on-hold）→ 先評估是否仍有效，再走 `/vibe-sdlc-dev`

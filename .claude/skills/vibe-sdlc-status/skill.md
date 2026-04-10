@@ -84,6 +84,22 @@ git push --force-with-lease origin dev/main-agent
 
 > **與其他分支的根本差異**：對其他分支 `--force-with-lease` 是高危動作；對 `dev/main-agent` 則是**正常操作**——因為它的合約就是「可被 A-Main 重設的快照」。但即便如此，**只有 A-Main session 可以執行**，其他 session 一律走 reset 對齊。
 
+### 顯示與報告規則（跨 skill 通用）
+
+回報 `dev/main-agent` 狀態時（無論是 `/vibe-sdlc-status` 彙整、`/vibe-sdlc` 儀表板、還是 Claude 的自由輸出），**必須**遵守以下規則：
+
+- ❌ **不得**顯示 `dev/main-agent` 相對於 `main` 的 `ahead/behind` commit 數量
+- ❌ **不得**使用「落後 main N 個 commit」「需要 rebase」等語句
+- ❌ **不得**輸出 `git rev-list --left-right --count` 對快照分支的原始數據
+- ✅ **允許**使用相對時間字串（如「2 小時前」「昨天」）表達快照時效
+- ✅ **允許**顯示最新快照的 short commit hash 作為參考
+
+> **原因**：快照分支在 `main` 合入新 PR 後天生會「落後」，這是設計合約的一部分，不是需要同步的警告。實測中使用者會把 `behind: N` 誤讀為警告並反覆追問。
+>
+> **取得時效的唯一正確方式**：`git log -1 --format='%cr %h' dev/main-agent`
+>
+> 完整的顯示規則表與 Agent 活動區塊的呈現格式詳見 `/vibe-sdlc` skill 的「快照分支顯示規則」章節。
+
 ### 各 Agent 狀態檔格式
 
 每個 Agent 的狀態檔遵循以下格式：
