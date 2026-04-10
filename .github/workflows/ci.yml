@@ -3,8 +3,20 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '.claude/**'
+      - '**/*.md'
+      - '.gitignore'
+      - 'LICENSE'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '.claude/**'
+      - '**/*.md'
+      - '.gitignore'
+      - 'LICENSE'
 
 jobs:
   ci-backend:
