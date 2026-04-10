@@ -1,8 +1,8 @@
 # 01-6 UI/UX 設計規格文件
 
 > **專案名稱**：Vibe Money Book — 語音記帳應用
-> **版本**：v1.1
-> **最後更新**：2026-04-09
+> **版本**：v1.3
+> **最後更新**：2026-04-11
 
 ---
 
@@ -163,6 +163,8 @@
 
 #### 3.1.1 Header
 
+> 視覺參考：[ui/home.html#header](./ui/home.html#header)
+
 ```
 ┌──────────────────────────────────────┐
 │ [🟢 icon] Vibe Money Book     [⚙️]  │
@@ -179,6 +181,8 @@
 | 設定按鈕 | 24×24px 齒輪 icon、`--color-text-secondary`、點擊跳轉 `/settings` |
 
 #### 3.1.2 預算卡片 (Budget Card)
+
+> 視覺參考：[ui/home.html#budget-card](./ui/home.html#budget-card)
 
 ```
 ┌──────────────────────────────────────┐
@@ -210,6 +214,8 @@
 
 #### 3.1.3 AI 回饋卡片 (AI Feedback Card)
 
+> 視覺參考：[ui/home.html#ai-feedback](./ui/home.html#ai-feedback)
+
 ```
 ┌──────────────────────────────────────┐
 │ [💬]  溫柔管家 的即時回饋                │
@@ -234,6 +240,8 @@
 | `guilt_trip` | 心疼天使 🥺 | 愛心 |
 
 #### 3.1.4 最近帳目列表 (Recent Transactions)
+
+> 視覺參考：[ui/home.html#recent-transactions](./ui/home.html#recent-transactions)
 
 ```
 ┌──────────────────────────────────────┐
@@ -261,6 +269,8 @@
 
 #### 3.1.5 輸入區 (Input Bar) — 固定底部
 
+> 視覺參考：[ui/home.html#input-bar](./ui/home.html#input-bar)
+
 ```
 ┌──────────────────────────────────────┐
 │ [例如：中午吃拉麵 280 元    ] [🎤] [➤]│
@@ -276,6 +286,8 @@
 | 發送按鈕 | 40×40px 圓形、背景 `--color-primary`、白色箭頭 icon、shadow `--shadow-fab` |
 
 #### 3.1.6 Footer
+
+> 視覺參考：[ui/home.html#footer](./ui/home.html#footer)
 
 ```
 ┌──────────────────────────────────────┐
@@ -553,6 +565,8 @@
 ### 4.1 語音錄音中 (Voice Recording)
 
 > 對應 PRD-F-001
+>
+> 視覺參考：[ui/home.html#input-bar](./ui/home.html#input-bar)（麥克風按鈕與輸入框載體）
 
 | 狀態 | UI 變化 |
 |------|---------|
@@ -565,6 +579,8 @@
 ### 4.2 AI 解析結果確認卡片 (Parsed Result Card)
 
 > 對應 PRD-F-004
+>
+> 視覺參考：[ui/home.html#recent-transactions](./ui/home.html#recent-transactions)（卡片插入於此區塊頂部）
 
 使用者輸入送出後，AI 解析完成時在「最近帳目」區域頂部以卡片形式顯示結構化結果，使用者可確認或修改。
 
@@ -597,6 +613,8 @@
 ### 4.3 AI 處理中 (AI Processing)
 
 > 對應 PRD-F-004、PRD-F-006
+>
+> 視覺參考：[ui/home.html#ai-feedback](./ui/home.html#ai-feedback)（typing indicator 出現位置）、[ui/home.html#recent-transactions](./ui/home.html#recent-transactions)（skeleton loading 出現位置）
 
 | 狀態 | UI 變化 |
 |------|---------|
@@ -608,6 +626,8 @@
 ### 4.4 預算警示 (Budget Alert)
 
 > 對應 PRD-F-007
+>
+> 視覺參考：[ui/home.html#budget-card](./ui/home.html#budget-card)（進度條與百分比數字所在位置）
 
 | 預算狀態 | 視覺效果 |
 |---------|---------|
@@ -618,6 +638,8 @@
 
 ### 4.5 刪除操作
 
+> 視覺參考：[ui/home.html#recent-transactions](./ui/home.html#recent-transactions)（首頁最近帳目項目）、[ui/history.html#history-list](./ui/history.html#history-list)（記錄頁列表項目）
+
 | 操作 | UI 行為 |
 |------|---------|
 | 左滑交易項目 | 項目右側滑出紅色「刪除」區塊（寬 80px）、背景 `--color-danger`、白色垃圾桶 icon |
@@ -625,6 +647,8 @@
 | 確認刪除 | 項目以 slide-out-left（300ms）動畫移除；下方項目上移填補空間 |
 
 ### 4.6 頁面轉場
+
+> 視覺參考：跨頁全域動畫規範，不綁定單一 wireframe。實作時可觀察各頁面 wireframe 的 `<main>` 容器作為轉場目標區域：[ui/home.html](./ui/home.html) · [ui/stats.html](./ui/stats.html) · [ui/history.html](./ui/history.html) · [ui/settings.html](./ui/settings.html)
 
 | 轉場 | 動畫 |
 |------|------|
@@ -638,8 +662,12 @@
 ## 5. PRD-F-012 新類別對話流 UI
 
 > 對應 PRD-F-012：AI 自動偵測並新增消費類別
+>
+> 視覺參考：對話流 UI 寄生於首頁 AI 回饋區（[ui/home.html#ai-feedback](./ui/home.html#ai-feedback)）與底部 Sheet。現行 wireframe 為靜態版，對話泡泡的動態切換與 Sheet 彈出僅以本規格書文字描述為準；未來升級為 mockup 時應於 `ui/home.html` 追加對話泡泡與 Sheet 的結構性 `<section>`。
 
 ### 5.1 對話流程
+
+> 視覺參考：[ui/home.html#ai-feedback](./ui/home.html#ai-feedback)（AI 建議泡泡出現於回饋卡片區域）
 
 當 AI 偵測到使用者的消費無法歸入現有類別時，觸發以下對話流程：
 
@@ -665,6 +693,8 @@ AI（對話泡泡）：
 ```
 
 ### 5.2 三個操作分支
+
+> 視覺參考：[ui/home.html#ai-feedback](./ui/home.html#ai-feedback)（操作按鈕組渲染於 AI 回饋泡泡下緣；Sheet 從 [ui/home.html#tab-bar](./ui/home.html#tab-bar) 上方彈入）
 
 #### 分支 A：確認新增
 
@@ -722,6 +752,8 @@ AI 回覆：
 
 ### 5.3 對話泡泡設計規格
 
+> 視覺參考：[ui/home.html#ai-feedback](./ui/home.html#ai-feedback)（對話泡泡容器沿用 AI 回饋卡片的 `--color-primary-light` 底色與圓角樣式）
+
 | 元素 | 規格 |
 |------|------|
 | AI 泡泡容器 | 最大寬度 85%、背景 `--color-primary-light`、radius `--radius-xl`、padding `--space-lg`、左對齊 |
@@ -733,6 +765,8 @@ AI 回覆：
 | [選現有] 按鈕 | 背景透明、border 1px `--color-border`、文字 `--color-text-secondary`、radius `--radius-sm` |
 
 ### 5.4 相似類別合併提示
+
+> 視覺參考：[ui/home.html#ai-feedback](./ui/home.html#ai-feedback)（相似類別提示泡泡共用 AI 回饋卡片樣式）
 
 當 AI 偵測到建議的新類別與現有類別相似時（如「咖啡」vs「飲食」）：
 
@@ -751,6 +785,8 @@ AI 回覆：
 ```
 
 ### 5.5 類別上限提示
+
+> 視覺參考：[ui/home.html#ai-feedback](./ui/home.html#ai-feedback)（上限提示泡泡渲染於 AI 回饋區，按鈕跳轉 [ui/settings.html#category-budget](./ui/settings.html#category-budget)）
 
 當使用者已達 20 個類別上限時：
 
@@ -771,8 +807,12 @@ AI 回覆：
 ## 6. PRD-F-013 AI 引擎選擇 UI
 
 > 對應 PRD-F-013：使用者可選擇偏好的 AI 引擎（Gemini / OpenAI），並自行輸入 API Key
+>
+> 視覺參考：[ui/settings.html#ai-engine](./ui/settings.html#ai-engine)
 
 ### 6.1 設定頁 AI 引擎區塊
+
+> 視覺參考：[ui/settings.html#ai-engine](./ui/settings.html#ai-engine)
 
 位於設定頁「類別預算管理」與「其他設定」之間。
 
@@ -800,6 +840,8 @@ AI 回覆：
 
 ### 6.2 元件規格
 
+> 視覺參考：[ui/settings.html#ai-engine](./ui/settings.html#ai-engine)（引擎卡片、API Key 輸入框、金鑰狀態指示皆渲染於此 section）
+
 | 元素 | 規格 |
 |------|------|
 | 區塊標題 | `--font-title`、`--color-text-primary`、文字「AI 引擎設定」 |
@@ -815,6 +857,8 @@ AI 回覆：
 
 ### 6.3 互動行為
 
+> 視覺參考：[ui/settings.html#ai-engine](./ui/settings.html#ai-engine)（所有互動均發生於此 section 內的引擎卡片與 API Key 輸入框）
+
 | 操作 | 行為 |
 |------|------|
 | 切換引擎 | 即時生效（無需重新整理頁面）、更新 user profile 的 `ai_engine` 欄位 |
@@ -824,6 +868,8 @@ AI 回覆：
 | 清空 Key | 從 localStorage 移除、狀態回到「未設定」 |
 
 ### 6.4 錯誤提示（記帳時）
+
+> 視覺參考：[ui/home.html#input-bar](./ui/home.html#input-bar)（錯誤提示浮動於輸入區上方，按鈕跳轉 [ui/settings.html#ai-engine](./ui/settings.html#ai-engine)）
 
 當使用者未設定 API Key 或 Key 失效時，在記帳流程中顯示提示：
 
@@ -901,3 +947,4 @@ AI 回覆：
 | v1.0 | 2026-03-17 | 初版定稿（M1-M4 UI/UX 設計規格、Design Tokens、頁面佈局、互動動畫、響應式設計、無障礙設計） |
 | v1.1 | 2026-04-09 | 規格文件改名對齊新版 vibe-sdlc-spec：本檔由 `01-4-UI_UX_Design.md` 改名為 `01-6-UI_UX_Design.md`、關聯文件表更新 API Spec 連結為 `01-5-API_Spec.md`、標題同步更新；首次建立完整版本修訂說明區塊 |
 | v1.2 | 2026-04-10 | 對齊 vibe-sdlc-spec UI/UX Writing Guidelines §9：為 §3.1–§3.6 全部頁面章節補上 `ui/*.html` wireframe 視覺參考與元件層級 anchor link；新增 `/docs/ui/` 目錄含 6 個低保真 HTML + Tailwind wireframe（home/stats/history/settings/login/register）。markdown 規格書仍為實作權威，HTML wireframe 為視覺輔助（issue #209） |
+| v1.3 | 2026-04-11 | 完整對齊 UI/UX Writing Guidelines §9.6 元件層級 anchor 規範：(1) §3.1.1–3.1.6 首頁各子元件章節補上獨立 `ui/home.html#xxx` 視覺參考；(2) §4 互動狀態與動畫（§4.1–4.6）各子章節補上視覺參考，指向對應承載元件的 wireframe anchor；(3) §5 PRD-F-012 新類別對話流（§5.1–5.5）補上視覺參考，對話流渲染於 `ui/home.html#ai-feedback`；(4) §6 PRD-F-013 AI 引擎選擇 UI（§6.1–6.4）補上視覺參考，全部指向 `ui/settings.html#ai-engine`；(5) 修正文件開頭版本號與日期同步（前次 v1.2 升版時 header 未同步更新） |
