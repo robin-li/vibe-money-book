@@ -42,7 +42,7 @@ user_invocable: true
 
 | 選項 | 行為 |
 |------|------|
-| **1 — 直接修正** | 不建 Issue，在 `dev/main-agent` 分支上修正（若分支不存在則從最新 main 建立）。修正完成後達到自然停止點時提交 PR。適合 typo、文案調整、簡單 config 變更等小修。 |
+| **1 — 直接修正** | 不建 Issue，從 `origin/main` 建立 `chore/main-agent/<YYYYMMDD>-<簡述>` 短命分支進行修正。修正完成後達到自然停止點時提交 PR，PR 合併後刪除該分支。適合 typo、文案調整、簡單 config 變更等小修。 |
 | **2 — 建 Issue 再修正** | 先以 `gh issue create` 建立 Issue（含標題、描述、標籤），然後立即進入 P3 開發流程修正。若有對應 Milestone 應掛載。 |
 | **3 — 收集後批量建立** | 將此回報暫存於對話上下文中（使用清單格式追蹤）。當開發者說「建立 Issues」或「整理回報」時，一次性列出所有已收集的回報，確認後批量建立 Issues。 |
 | **4 — 彙整並開發** | 結束收集階段，將所有暫存回報批量建立 Issues（逐一確認標題、標籤、Milestone），建立完成後**立即進入 P3 開發流程**，依優先順序逐一領取 Issue 開始開發。 |
@@ -74,7 +74,7 @@ user_invocable: true
 
 以下情境**不觸發**（直接執行開發，但仍需透過 PR 提交，嚴禁直接 push main）：
 - 透過 `/vibe-sdlc-dev` 領取既有 Issue 進行開發
-- 開發者明確說「直接改」「快速修一下」等表達**不需事前追蹤為正式 Issue** 的意圖（仍在 `dev/main-agent` 分支上開發並提交 PR）
+- 開發者明確說「直接改」「快速修一下」等表達**不需事前追蹤為正式 Issue** 的意圖（走 `chore/main-agent/<date>-*` 短命分支開發並提交 PR）
 - 純粹的程式碼問答、架構討論（無實際修改需求）
 
 ## 流程階段
@@ -98,7 +98,7 @@ user_invocable: true
 ### AI 助手（執行者）— 你的角色
 - 交叉比對規格文件，產出差異報告
 - 根據 Dev Plan 建立 GitHub Issues
-- 在對應分支上實作程式碼與測試（per-issue 分支或 `dev/main-agent`）
+- 在對應分支上實作程式碼與測試（feature 分支或 `chore/main-agent/*` 短命分支）
 - Vibe Check 通過後自動建立 PR（無需等待人類核准）
 - 處理 CI 失敗修正、更新 Dev Plan 任務狀態
 - 遇到問題優先自行調查與解決，無法解決時才上報開發者
@@ -145,7 +145,7 @@ user_invocable: true
   ❌ CLAUDE.md
 
 Vibe-SDLC 的 Phase 1 skill (/vibe-sdlc-spec) 具備空專案初始化能力，
-可協助建立 git repo、CLAUDE.md、/docs 骨架、常駐分支 dev/main-agent 等。
+可協助建立 git repo、CLAUDE.md、/docs 骨架、A-Main 快照分支 dev/main-agent 等。
 
 請改呼叫：/vibe-sdlc-spec
 ```
@@ -158,11 +158,11 @@ Vibe-SDLC 的 Phase 1 skill (/vibe-sdlc-spec) 具備空專案初始化能力，
 
 在收集任何數據之前，若工作目錄已經建立本地 git 倉庫及遠端 Github (或 Gitlab) 倉庫，則應先確保本地工作目錄與遠端同步：
 
-> **核心原則**：`{main}` 為唯讀基準分支，**任何修改都不應出現在 `{main}` 上**。Vibe-SDLC 使用常駐分支 `dev/main-agent` 作為任務間的「停車場」與小修累積處，所有未在 feature 分支上的工作都應在 `dev/main-agent` 上進行。
+> **核心原則**：`{main}` 為唯讀基準分支，**任何修改都不應出現在 `{main}` 上**。Vibe-SDLC 使用 `dev/main-agent` 作為 A-Main 的**快照分支**（不承接工作 commit），任務間預設停留在此分支**檢視狀態**；要動手時一律從 `origin/main` 建新的 `feat/*` 或 `chore/main-agent/*` 短命分支。
 
 1. 執行 `git fetch origin` 取得遠端最新狀態
 2. 偵測主線分支名稱（`main` 或 `master`，以下統稱 `{main}`）
-3. **確保常駐分支 `dev/main-agent` 存在**：
+3. **確保 A-Main 快照分支 `dev/main-agent` 存在**：
    ```bash
    # 檢查本地是否存在 dev/main-agent
    git show-ref --verify --quiet refs/heads/dev/main-agent
@@ -172,16 +172,18 @@ Vibe-SDLC 的 Phase 1 skill (/vibe-sdlc-spec) 具備空專案初始化能力，
    ```
    若遠端已存在但本地不存在，則 `git checkout -b dev/main-agent origin/dev/main-agent`。
 
+   > **此分支不承接工作 commit**，僅作為 A-Main 的 STATUS 快照點。詳見 `/vibe-sdlc-status` 的「A-Main 快照分支」章節。
+
 4. 執行 `git status --short` 檢查工作目錄狀態，根據當前分支與工作目錄狀態，採取對應流程：
 
-#### 情境 A：當前在 `dev/main-agent`（常駐分支，正常狀態）
+#### 情境 A：當前在 `dev/main-agent`（快照分支，正常狀態）
 
-- **工作目錄乾淨**：執行 `git fetch origin && git rebase origin/{main}` 將 `dev/main-agent` 同步至最新 `{main}`
-- **工作目錄有未提交變更**（小修累積中，正常）：跳過 rebase，提示使用者當前有未提交變更，繼續後續儀表板流程
+- **工作目錄乾淨**：執行 `git fetch origin && git reset --hard origin/dev/main-agent` 對齊遠端快照（**不要 rebase**）。儀表板僅讀取資料，不修改此分支歷史
+- **工作目錄有未提交變更**（⚠️ 異常：快照分支不該有未提交變更）：提示使用者並建議將變更搬移至 `chore/main-agent/<date>-*` 短命分支後再執行儀表板流程
 
 #### 情境 B：當前在 `{main}` 分支（應避免）
 
-- **工作目錄乾淨**：執行 `git pull origin {main}` 後切換至 `dev/main-agent`：`git checkout dev/main-agent && git rebase origin/{main}`
+- **工作目錄乾淨**：執行 `git pull origin {main}` 後切回快照分支：`git checkout dev/main-agent && git reset --hard origin/dev/main-agent`
 - **工作目錄有未提交變更**（⚠️ 異常狀態）：以下列格式警告，並**暫停等待使用者指示**：
 
   ```
@@ -190,20 +192,20 @@ Vibe-SDLC 的 Phase 1 skill (/vibe-sdlc-spec) 具備空專案初始化能力，
   ├─ 未提交變更：
   │  {git status --short 輸出，逐行列出}
   └─ 建議操作：
-     1. 搬移至常駐分支 dev/main-agent（推薦，自動接管未提交變更）
-     2. 暫存變更（git stash）→ 拉取最新 {main} → 切到 dev/main-agent → stash pop
+     1. 搬移至 chore/main-agent/<date>-* 短命分支（推薦）
+     2. 暫存變更（git stash）→ pull main → 切回 dev/main-agent → 建 chore 分支 → stash pop
      3. 捨棄全部變更（⚠️ 不可逆，慎用）
 
   請選擇操作（1/2/3），或輸入其他指示：
   ```
 
-  - 選擇 **1**：`git checkout dev/main-agent`（未提交變更會自動帶至 `dev/main-agent`，因為兩分支共享 working tree）
-  - 選擇 **2**：`git stash` → `git pull origin {main}` → `git checkout dev/main-agent` → `git rebase origin/{main}` → `git stash pop`
-  - 選擇 **3**：再次確認後 `git checkout -- . && git clean -fd` → `git pull origin {main}` → `git checkout dev/main-agent && git rebase origin/{main}`
+  - 選擇 **1**：`git checkout -b chore/main-agent/$(date +%Y%m%d)-<簡述>`（未提交變更會自動帶過去）
+  - 選擇 **2**：`git stash` → `git pull origin {main}` → `git checkout dev/main-agent && git reset --hard origin/dev/main-agent` → `git checkout -b chore/main-agent/$(date +%Y%m%d)-<簡述> origin/{main}` → `git stash pop`
+  - 選擇 **3**：再次確認後 `git checkout -- . && git clean -fd` → `git pull origin {main}` → `git checkout dev/main-agent && git reset --hard origin/dev/main-agent`
 
 #### 情境 C：當前在 feature 分支（`feat/<agent>/issue-N-簡述`）
 
-- **工作目錄乾淨**：提示使用者目前所在 feature 分支，詢問是否切回 `dev/main-agent`，若使用者不想切換則直接在當前分支繼續（儀表板數據以當前分支為準）
+- **工作目錄乾淨**：提示使用者目前所在 feature/chore 分支，詢問是否切回 `dev/main-agent` 檢視，若使用者不想切換則直接在當前分支繼續（儀表板數據以當前分支為準）
 - **工作目錄有未提交變更**：以下列格式警告，並**暫停等待使用者指示**：
 
   ```
@@ -219,8 +221,8 @@ Vibe-SDLC 的 Phase 1 skill (/vibe-sdlc-spec) 具備空專案初始化能力，
   請選擇操作（1/2/3），或輸入其他指示：
   ```
 
-  - 選擇 **1**：`git add` 相關檔案（排除 `.env`）→ 引導 commit → `git push` → 檢查 PR → `git checkout dev/main-agent && git rebase origin/{main}`
-  - 選擇 **2**：`git stash` → `git checkout dev/main-agent && git rebase origin/{main}`
+  - 選擇 **1**：`git add` 相關檔案（排除 `.env`）→ 引導 commit → `git push` → 檢查 PR → `git checkout dev/main-agent && git reset --hard origin/dev/main-agent`
+  - 選擇 **2**：`git stash` → `git checkout dev/main-agent && git reset --hard origin/dev/main-agent`
   - 選擇 **3**：繼續後續步驟（不切換分支）
 
 5. 檢查是否有已合併的本地分支、遠端已合併分支或無用的 worktree，若有則列出清單提醒開發者可清理（詳細清理流程見 P3 skill「清理已合併分支與 Worktree」章節）
@@ -230,7 +232,7 @@ Vibe-SDLC 的 Phase 1 skill (/vibe-sdlc-spec) 具備空專案初始化能力，
 | 類型 | 分支名稱 |
 |------|---------|
 | 主線 | `main`, `master` |
-| 常駐工作 | `dev/main-agent`（Vibe-SDLC 任務間停車場與小修累積處） |
+| A-Main 快照 | `dev/main-agent`（A-Main 的 STATUS / dashboard 快照分支，不承接工作 commit） |
 | 開發 | `develop`, `dev` |
 | 測試 | `testing`, `test` |
 | 預發 | `staging`, `uat` |

@@ -26,6 +26,64 @@ user_invocable: true
 
 > **無衝突設計**：每個 Agent 只寫自己的狀態檔，A-Main 負責讀取與彙整。
 
+## A-Main 快照分支：`dev/main-agent`
+
+A-Main 除了維護 `/docs/status/` 下的狀態檔之外，還擁有一條專屬的**快照分支** `dev/main-agent`，用來把 STATUS 寫入版控、讓跨機器與多 session 場景下的其他協作者也能取得最新狀態。
+
+### 角色定義
+
+| 項目 | 說明 |
+|------|------|
+| **用途** | 承載 A-Main 的 STATUS / dashboard 快照 commit；**不**承載任何工作 commit |
+| **生命週期** | 永久存在，**不可刪除** |
+| **歷史保證** | **不保證線性**。A-Main 可在必要時 `git reset --hard origin/main` 後重新寫入快照 commit |
+| **管理者** | 本 skill (`/vibe-sdlc-status`)，Phase 3 (`/vibe-sdlc-dev`) 不介入其歷史維護 |
+| **多 session 併發** | 後啟動的 session 必須先 `git fetch origin && git reset --hard origin/dev/main-agent` 對齊遠端，**禁止** rebase 本地歷史 |
+
+> 把這條分支當成「**可移動的 git tag**」來理解：它指向當前的 A-Main 狀態快照，不是累積歷史的工作基地。
+
+### 嚴格禁令
+
+以下動作會破壞快照分支的協作協議，**任何 session 都不得執行**：
+
+- ❌ 在 `dev/main-agent` 上累積任何工作 commit（feature 實作、小修、文件改動）
+- ❌ 從 `dev/main-agent` checkout 新的 feature/chore 分支（必須從 `origin/main` 分出）
+- ❌ 對 `dev/main-agent` 執行 `git rebase origin/main` 後 `git push --force-with-lease`（會與其他 session 的快照衝突）
+
+> 所有工作 commit 必須走 `feat/*` 或 `chore/main-agent/*` 短命分支，詳見 `/vibe-sdlc-dev` 的「分支策略」。
+
+### STATUS 快照寫入流程（A-Main 專用）
+
+A-Main 在以下時機可將彙整後的 STATUS 寫入 `dev/main-agent`：
+
+| 時機 | 是否寫入 |
+|------|---------|
+| 呼叫 `/vibe-sdlc-status` 並確認彙整結果 | 視版控模式（見下） |
+| PR 合併後（P4 合併後作業） | 視版控模式 |
+| 里程碑完成時 | **建議** |
+
+寫入步驟（**只有 A-Main 可執行**）：
+
+```bash
+# 1. 對齊到最新 main，丟棄舊的快照歷史（不保留線性）
+git fetch origin
+git checkout dev/main-agent
+git reset --hard origin/main
+
+# 2. 寫入新的 STATUS 內容
+# （此時 /docs/status/STATUS.md 已由彙整步驟更新）
+git add docs/status/STATUS.md
+git commit -m "status: snapshot $(date +%Y-%m-%d-%H%M)"
+
+# 3. force push 到遠端（這是合法且預期的）
+git push --force-with-lease origin dev/main-agent
+
+# 4. 收尾：本 skill 不留在 dev/main-agent 上做其他事，
+#    若要繼續工作，從 origin/main 建新分支
+```
+
+> **與其他分支的根本差異**：對其他分支 `--force-with-lease` 是高危動作；對 `dev/main-agent` 則是**正常操作**——因為它的合約就是「可被 A-Main 重設的快照」。但即便如此，**只有 A-Main session 可以執行**，其他 session 一律走 reset 對齊。
+
 ### 各 Agent 狀態檔格式
 
 每個 Agent 的狀態檔遵循以下格式：
